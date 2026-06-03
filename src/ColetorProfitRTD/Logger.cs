@@ -1,0 +1,61 @@
+using System;
+using System.IO;
+
+namespace ColetorProfitRTD
+{
+    public sealed class Logger
+    {
+        private readonly object _lock = new object();
+        private readonly string _path;
+
+        public Logger(string path)
+        {
+            _path = path;
+
+            if (!string.IsNullOrWhiteSpace(_path))
+            {
+                string directory = Path.GetDirectoryName(_path);
+
+                if (!string.IsNullOrWhiteSpace(directory))
+                {
+                    Directory.CreateDirectory(directory);
+                }
+            }
+        }
+
+        public void Info(string message)
+        {
+            Write("INFO", message, null);
+        }
+
+        public void Warn(string message)
+        {
+            Write("WARN", message, null);
+        }
+
+        public void Error(string message, Exception exception = null)
+        {
+            Write("ERROR", message, exception);
+        }
+
+        private void Write(string level, string message, Exception exception)
+        {
+            string line = $"{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff} [{level}] {message}";
+
+            if (exception != null)
+            {
+                line += " | " + exception.GetType().Name + ": " + exception.Message;
+            }
+
+            lock (_lock)
+            {
+                Console.WriteLine(line);
+
+                if (!string.IsNullOrWhiteSpace(_path))
+                {
+                    File.AppendAllText(_path, line + Environment.NewLine);
+                }
+            }
+        }
+    }
+}

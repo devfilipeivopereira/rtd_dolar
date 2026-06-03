@@ -1,0 +1,3144 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WDO Reversal Engine Quant</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box}
+:root{
+  --bg:#0b0d10;
+  --panel:#14171c;
+  --panel2:#1b2027;
+  --panel3:#232a33;
+  --line:#303844;
+  --line2:#3b4552;
+  --txt:#eef2f6;
+  --muted:#a9b3bf;
+  --soft:#738091;
+  --green:#12b886;
+  --cyan:#3bc9db;
+  --blue:#4dabf7;
+  --amber:#fab005;
+  --orange:#fd7e14;
+  --red:#fa5252;
+  --pink:#f06595;
+  --violet:#9775fa;
+  --font:Inter,Segoe UI,Roboto,Arial,sans-serif;
+  --mono:"SFMono-Regular",Consolas,"Liberation Mono",monospace;
+}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--txt);font-family:var(--font)}
+body{min-height:100vh;overflow-x:hidden}
+button,input,select{font:inherit}
+button{cursor:pointer}
+.app{min-height:100vh;display:flex;flex-direction:column}
+.topbar{
+  height:64px;display:flex;align-items:center;justify-content:space-between;
+  padding:0 22px;border-bottom:1px solid var(--line);background:#101318;
+  position:sticky;top:0;z-index:20;
+}
+.brand{display:flex;align-items:center;gap:12px;min-width:0}
+.mark{
+  width:38px;height:38px;border:1px solid #2f8f75;background:#0f2b26;
+  display:grid;place-items:center;border-radius:7px;color:#73f2c4;
+  font-family:var(--mono);font-weight:800;
+}
+.brand-title{font-size:15px;font-weight:800;letter-spacing:.03em;text-transform:uppercase;white-space:nowrap}
+.brand-sub{font-size:11px;color:var(--muted);margin-top:2px;white-space:nowrap}
+.top-meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+.pill{
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  height:30px;padding:0 10px;border:1px solid var(--line);border-radius:6px;
+  background:var(--panel2);color:var(--muted);font-size:11px;font-family:var(--mono);
+}
+.pill.ok{color:#74f0c6;border-color:#1f7a66;background:#0d261f}
+.pill.warn{color:#ffd66b;border-color:#7a5f1f;background:#28210d}
+.pill.bad{color:#ff9b9b;border-color:#7a2b2b;background:#2b1111}
+.live-panel{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;margin-bottom:10px}
+.live-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.live-kv{border:1px solid var(--line);background:#10141a;border-radius:6px;padding:8px 9px;min-width:0}
+.live-kv span{display:block;color:var(--muted);font-size:9px;text-transform:uppercase;font-weight:800;letter-spacing:.05em;margin-bottom:4px}
+.live-kv strong{display:block;color:var(--txt);font-family:var(--mono);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rtd-toggle.active{background:#123125;border-color:#1f8a70;color:#8ef2d2}
+input.live-fed{border-color:#1f8a70;box-shadow:0 0 0 2px #12b88618}
+.layout{
+  display:grid;grid-template-columns:360px minmax(0,1fr);gap:0;
+  min-height:calc(100vh - 64px);
+}
+.sidebar{
+  border-right:1px solid var(--line);background:var(--panel);
+  padding:18px;overflow:auto;max-height:calc(100vh - 64px);
+}
+.workspace{min-width:0;display:flex;flex-direction:column;overflow:hidden}
+.section{margin-bottom:16px}
+.section-title{
+  color:var(--soft);font-size:10px;font-weight:800;letter-spacing:.12em;
+  text-transform:uppercase;margin-bottom:9px;display:flex;align-items:center;gap:8px;
+}
+.section-title::before{content:"";width:3px;height:12px;border-radius:2px;background:var(--green)}
+.dropzone{
+  position:relative;border:1px dashed var(--line2);border-radius:8px;
+  padding:16px;background:#11161c;min-height:126px;display:flex;
+  flex-direction:column;justify-content:center;gap:9px;transition:.18s border,.18s background;
+}
+.dropzone.drag{border-color:var(--cyan);background:#102027}
+.file-row{display:flex;align-items:center;gap:10px}
+.file-icon{
+  width:34px;height:34px;border-radius:7px;background:#173022;border:1px solid #236b54;
+  display:grid;place-items:center;color:#73f2c4;font-family:var(--mono);font-size:12px;font-weight:800;
+}
+.file-text{min-width:0}
+.file-name{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:260px}
+.file-help{font-size:11px;color:var(--muted);margin-top:3px;line-height:1.35}
+.file-input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.status{
+  display:none;border-radius:6px;border:1px solid var(--line);padding:8px 10px;
+  font-size:11px;line-height:1.35;color:var(--muted);background:var(--panel2);
+}
+.status.show{display:block}
+.status.ok{border-color:#1f7a66;color:#9df2d5;background:#0d261f}
+.status.warn{border-color:#7a5f1f;color:#ffd66b;background:#28210d}
+.status.bad{border-color:#7a2b2b;color:#ff9b9b;background:#2b1111}
+.field-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.field{display:flex;flex-direction:column;gap:5px;min-width:0}
+label{font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+input[type=number]{
+  width:100%;height:36px;background:#10141a;border:1px solid var(--line);
+  color:var(--txt);border-radius:6px;padding:0 10px;font-family:var(--mono);font-size:12px;
+  outline:none;transition:.15s border,.15s box-shadow;
+}
+input[type=number]:focus{border-color:#407ea6;box-shadow:0 0 0 3px #4dabf724}
+.window-group{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.seg{
+  height:38px;border:1px solid var(--line);background:#10141a;color:var(--muted);
+  border-radius:6px;font-weight:800;font-size:12px;
+}
+.seg.active{background:#123125;border-color:#1f8a70;color:#8ef2d2}
+.btn-primary{
+  width:100%;height:42px;border:0;border-radius:7px;
+  background:#0f8a6a;color:#f6fffb;font-weight:800;letter-spacing:.03em;
+}
+.btn-primary:hover:not(:disabled){filter:brightness(1.06)}
+.btn-primary:disabled{background:#2a3038;color:#6f7a86;cursor:not-allowed}
+.note{
+  border:1px solid var(--line);background:#10141a;border-radius:8px;padding:10px;
+  color:var(--muted);font-size:11px;line-height:1.45;
+}
+.note strong{color:var(--txt)}
+.layer-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.layer-toggle{
+  min-height:34px;display:flex;align-items:center;gap:8px;
+  border:1px solid var(--line);background:#10141a;color:var(--muted);
+  border-radius:6px;padding:7px 9px;font-size:11px;font-weight:800;
+  text-transform:none;letter-spacing:0;cursor:pointer;user-select:none;
+}
+.layer-toggle input{width:14px;height:14px;accent-color:var(--green);margin:0;flex:0 0 auto}
+.layer-toggle:has(input:checked){border-color:#1f8a70;color:#dffcf3;background:#123125}
+.chart-head{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:14px 18px;border-bottom:1px solid var(--line);background:#101318;
+}
+.chart-title{font-size:12px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.08em}
+.chart-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.chart-nav{display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.nav-btn{
+  width:34px;height:30px;border:1px solid var(--line);border-radius:6px;
+  background:#10141a;color:var(--muted);font-family:var(--mono);font-size:12px;font-weight:800;
+}
+.nav-btn:hover:not(:disabled){border-color:#1f8a70;color:#8ef2d2;background:#123125}
+.nav-btn:disabled{opacity:.35;cursor:not-allowed}
+.nav-btn.wide{width:auto;padding:0 10px}
+.tabs{display:flex;gap:6px;border-bottom:1px solid var(--line);padding:10px 18px;background:var(--panel)}
+.tab{
+  height:34px;padding:0 12px;border:1px solid var(--line);border-radius:6px;
+  color:var(--muted);background:#10141a;font-size:12px;font-weight:800;
+}
+.tab.active{color:#eafff8;border-color:#1f8a70;background:#123125}
+.chart-shell{height:410px;position:relative;padding:14px 18px;background:var(--bg);border-bottom:1px solid var(--line)}
+canvas{width:100%!important;height:100%!important}
+#main-chart{cursor:crosshair}
+.empty{
+  position:absolute;inset:0;display:grid;place-items:center;color:var(--soft);
+  text-align:center;font-size:13px;padding:20px;
+}
+.cards{
+  display:grid;grid-template-columns:repeat(6,minmax(120px,1fr));border-bottom:1px solid var(--line);
+  background:var(--panel);
+}
+.card{padding:13px 14px;border-right:1px solid var(--line);min-width:0}
+.card:last-child{border-right:0}
+.card-label{font-size:9px;color:var(--soft);font-weight:800;text-transform:uppercase;letter-spacing:.1em;margin-bottom:7px}
+.card-value{font-family:var(--mono);font-size:18px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card-sub{font-size:10px;color:var(--muted);margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.content{padding:16px 18px 22px;background:var(--bg);overflow:auto}
+.panel-grid{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(280px,.8fr);gap:14px}
+.panel{
+  border:1px solid var(--line);background:var(--panel);border-radius:8px;overflow:hidden;
+}
+.panel-head{
+  height:42px;display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:0 12px;border-bottom:1px solid var(--line);background:#11161c;
+}
+.panel-title{font-size:11px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.08em}
+.panel-body{padding:12px}
+.table-wrap{overflow:auto;max-height:360px}
+table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12px}
+th{
+  position:sticky;top:0;background:#11161c;color:var(--soft);text-align:left;
+  font-size:9px;text-transform:uppercase;letter-spacing:.08em;padding:9px 10px;border-bottom:1px solid var(--line);
+}
+td{padding:8px 10px;border-bottom:1px solid #ffffff0a;color:var(--muted);vertical-align:middle}
+td.strong{color:var(--txt);font-weight:800}
+tr:hover td{background:#ffffff05}
+.variation-table th,.variation-table td{text-align:right}
+.variation-table th:first-child,.variation-table td:first-child{text-align:center}
+.variation-table td{color:#06120d;font-weight:800;border-bottom:1px solid #00000018}
+.variation-table tr.var-up.heat-1 td{background:#a8ddb0}
+.variation-table tr.var-up.heat-2 td{background:#7bcf8e}
+.variation-table tr.var-up.heat-3 td{background:#4fc171}
+.variation-table tr.var-up.heat-4 td{background:#23b65b}
+.variation-table tr.var-up.heat-5 td{background:#05a94c}
+.variation-table tr.var-up.heat-6 td{background:#009b41}
+.variation-table tr.var-down.heat-1 td{background:#ffd18a}
+.variation-table tr.var-down.heat-2 td{background:#ffb174}
+.variation-table tr.var-down.heat-3 td{background:#ff916f}
+.variation-table tr.var-down.heat-4 td{background:#f87171;color:#ffffff}
+.variation-table tr.var-down.heat-5 td{background:#e5484d;color:#ffffff}
+.variation-table tr.var-down.heat-6 td{background:#c92a2a;color:#ffffff}
+.variation-table tr.var-base td{background:#07090b;color:var(--txt);border-top:2px solid #000;border-bottom:2px solid #000}
+.variation-table tr:hover td{filter:brightness(1.06)}
+.tag{
+  display:inline-flex;height:22px;align-items:center;padding:0 7px;border-radius:5px;
+  border:1px solid var(--line);background:#10141a;font-size:10px;font-weight:800;color:var(--muted);
+}
+.tag.green{border-color:#1f7a66;color:#9df2d5;background:#0d261f}
+.tag.blue{border-color:#285d80;color:#9bd7ff;background:#10202b}
+.tag.amber{border-color:#7a5f1f;color:#ffd66b;background:#28210d}
+.tag.red{border-color:#7a2b2b;color:#ff9b9b;background:#2b1111}
+.tag.violet{border-color:#554099;color:#c9b8ff;background:#1d1930}
+.profile-bars{display:flex;flex-direction:column;gap:6px}
+.profile-row{display:grid;grid-template-columns:78px 1fr 62px;gap:9px;align-items:center;font-family:var(--mono);font-size:11px;color:var(--muted)}
+.bar-track{height:18px;background:#10141a;border:1px solid var(--line);border-radius:4px;overflow:hidden}
+.bar-fill{height:100%;background:#246b61}
+.bar-fill.poc{background:#dfad27}
+.bar-fill.value{background:#2f75a8}
+.dom-grid{display:grid;grid-template-columns:minmax(360px,1.15fr) minmax(280px,.75fr);gap:14px}
+.dom-ladder{font-family:var(--mono);font-size:12px}
+.dom-row{
+  display:grid;grid-template-columns:82px minmax(96px,1fr) 82px minmax(130px,1.05fr);
+  min-height:28px;border-bottom:1px solid #ffffff0a;align-items:stretch;
+}
+.dom-row:last-child{border-bottom:0}
+.dom-cell{display:flex;align-items:center;padding:0 9px;min-width:0;overflow:hidden}
+.dom-ask{justify-content:flex-end;color:#ffb1b1;background:#2b111120}
+.dom-bid{justify-content:flex-start;color:#96f2d7;background:#0d261f24}
+.dom-price{justify-content:center;color:var(--txt);font-weight:900;border-left:1px solid #ffffff0a;border-right:1px solid #ffffff0a}
+.dom-marks{gap:4px;flex-wrap:wrap}
+.dom-row.near .dom-price{background:#27303a}
+.dom-row.last .dom-price{background:#184433;color:#9df2d5}
+.dom-row.up .dom-price{box-shadow:inset 3px 0 0 var(--green)}
+.dom-row.down .dom-price{box-shadow:inset 3px 0 0 var(--red)}
+.dom-row.bid-level .dom-bid{background:#123125;color:#a8ffe1;font-weight:900}
+.dom-row.ask-level .dom-ask{background:#351515;color:#ffc9c9;font-weight:900}
+.dom-tag{display:inline-flex;align-items:center;max-width:100%;height:18px;padding:0 5px;border-radius:4px;border:1px solid var(--line);font-size:9px;font-weight:900;color:var(--muted);background:#10141a;white-space:nowrap}
+.dom-tag.current{border-color:#1f8a70;color:#9df2d5;background:#0d261f}
+.dom-tag.key{border-color:#7a5f1f;color:#ffd66b;background:#28210d}
+.dom-tag.res{border-color:#7a2b2b;color:#ffb1b1;background:#2b1111}
+.dom-tag.sup{border-color:#225d77;color:#9bd7ff;background:#10202b}
+.dom-side{display:grid;grid-template-rows:auto auto;gap:14px}
+.dom-tape{display:flex;flex-direction:column;gap:6px;max-height:318px;overflow:auto;font-family:var(--mono)}
+.dom-tick{display:grid;grid-template-columns:72px 74px 56px 1fr;gap:8px;align-items:center;border:1px solid var(--line);background:#10141a;border-radius:6px;padding:7px 8px;color:var(--muted);font-size:11px}
+.dom-tick strong{color:var(--txt)}
+.dom-tick.up{border-color:#1f7a66;background:#0d261f}
+.dom-tick.down{border-color:#7a2b2b;background:#2b1111}
+.dom-tick.flat{border-color:var(--line)}
+.dom-levels{display:flex;flex-direction:column;gap:7px;max-height:318px;overflow:auto}
+.dom-level{
+  display:grid;grid-template-columns:74px minmax(0,1fr) 64px;gap:8px;align-items:center;
+  border:1px solid var(--line);background:#10141a;border-radius:6px;padding:8px 9px;font-family:var(--mono);font-size:11px;
+}
+.dom-level strong{color:var(--txt)}
+.dom-level span{color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dom-level.above{border-color:#7a2b2b}
+.dom-level.below{border-color:#225d77}
+.dom-summary{display:grid;grid-template-columns:repeat(4,minmax(120px,1fr));gap:8px;margin-bottom:10px}
+.dom-summary .live-kv{padding:9px 10px}
+.small-list{display:flex;flex-direction:column;gap:9px}
+.kv{display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid #ffffff0a;padding-bottom:7px}
+.kv:last-child{border-bottom:0;padding-bottom:0}
+.kv span:first-child{font-size:11px;color:var(--muted)}
+.kv span:last-child{font-family:var(--mono);font-size:12px;color:var(--txt);font-weight:800;text-align:right}
+.warnings{display:flex;flex-direction:column;gap:8px}
+.warn-line{border:1px solid #7a5f1f;background:#28210d;color:#ffd66b;border-radius:6px;padding:8px 10px;font-size:11px;line-height:1.35}
+.source-links{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.source-links a{color:#9bd7ff;text-decoration:none;border:1px solid #285d80;background:#10202b;border-radius:5px;padding:5px 7px;font-size:10px;font-weight:800}
+.hidden{display:none!important}
+@media(max-width:1180px){
+  .layout{grid-template-columns:1fr}
+  .sidebar{max-height:none;border-right:0;border-bottom:1px solid var(--line)}
+  .cards{grid-template-columns:repeat(3,1fr)}
+  .panel-grid{grid-template-columns:1fr}
+  .dom-grid{grid-template-columns:1fr}
+  .dom-summary{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:700px){
+  .topbar{height:auto;align-items:flex-start;padding:12px;gap:10px;flex-direction:column}
+  .layout{min-height:calc(100vh - 96px)}
+  .brand-title,.brand-sub{white-space:normal}
+  .top-meta{justify-content:flex-start}
+  .field-grid{grid-template-columns:1fr}
+  .cards{grid-template-columns:1fr 1fr}
+  .chart-shell{height:340px;padding:10px}
+  .tabs{overflow:auto;padding:9px 10px}
+  .tab{white-space:nowrap}
+  .chart-head{align-items:flex-start;flex-direction:column}
+  .chart-actions,.chart-nav{justify-content:flex-start}
+  .dom-row{grid-template-columns:62px minmax(76px,1fr) 62px minmax(100px,1fr)}
+  .dom-summary{grid-template-columns:1fr}
+  .dom-tick{grid-template-columns:58px 66px 42px 1fr}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand">
+      <div class="mark">WDO</div>
+      <div>
+        <div class="brand-title">WDO Reversal Engine Quant</div>
+        <div class="brand-sub">Volatilidade, volume profile proxy, value areas e confluencia</div>
+      </div>
+    </div>
+    <div class="top-meta">
+      <span class="pill" id="file-pill">Sem CSV</span>
+      <span class="pill warn" id="rtd-pill">RTD Manual</span>
+      <span class="pill" id="date-pill">Aguardando</span>
+      <span class="pill" id="regime-pill">Sem regime</span>
+    </div>
+  </header>
+
+  <main class="layout">
+    <aside class="sidebar">
+      <section class="section">
+        <div class="section-title">Upload diario</div>
+        <div class="dropzone" id="dropzone">
+          <input class="file-input" type="file" id="csv-file" accept=".csv,text/csv">
+          <div class="file-row">
+            <div class="file-icon">CSV</div>
+            <div class="file-text">
+              <div class="file-name" id="file-name">Selecione o CSV do WDO</div>
+              <div class="file-help">Formato B3/Nelogica com OHLCV diario</div>
+            </div>
+          </div>
+          <div class="status" id="file-status"></div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-title">Janela estatistica</div>
+        <div class="window-group" id="window-group">
+          <button class="seg active" data-window="21">21 dias</button>
+          <button class="seg" data-window="45">45 dias</button>
+          <button class="seg" data-window="63">63 dias</button>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-title">Intraday atual</div>
+        <div class="live-panel">
+          <button class="seg rtd-toggle active" id="rtd-toggle" type="button">RTD Live</button>
+          <span class="pill warn" id="rtd-status">Reconectando</span>
+        </div>
+        <div class="live-grid">
+          <div class="live-kv"><span>Ativo</span><strong id="rtd-asset">WDOFUT_F_0</strong></div>
+          <div class="live-kv"><span>Hora</span><strong id="rtd-last">--</strong></div>
+          <div class="live-kv"><span>Book</span><strong id="rtd-book">--</strong></div>
+          <div class="live-kv"><span>VPJ</span><strong id="rtd-vpj">--</strong></div>
+        </div>
+        <div class="field-grid">
+          <div class="field">
+            <label for="in-open">Abertura</label>
+            <input type="number" id="in-open" step="0.5" placeholder="0.0">
+          </div>
+          <div class="field">
+            <label for="in-high">Maxima parcial</label>
+            <input type="number" id="in-high" step="0.5" placeholder="0.0">
+          </div>
+          <div class="field">
+            <label for="in-low">Minima parcial</label>
+            <input type="number" id="in-low" step="0.5" placeholder="0.0">
+          </div>
+          <div class="field">
+            <label for="in-price">Preco atual</label>
+            <input type="number" id="in-price" step="0.5" placeholder="0.0">
+          </div>
+          <div class="field">
+            <label for="in-vwap">VWAP intraday</label>
+            <input type="number" id="in-vwap" step="0.5" placeholder="opcional">
+          </div>
+          <div class="field">
+            <label for="in-volume">Volume acum.</label>
+            <input type="number" id="in-volume" step="1" placeholder="opcional">
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <button class="btn-primary" id="btn-calc" disabled>Calcular panorama</button>
+      </section>
+
+      <section class="section">
+        <div class="section-title">Camadas do grafico</div>
+        <div class="layer-grid" id="chart-layers">
+          <label class="layer-toggle"><input type="checkbox" data-layer="candles" checked> Candles</label>
+          <label class="layer-toggle"><input type="checkbox" data-layer="close" checked> Fechamento</label>
+          <label class="layer-toggle"><input type="checkbox" data-layer="current" checked> Preco atual</label>
+          <label class="layer-toggle"><input type="checkbox" data-layer="anchor" checked> VWAP/Ancora</label>
+          <label class="layer-toggle"><input type="checkbox" data-layer="poc" checked> POC</label>
+          <label class="layer-toggle"><input type="checkbox" data-layer="valueArea" checked> VAH/VAL</label>
+          <label class="layer-toggle"><input type="checkbox" data-layer="sigma" checked> Sigma</label>
+          <label class="layer-toggle"><input type="checkbox" data-layer="opening" checked> Abertura desvios</label>
+          <label class="layer-toggle"><input type="checkbox" data-layer="pocDeviations" checked> POC desvios</label>
+          <label class="layer-toggle"><input type="checkbox" data-layer="confluence" checked> Confluencias</label>
+          <label class="layer-toggle"><input type="checkbox" data-layer="percentPrevClose"> Var % D-1</label>
+          <label class="layer-toggle"><input type="checkbox" data-layer="percentOpening"> Var % Abertura</label>
+          <label class="layer-toggle"><input type="checkbox" data-layer="percentPoc"> Var % POC</label>
+          <label class="layer-toggle"><input type="checkbox" data-layer="previousDay" checked> Dia anterior</label>
+          <label class="layer-toggle"><input type="checkbox" data-layer="avwap" checked> AVWAP</label>
+          <label class="layer-toggle"><input type="checkbox" data-layer="sr" checked> Sup/Res</label>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="note">
+          <strong>POC/VAH/VAL:</strong> com CSV diario, o volume por preco e aproximado por distribuicao uniforme no range do candle. Para POC real, use dados intraday/tick em uma versao futura.
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-title">Referencias quant</div>
+        <div class="source-links">
+          <a href="https://www.nber.org/papers/w7613" target="_blank" rel="noopener">Lo et al.</a>
+          <a href="https://ideas.repec.org/a/ucp/jnlbus/v73y2000i3p477-91.html" target="_blank" rel="noopener">Yang-Zhang</a>
+          <a href="https://academic.oup.com/jfec/article/12/1/47/816163" target="_blank" rel="noopener">Cont et al.</a>
+          <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=1695596" target="_blank" rel="noopener">VPIN</a>
+          <a href="https://www.econometricsociety.org/publications/econometrica/2000/09/01/reality-check-data-snooping" target="_blank" rel="noopener">White</a>
+        </div>
+      </section>
+    </aside>
+
+    <section class="workspace">
+      <div class="chart-head">
+        <div>
+          <div class="chart-title" id="chart-title">Panorama de pontos de interesse</div>
+        </div>
+        <div class="chart-actions">
+          <span class="pill" id="window-pill">Janela 21d</span>
+          <span class="pill" id="anchor-pill">Ancora: --</span>
+          <span class="pill" id="score-pill">Score: --</span>
+          <span class="pill" id="range-pill">Grafico: --</span>
+          <div class="chart-nav" aria-label="Navegacao do grafico">
+            <button class="nav-btn" id="chart-prev" type="button" title="Voltar dias no grafico">&lt;</button>
+            <button class="nav-btn" id="chart-next" type="button" title="Avancar dias no grafico">&gt;</button>
+            <button class="nav-btn wide" id="chart-current" type="button" title="Ir para o dia atual">Atual</button>
+            <button class="nav-btn wide" id="chart-all" type="button" title="Mostrar toda a janela">Tudo</button>
+            <button class="nav-btn" id="chart-zoom-in" type="button" title="Aproximar">+</button>
+            <button class="nav-btn" id="chart-zoom-out" type="button" title="Afastar">-</button>
+            <button class="nav-btn" id="price-zoom-in" type="button" title="Aproximar escala de preco">Y+</button>
+            <button class="nav-btn" id="price-zoom-out" type="button" title="Afastar escala de preco">Y-</button>
+            <button class="nav-btn wide" id="price-auto" type="button" title="Auto ajustar escala de preco">Auto</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="chart-shell">
+        <div class="empty" id="empty-state">Carregue o CSV e calcule para visualizar niveis, volume profile proxy e confluencias.</div>
+        <canvas id="main-chart" class="hidden"></canvas>
+      </div>
+
+      <div class="cards" id="cards"></div>
+
+      <nav class="tabs" id="tabs">
+        <button class="tab active" data-tab="dom">DOM</button>
+        <button class="tab" data-tab="levels">Niveis</button>
+        <button class="tab" data-tab="openmap">Abertura</button>
+        <button class="tab" data-tab="pocmap">POC</button>
+        <button class="tab" data-tab="percentmap">Variacao %</button>
+        <button class="tab" data-tab="profile">Volume Profile</button>
+        <button class="tab" data-tab="confluence">Confluencia</button>
+        <button class="tab" data-tab="backtest">Backtest Proxy</button>
+      </nav>
+
+      <div class="content">
+        <section class="tab-panel" id="panel-dom">
+          <div class="dom-summary">
+            <div class="live-kv"><span>Ultimo</span><strong id="dom-last-price">--</strong></div>
+            <div class="live-kv"><span>Direcao</span><strong id="dom-direction">--</strong></div>
+            <div class="live-kv"><span>Spread</span><strong id="dom-spread">--</strong></div>
+            <div class="live-kv"><span>Pressao book</span><strong id="dom-pressure">--</strong></div>
+          </div>
+          <div class="dom-grid">
+            <div class="panel">
+              <div class="panel-head">
+                <div class="panel-title">DOM de preco tick a tick</div>
+                <span class="tag green">RTD Live</span>
+              </div>
+              <div class="dom-ladder" id="dom-ladder"></div>
+            </div>
+            <div class="dom-side">
+              <div class="panel">
+                <div class="panel-head"><div class="panel-title">Tape recente</div></div>
+                <div class="panel-body">
+                  <div class="dom-tape" id="dom-tape"></div>
+                </div>
+              </div>
+              <div class="panel">
+                <div class="panel-head"><div class="panel-title">Pontos principais proximos</div></div>
+                <div class="panel-body">
+                  <div class="dom-levels" id="dom-key-levels"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="tab-panel hidden" id="panel-levels">
+          <div class="panel-grid">
+            <div class="panel">
+              <div class="panel-head">
+                <div class="panel-title">Pontos de interesse ranqueados</div>
+                <span class="tag amber">proxy diario</span>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Preco</th><th>Tipo</th><th>Forca</th><th>Dist.</th><th>Fonte</th><th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody id="levels-body"></tbody>
+                </table>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="panel-head"><div class="panel-title">Diagnostico</div></div>
+              <div class="panel-body">
+                <div class="warnings" id="warnings"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="tab-panel hidden" id="panel-openmap">
+          <div class="panel-grid">
+            <div class="panel">
+              <div class="panel-head">
+                <div class="panel-title">Niveis pela abertura do dia</div>
+                <span class="tag blue">Abertura +/- 1 a 4 desvios</span>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Lado</th><th>Desvio</th><th>Preco</th><th>Dist. abertura</th><th>Dist. atual</th><th>Referencia</th>
+                    </tr>
+                  </thead>
+                  <tbody id="opening-body"></tbody>
+                </table>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="panel-head"><div class="panel-title">Base do calculo</div></div>
+              <div class="panel-body">
+                <div class="small-list" id="opening-kv"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="tab-panel hidden" id="panel-pocmap">
+          <div class="panel-grid">
+            <div class="panel">
+              <div class="panel-head">
+                <div class="panel-title">Niveis pelo POC</div>
+                <span class="tag amber">POC proxy +/- 1 a 4 desvios</span>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Lado</th><th>Desvio</th><th>Preco</th><th>Dist. POC</th><th>Dist. atual</th><th>Referencia</th>
+                    </tr>
+                  </thead>
+                  <tbody id="pocdev-body"></tbody>
+                </table>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="panel-head"><div class="panel-title">Base do calculo</div></div>
+              <div class="panel-body">
+                <div class="small-list" id="pocdev-kv"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="tab-panel hidden" id="panel-percentmap">
+          <div class="panel-grid">
+            <div class="panel">
+              <div class="panel-head">
+                <div class="panel-title">Variacao percentual por referencia</div>
+                <span class="tag blue">-3% a +3%</span>
+              </div>
+              <div class="table-wrap">
+                <table class="variation-table">
+                  <thead>
+                    <tr>
+                      <th>Variacao</th><th>Fechamento anterior</th><th>Abertura atual</th><th>POC proxy</th>
+                    </tr>
+                  </thead>
+                  <tbody id="percent-body"></tbody>
+                </table>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="panel-head"><div class="panel-title">Base do calculo</div></div>
+              <div class="panel-body">
+                <div class="small-list" id="percent-kv"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="tab-panel hidden" id="panel-profile">
+          <div class="panel-grid">
+            <div class="panel">
+              <div class="panel-head">
+                <div class="panel-title">Volume Profile Proxy</div>
+                <span class="tag amber">POC/VA 70%</span>
+              </div>
+              <div class="panel-body">
+                <div class="profile-bars" id="profile-bars"></div>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="panel-head"><div class="panel-title">Value Area</div></div>
+              <div class="panel-body">
+                <div class="small-list" id="profile-kv"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="tab-panel hidden" id="panel-confluence">
+          <div class="panel-grid">
+            <div class="panel">
+              <div class="panel-head"><div class="panel-title">Ranking de confluencia</div></div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Rank</th><th>Preco</th><th>Score</th><th>Tipo</th><th>Janelas/Refs</th><th>Evidencia</th>
+                    </tr>
+                  </thead>
+                  <tbody id="confluence-body"></tbody>
+                </table>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="panel-head"><div class="panel-title">Contexto de players</div></div>
+              <div class="panel-body">
+                <div class="small-list" id="player-kv"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="tab-panel hidden" id="panel-backtest">
+          <div class="panel-grid">
+            <div class="panel">
+              <div class="panel-head">
+                <div class="panel-title">Teste walk-forward proxy</div>
+                <span class="tag blue">sem look-ahead</span>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Nivel</th><th>Amostras</th><th>Toques</th><th>Reversoes</th><th>Taxa</th><th>Observacao</th>
+                    </tr>
+                  </thead>
+                  <tbody id="backtest-body"></tbody>
+                </table>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="panel-head"><div class="panel-title">Comparacao 21/45/63</div></div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Janela</th><th>GK</th><th>YZ</th><th>ATR</th><th>POC proxy</th><th>VR(5)</th>
+                    </tr>
+                  </thead>
+                  <tbody id="compare-body"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+"use strict";
+
+const DEFAULT_CHART_LAYERS = {
+  candles: true,
+  close: true,
+  current: true,
+  anchor: true,
+  poc: true,
+  valueArea: true,
+  sigma: true,
+  opening: true,
+  pocDeviations: true,
+  confluence: true,
+  percentPrevClose: false,
+  percentOpening: false,
+  percentPoc: false,
+  previousDay: true,
+  avwap: true,
+  sr: true,
+};
+
+function loadChartLayers() {
+  try {
+    const raw = globalThis.localStorage?.getItem("wdo-chart-layers");
+    if (!raw) return { ...DEFAULT_CHART_LAYERS };
+    return { ...DEFAULT_CHART_LAYERS, ...JSON.parse(raw) };
+  } catch (_) {
+    return { ...DEFAULT_CHART_LAYERS };
+  }
+}
+
+function saveChartLayers() {
+  try {
+    globalThis.localStorage?.setItem("wdo-chart-layers", JSON.stringify(state.chartLayers));
+  } catch (_) {}
+}
+
+const state = {
+  bars: [],
+  uploadedCount: 0,
+  selectedWindow: 21,
+  latest: null,
+  result: null,
+  chart: null,
+  rtd: {
+    enabled: true,
+    socket: null,
+    reconnectTimer: null,
+    recalcTimer: null,
+    lastSnapshot: null,
+    ticks: [],
+    lastPrice: null,
+    tickSize: 0.5,
+  },
+  chartLayers: loadChartLayers(),
+  chartView: {
+    start: 0,
+    size: 16,
+    drag: null,
+  },
+  priceScale: {
+    factor: 1,
+  },
+};
+
+const COLORS = {
+  grid: "#30384455",
+  text: "#a9b3bf",
+  price: "#eef2f6",
+  vwap: "#12b886",
+  poc: "#fab005",
+  vah: "#4dabf7",
+  val: "#4dabf7",
+  resistance: "#fa5252",
+  support: "#3bc9db",
+  avwap: "#9775fa",
+  current: "#f06595",
+};
+
+const SOURCE_WEIGHTS = {
+  VWAP: 24,
+  POC: 26,
+  VAH: 19,
+  VAL: 19,
+  HVN: 16,
+  LVN: 10,
+  Sigma: 14,
+  SR: 20,
+  AVWAP: 18,
+  D1: 14,
+  Open: 16,
+  Percent: 10,
+  Round: 7,
+};
+
+const PERCENT_VARIATIONS = [3, 2.5, 2, 1.5, 1, 0.5, 0, -0.5, -1, -1.5, -2, -2.5, -3];
+
+const refs = {
+  file: document.getElementById("csv-file"),
+  dropzone: document.getElementById("dropzone"),
+  fileName: document.getElementById("file-name"),
+  fileStatus: document.getElementById("file-status"),
+  filePill: document.getElementById("file-pill"),
+  rtdPill: document.getElementById("rtd-pill"),
+  rtdToggle: document.getElementById("rtd-toggle"),
+  rtdStatus: document.getElementById("rtd-status"),
+  rtdAsset: document.getElementById("rtd-asset"),
+  rtdLast: document.getElementById("rtd-last"),
+  rtdBook: document.getElementById("rtd-book"),
+  rtdVpj: document.getElementById("rtd-vpj"),
+  datePill: document.getElementById("date-pill"),
+  regimePill: document.getElementById("regime-pill"),
+  windowPill: document.getElementById("window-pill"),
+  anchorPill: document.getElementById("anchor-pill"),
+  scorePill: document.getElementById("score-pill"),
+  rangePill: document.getElementById("range-pill"),
+  empty: document.getElementById("empty-state"),
+  canvas: document.getElementById("main-chart"),
+  cards: document.getElementById("cards"),
+  domLastPrice: document.getElementById("dom-last-price"),
+  domDirection: document.getElementById("dom-direction"),
+  domSpread: document.getElementById("dom-spread"),
+  domPressure: document.getElementById("dom-pressure"),
+  domLadder: document.getElementById("dom-ladder"),
+  domTape: document.getElementById("dom-tape"),
+  domKeyLevels: document.getElementById("dom-key-levels"),
+  btn: document.getElementById("btn-calc"),
+  levelsBody: document.getElementById("levels-body"),
+  openingBody: document.getElementById("opening-body"),
+  openingKv: document.getElementById("opening-kv"),
+  pocdevBody: document.getElementById("pocdev-body"),
+  pocdevKv: document.getElementById("pocdev-kv"),
+  percentBody: document.getElementById("percent-body"),
+  percentKv: document.getElementById("percent-kv"),
+  confluenceBody: document.getElementById("confluence-body"),
+  backtestBody: document.getElementById("backtest-body"),
+  compareBody: document.getElementById("compare-body"),
+  warnings: document.getElementById("warnings"),
+  profileBars: document.getElementById("profile-bars"),
+  profileKv: document.getElementById("profile-kv"),
+  playerKv: document.getElementById("player-kv"),
+  chartPrev: document.getElementById("chart-prev"),
+  chartNext: document.getElementById("chart-next"),
+  chartCurrent: document.getElementById("chart-current"),
+  chartAll: document.getElementById("chart-all"),
+  chartZoomIn: document.getElementById("chart-zoom-in"),
+  chartZoomOut: document.getElementById("chart-zoom-out"),
+  priceZoomIn: document.getElementById("price-zoom-in"),
+  priceZoomOut: document.getElementById("price-zoom-out"),
+  priceAuto: document.getElementById("price-auto"),
+  chartLayers: document.getElementById("chart-layers"),
+  inputs: {
+    open: document.getElementById("in-open"),
+    high: document.getElementById("in-high"),
+    low: document.getElementById("in-low"),
+    price: document.getElementById("in-price"),
+    vwap: document.getElementById("in-vwap"),
+    volume: document.getElementById("in-volume"),
+  },
+};
+
+function showStatus(el, type, message) {
+  el.className = `status show ${type}`;
+  el.innerHTML = message;
+}
+
+function setPill(el, type, text) {
+  el.className = `pill ${type || ""}`.trim();
+  el.textContent = text;
+}
+
+function fmt(n, dec = 1) {
+  if (!Number.isFinite(n)) return "--";
+  return n.toLocaleString("pt-BR", { minimumFractionDigits: dec, maximumFractionDigits: dec });
+}
+
+function fmtPct(n, dec = 1) {
+  if (!Number.isFinite(n)) return "--";
+  return `${n.toLocaleString("pt-BR", { minimumFractionDigits: dec, maximumFractionDigits: dec })}%`;
+}
+
+function isoDate(d) {
+  if (!d) return "--";
+  return d.toISOString().slice(0, 10);
+}
+
+function brDate(d) {
+  if (!d) return "--";
+  return d.toLocaleDateString("pt-BR", { timeZone: "UTC" });
+}
+
+function normHeader(s) {
+  return String(s || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9]/g, "")
+    .toLowerCase();
+}
+
+function detectDelimiter(text) {
+  const sample = text.split(/\r?\n/).slice(0, 8);
+  const score = { ";": 0, "\t": 0, ",": 0 };
+  sample.forEach(line => {
+    score[";"] += (line.match(/;/g) || []).length;
+    score["\t"] += (line.match(/\t/g) || []).length;
+    score[","] += (line.match(/,/g) || []).length;
+  });
+  if (score[";"] >= score["\t"] && score[";"] >= 2) return ";";
+  if (score["\t"] >= 2) return "\t";
+  return ",";
+}
+
+function splitCsvLine(line, delimiter) {
+  const out = [];
+  let cur = "";
+  let quoted = false;
+  for (let i = 0; i < line.length; i += 1) {
+    const ch = line[i];
+    if (ch === '"') {
+      if (quoted && line[i + 1] === '"') {
+        cur += '"';
+        i += 1;
+      } else {
+        quoted = !quoted;
+      }
+    } else if (ch === delimiter && !quoted) {
+      out.push(cur.trim());
+      cur = "";
+    } else {
+      cur += ch;
+    }
+  }
+  out.push(cur.trim());
+  return out;
+}
+
+function parseLocaleNumber(value) {
+  if (typeof value === "number") return value;
+  let s = String(value || "").trim();
+  if (!s) return NaN;
+  s = s.replace(/\s/g, "").replace(/[^\d,.\-]/g, "");
+  if (!s || s === "-" || s === "." || s === ",") return NaN;
+  const comma = s.lastIndexOf(",");
+  const dot = s.lastIndexOf(".");
+  if (comma >= 0 && dot >= 0) {
+    if (comma > dot) s = s.replace(/\./g, "").replace(",", ".");
+    else s = s.replace(/,/g, "");
+  } else if (comma >= 0) {
+    s = s.replace(/\./g, "").replace(",", ".");
+  } else if ((s.match(/\./g) || []).length > 1) {
+    s = s.replace(/\./g, "");
+  } else if (/^\d{1,3}(\.\d{3})+$/.test(s)) {
+    s = s.replace(/\./g, "");
+  }
+  return Number.parseFloat(s);
+}
+
+function parseDate(value) {
+  const s = String(value || "").trim();
+  let m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (m) return new Date(Date.UTC(+m[3], +m[2] - 1, +m[1]));
+  m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (m) return new Date(Date.UTC(+m[1], +m[2] - 1, +m[3]));
+  return null;
+}
+
+function mapHeader(row) {
+  const map = {};
+  row.forEach((cell, idx) => {
+    const h = normHeader(cell);
+    if (h === "ativo" || h === "symbol" || h === "ticker") map.ativo = idx;
+    else if (h === "data" || h === "date") map.date = idx;
+    else if (h.includes("abertura") || h === "open") map.open = idx;
+    else if (h.includes("max") || h === "high" || h === "mximo") map.high = idx;
+    else if (h.includes("min") || h === "low" || h === "mnimo") map.low = idx;
+    else if (h.includes("fech") || h === "close" || h === "ultimo") map.close = idx;
+    else if (h.includes("volume") || h === "vol") map.volume = idx;
+    else if (h.includes("quant") || h === "qty" || h === "trades") map.quantity = idx;
+  });
+  return map;
+}
+
+function rowLooksLikeHeader(row) {
+  const joined = row.map(normHeader).join("|");
+  return /(data|abertura|open|fech|close|volume|ativo)/.test(joined);
+}
+
+function parseDailyCsv(text) {
+  const delimiter = detectDelimiter(text);
+  const rows = text
+    .replace(/^\uFEFF/, "")
+    .split(/\r?\n/)
+    .map(line => line.trim())
+    .filter(Boolean)
+    .map(line => splitCsvLine(line, delimiter));
+  if (!rows.length) return { ok: false, message: "CSV vazio." };
+
+  let header = {};
+  let start = 0;
+  if (rowLooksLikeHeader(rows[0])) {
+    header = mapHeader(rows[0]);
+    start = 1;
+  }
+
+  const bars = [];
+  const errors = [];
+  for (let i = start; i < rows.length; i += 1) {
+    const r = rows[i];
+    let ativo = "WDO";
+    let date;
+    let open;
+    let high;
+    let low;
+    let close;
+    let volume;
+    let quantity;
+
+    if (header.date !== undefined) {
+      ativo = header.ativo !== undefined ? r[header.ativo] || ativo : ativo;
+      date = parseDate(r[header.date]);
+      open = parseLocaleNumber(r[header.open]);
+      high = parseLocaleNumber(r[header.high]);
+      low = parseLocaleNumber(r[header.low]);
+      close = parseLocaleNumber(r[header.close]);
+      volume = parseLocaleNumber(r[header.volume]);
+      quantity = parseLocaleNumber(r[header.quantity]);
+    } else {
+      const d0 = parseDate(r[0]);
+      const d1 = parseDate(r[1]);
+      if (d1 && r.length >= 6) {
+        ativo = r[0] || ativo;
+        date = d1;
+        open = parseLocaleNumber(r[2]);
+        high = parseLocaleNumber(r[3]);
+        low = parseLocaleNumber(r[4]);
+        close = parseLocaleNumber(r[5]);
+        volume = parseLocaleNumber(r[6]);
+        quantity = parseLocaleNumber(r[7]);
+      } else if (d0 && r.length >= 5) {
+        date = d0;
+        open = parseLocaleNumber(r[1]);
+        high = parseLocaleNumber(r[2]);
+        low = parseLocaleNumber(r[3]);
+        close = parseLocaleNumber(r[4]);
+        volume = parseLocaleNumber(r[5]);
+        quantity = parseLocaleNumber(r[6]);
+      }
+    }
+
+    const valid = date && [open, high, low, close].every(Number.isFinite) &&
+      open > 0 && high > 0 && low > 0 && close > 0 &&
+      high >= low && open <= high * 1.001 && open >= low * 0.999 &&
+      close <= high * 1.001 && close >= low * 0.999;
+    if (!valid) {
+      if (errors.length < 5) errors.push(i + 1);
+      continue;
+    }
+    bars.push({
+      ativo: String(ativo || "WDO").trim(),
+      date,
+      dateKey: isoDate(date),
+      open,
+      high,
+      low,
+      close,
+      volume: Number.isFinite(volume) ? volume : null,
+      quantity: Number.isFinite(quantity) ? quantity : null,
+    });
+  }
+
+  const byDate = new Map();
+  bars.forEach(bar => byDate.set(bar.dateKey, bar));
+  const deduped = Array.from(byDate.values()).sort((a, b) => a.date - b.date);
+
+  if (deduped.length < 21) {
+    return { ok: false, message: `Apenas ${deduped.length} pregoes validos. Minimo: 21.` };
+  }
+  return {
+    ok: true,
+    delimiter,
+    bars: deduped,
+    errors,
+    duplicates: bars.length - deduped.length,
+  };
+}
+
+function decodeCsv(buffer) {
+  const utf8 = new TextDecoder("utf-8", { fatal: false }).decode(buffer);
+  const cp1252 = new TextDecoder("windows-1252").decode(buffer);
+  const badUtf8 = (utf8.match(/\uFFFD/g) || []).length;
+  if (badUtf8 > 0) return { text: cp1252, encoding: "windows-1252" };
+  return { text: utf8, encoding: "utf-8" };
+}
+
+function average(arr) {
+  return arr.length ? arr.reduce((s, v) => s + v, 0) / arr.length : NaN;
+}
+
+function stdev(arr, sample = true) {
+  if (arr.length < 2) return 0;
+  const m = average(arr);
+  const denom = sample ? arr.length - 1 : arr.length;
+  return Math.sqrt(arr.reduce((s, v) => s + (v - m) ** 2, 0) / denom);
+}
+
+function percentileRank(values, x) {
+  if (!values.length || !Number.isFinite(x)) return NaN;
+  return values.filter(v => v <= x).length / values.length * 100;
+}
+
+function median(values) {
+  if (!values.length) return NaN;
+  const s = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(s.length / 2);
+  return s.length % 2 ? s[mid] : (s[mid - 1] + s[mid]) / 2;
+}
+
+function quantile(values, q) {
+  if (!values.length) return NaN;
+  const s = [...values].sort((a, b) => a - b);
+  const pos = (s.length - 1) * q;
+  const base = Math.floor(pos);
+  const rest = pos - base;
+  if (s[base + 1] !== undefined) return s[base] + rest * (s[base + 1] - s[base]);
+  return s[base];
+}
+
+function clamp(n, min, max) {
+  return Math.max(min, Math.min(max, n));
+}
+
+function typicalPrice(b) {
+  return (b.high + b.low + b.close) / 3;
+}
+
+function barVolume(b) {
+  return Number.isFinite(b.volume) && b.volume > 0
+    ? b.volume
+    : Number.isFinite(b.quantity) && b.quantity > 0
+      ? b.quantity
+      : 1;
+}
+
+function calcGarmanKlass(bars) {
+  const terms = bars.map(b => {
+    const t1 = 0.5 * Math.log(b.high / b.low) ** 2;
+    const t2 = (2 * Math.log(2) - 1) * Math.log(b.close / b.open) ** 2;
+    return Math.max(0, t1 - t2);
+  });
+  const ratio = Math.sqrt(average(terms));
+  const price = average(bars.map(b => b.close));
+  return { ratio, points: ratio * price };
+}
+
+function calcParkinson(bars) {
+  const ratio = Math.sqrt(average(bars.map(b => Math.log(b.high / b.low) ** 2)) / (4 * Math.log(2)));
+  const price = average(bars.map(b => b.close));
+  return { ratio, points: ratio * price };
+}
+
+function calcRogersSatchell(bars) {
+  const terms = bars.map(b =>
+    Math.log(b.high / b.open) * Math.log(b.high / b.close) +
+    Math.log(b.low / b.open) * Math.log(b.low / b.close)
+  );
+  const ratio = Math.sqrt(Math.max(0, average(terms)));
+  const price = average(bars.map(b => b.close));
+  return { ratio, points: ratio * price };
+}
+
+function calcYangZhang(bars) {
+  if (bars.length < 3) return { ratio: 0, points: 0 };
+  const overnight = [];
+  const openClose = [];
+  const rs = [];
+  for (let i = 1; i < bars.length; i += 1) {
+    overnight.push(Math.log(bars[i].open / bars[i - 1].close));
+    openClose.push(Math.log(bars[i].close / bars[i].open));
+    rs.push(
+      Math.log(bars[i].high / bars[i].open) * Math.log(bars[i].high / bars[i].close) +
+      Math.log(bars[i].low / bars[i].open) * Math.log(bars[i].low / bars[i].close)
+    );
+  }
+  const n = bars.length;
+  const k = 0.34 / (1.34 + (n + 1) / (n - 1));
+  const variance = stdev(overnight) ** 2 + k * stdev(openClose) ** 2 + (1 - k) * average(rs);
+  const ratio = Math.sqrt(Math.max(0, variance));
+  const price = average(bars.map(b => b.close));
+  return { ratio, points: ratio * price };
+}
+
+function calcCloseToClose(bars) {
+  const rets = [];
+  for (let i = 1; i < bars.length; i += 1) rets.push(Math.log(bars[i].close / bars[i - 1].close));
+  const ratio = stdev(rets);
+  const price = average(bars.map(b => b.close));
+  return { ratio, points: ratio * price };
+}
+
+function trueRanges(bars) {
+  return bars.map((b, i) => {
+    if (i === 0) return b.high - b.low;
+    const prevClose = bars[i - 1].close;
+    return Math.max(b.high - b.low, Math.abs(b.high - prevClose), Math.abs(b.low - prevClose));
+  });
+}
+
+function calcATR(bars) {
+  const trs = trueRanges(bars);
+  const current = trs[trs.length - 1];
+  return {
+    value: average(trs),
+    median: median(trs),
+    current,
+    percentile: percentileRank(trs, current),
+    trs,
+  };
+}
+
+function chooseBinWidth(range) {
+  const rough = range / 56;
+  const steps = [0.5, 1, 2.5, 5, 10, 12.5, 25, 50, 100];
+  return steps.find(step => step >= rough) || 100;
+}
+
+function volumeProfileProxy(bars) {
+  const minPrice = Math.min(...bars.map(b => b.low));
+  const maxPrice = Math.max(...bars.map(b => b.high));
+  const binWidth = chooseBinWidth(maxPrice - minPrice);
+  const start = Math.floor(minPrice / binWidth) * binWidth;
+  const end = Math.ceil(maxPrice / binWidth) * binWidth;
+  const bins = [];
+  for (let p = start; p <= end; p += binWidth) {
+    bins.push({ low: p, high: p + binWidth, price: p + binWidth / 2, volume: 0, inValue: false });
+  }
+  bars.forEach(b => {
+    const vol = barVolume(b);
+    const width = Math.max(b.high - b.low, binWidth);
+    bins.forEach(bin => {
+      const overlap = Math.max(0, Math.min(b.high, bin.high) - Math.max(b.low, bin.low));
+      if (overlap > 0) bin.volume += vol * (overlap / width);
+    });
+  });
+  const total = bins.reduce((s, b) => s + b.volume, 0);
+  const pocIndex = bins.reduce((best, b, i) => b.volume > bins[best].volume ? i : best, 0);
+  const poc = bins[pocIndex];
+
+  let included = new Set([pocIndex]);
+  let acc = poc.volume;
+  let left = pocIndex - 1;
+  let right = pocIndex + 1;
+  while (acc < total * 0.70 && (left >= 0 || right < bins.length)) {
+    const lv = left >= 0 ? bins[left].volume : -1;
+    const rv = right < bins.length ? bins[right].volume : -1;
+    if (rv >= lv) {
+      included.add(right);
+      acc += rv;
+      right += 1;
+    } else {
+      included.add(left);
+      acc += lv;
+      left -= 1;
+    }
+  }
+  included.forEach(i => { if (bins[i]) bins[i].inValue = true; });
+  const valueBins = bins.filter(b => b.inValue);
+  const vah = Math.max(...valueBins.map(b => b.high));
+  const val = Math.min(...valueBins.map(b => b.low));
+
+  const local = bins.map((b, i) => ({
+    ...b,
+    rank: b.volume / Math.max(1, poc.volume),
+    isHvn: i > 0 && i < bins.length - 1 && b.volume >= bins[i - 1].volume && b.volume >= bins[i + 1].volume && b.volume > poc.volume * 0.45,
+    isLvn: i > 0 && i < bins.length - 1 && b.volume <= bins[i - 1].volume && b.volume <= bins[i + 1].volume && b.volume < poc.volume * 0.35,
+  }));
+  const hvn = local.filter(b => b.isHvn).sort((a, b) => b.volume - a.volume).slice(0, 5);
+  const lvn = local.filter(b => b.isLvn).sort((a, b) => a.volume - b.volume).slice(0, 5);
+  return { bins: local, binWidth, total, poc, pocIndex, vah, val, hvn, lvn };
+}
+
+function detectPivots(bars, span = 2) {
+  const pivots = [];
+  for (let i = span; i < bars.length - span; i += 1) {
+    const b = bars[i];
+    let high = true;
+    let low = true;
+    for (let j = i - span; j <= i + span; j += 1) {
+      if (j === i) continue;
+      if (bars[j].high > b.high) high = false;
+      if (bars[j].low < b.low) low = false;
+    }
+    if (high) pivots.push({ price: b.high, type: "resistencia", source: "Pivo high", index: i, weight: 1.4 });
+    if (low) pivots.push({ price: b.low, type: "suporte", source: "Pivo low", index: i, weight: 1.4 });
+  }
+  return pivots;
+}
+
+function detectRejections(bars) {
+  const out = [];
+  bars.forEach((b, index) => {
+    const body = Math.max(Math.abs(b.close - b.open), 0.5);
+    const upper = b.high - Math.max(b.open, b.close);
+    const lower = Math.min(b.open, b.close) - b.low;
+    if (upper > body * 1.15) out.push({ price: b.high, type: "resistencia", source: "Rejeicao pavio", index, weight: 1.1 + upper / body * 0.12 });
+    if (lower > body * 1.15) out.push({ price: b.low, type: "suporte", source: "Rejeicao pavio", index, weight: 1.1 + lower / body * 0.12 });
+  });
+  return out;
+}
+
+function detectRoundLevels(minPrice, maxPrice, price, atr) {
+  const out = [];
+  const grids = [25, 50, 100];
+  grids.forEach(grid => {
+    const start = Math.ceil(minPrice / grid) * grid;
+    for (let p = start; p <= maxPrice; p += grid) {
+      if (Math.abs(p - price) <= atr * 2.2) {
+        out.push({ price: p, type: p >= price ? "resistencia" : "suporte", source: `${grid} pts`, index: 0, weight: grid === 100 ? 1.1 : 0.7 });
+      }
+    }
+  });
+  return out;
+}
+
+function supportResistanceEngine(bars, price, sigma, atrValue) {
+  const minPrice = Math.min(...bars.map(b => b.low));
+  const maxPrice = Math.max(...bars.map(b => b.high));
+  const candidates = [
+    ...detectPivots(bars, 2),
+    ...detectRejections(bars),
+    ...detectRoundLevels(minPrice, maxPrice, price, atrValue),
+  ].sort((a, b) => a.price - b.price);
+  const tolerance = Math.max(5, sigma * 0.16, atrValue * 0.10);
+  const clusters = [];
+  candidates.forEach(c => {
+    const last = clusters[clusters.length - 1];
+    if (last && Math.abs(c.price - last.price) <= tolerance) {
+      last.items.push(c);
+      last.price = average(last.items.map(x => x.price));
+    } else {
+      clusters.push({ price: c.price, items: [c] });
+    }
+  });
+
+  return clusters.map(cluster => {
+    const sources = [...new Set(cluster.items.map(i => i.source))];
+    const supportWeight = cluster.items.filter(i => i.type === "suporte").reduce((s, i) => s + i.weight, 0);
+    const resistWeight = cluster.items.filter(i => i.type === "resistencia").reduce((s, i) => s + i.weight, 0);
+    const type = Math.abs(supportWeight - resistWeight) < 0.2 ? "misto" : supportWeight > resistWeight ? "suporte" : "resistencia";
+    const touches = bars.filter(b => cluster.price >= b.low - tolerance && cluster.price <= b.high + tolerance).length;
+    const rejections = bars.filter(b => {
+      if (type === "suporte") return b.low <= cluster.price + tolerance && b.close > cluster.price;
+      if (type === "resistencia") return b.high >= cluster.price - tolerance && b.close < cluster.price;
+      return cluster.price >= b.low && cluster.price <= b.high;
+    }).length;
+    const recency = Math.max(...cluster.items.map(i => i.index)) / Math.max(1, bars.length - 1);
+    const raw = supportWeight + resistWeight;
+    const strength = clamp(18 + touches * 7 + rejections * 5 + Math.log1p(raw) * 10 + recency * 12, 0, 100);
+    return {
+      price: cluster.price,
+      type,
+      strength,
+      touches,
+      rejections,
+      sources,
+      count: cluster.items.length,
+    };
+  }).sort((a, b) => b.strength - a.strength).slice(0, 12);
+}
+
+function anchoredVWAPs(bars, pivots) {
+  const anchors = [{ label: "Inicio janela", index: 0 }];
+  const pivotHighs = pivots.filter(p => p.type === "resistencia").sort((a, b) => b.index - a.index);
+  const pivotLows = pivots.filter(p => p.type === "suporte").sort((a, b) => b.index - a.index);
+  if (pivotHighs[0]) anchors.push({ label: "Ultimo pivo high", index: pivotHighs[0].index });
+  if (pivotLows[0]) anchors.push({ label: "Ultimo pivo low", index: pivotLows[0].index });
+  const maxVolIndex = bars.reduce((best, b, i) => barVolume(b) > barVolume(bars[best]) ? i : best, 0);
+  anchors.push({ label: "Maior volume", index: maxVolIndex });
+
+  const unique = [];
+  const seen = new Set();
+  anchors.forEach(a => {
+    if (!seen.has(a.index)) {
+      seen.add(a.index);
+      unique.push(a);
+    }
+  });
+
+  return unique.map(anchor => {
+    let pv = 0;
+    let vol = 0;
+    for (let i = anchor.index; i < bars.length; i += 1) {
+      const v = barVolume(bars[i]);
+      pv += typicalPrice(bars[i]) * v;
+      vol += v;
+    }
+    return {
+      label: anchor.label,
+      index: anchor.index,
+      date: bars[anchor.index].date,
+      price: pv / Math.max(vol, 1),
+    };
+  });
+}
+
+function varianceRatio(bars, q = 5) {
+  const rets = [];
+  for (let i = 1; i < bars.length; i += 1) rets.push(Math.log(bars[i].close / bars[i - 1].close));
+  if (rets.length < q + 2) return NaN;
+  const one = stdev(rets, false) ** 2;
+  const qrets = [];
+  for (let i = q; i < bars.length; i += 1) qrets.push(Math.log(bars[i].close / bars[i - q].close));
+  const qvar = stdev(qrets, false) ** 2;
+  return qvar / (q * one);
+}
+
+function linearSlopeNormalized(bars, sigma) {
+  const y = bars.map(b => b.close);
+  const n = y.length;
+  const xMean = (n - 1) / 2;
+  const yMean = average(y);
+  let num = 0;
+  let den = 0;
+  for (let i = 0; i < n; i += 1) {
+    num += (i - xMean) * (y[i] - yMean);
+    den += (i - xMean) ** 2;
+  }
+  const slope = den ? num / den : 0;
+  return { slope, normalized: slope * n / Math.max(sigma, 1) };
+}
+
+function liquidityContext(bars, intraday) {
+  const vols = bars.map(barVolume);
+  const ranges = trueRanges(bars);
+  const latest = bars[bars.length - 1];
+  const returns = bars.slice(1).map((b, i) => Math.abs(Math.log(b.close / bars[i].close)));
+  const amihudSeries = returns.map((r, i) => r / Math.max(barVolume(bars[i + 1]), 1));
+  const latestVol = Number.isFinite(intraday.volume) && intraday.volume > 0 ? intraday.volume : barVolume(latest);
+  const volZ = stdev(vols) ? (latestVol - average(vols)) / stdev(vols) : 0;
+  const volPct = percentileRank(vols, latestVol);
+  const latestAmihud = amihudSeries[amihudSeries.length - 1] || 0;
+  const amihudPct = percentileRank(amihudSeries, latestAmihud);
+  const rangeNow = Math.max(intraday.high - intraday.low, 0);
+  const rvExpansion = (rangeNow / Math.max(average(ranges), 1)) * (latestVol / Math.max(average(vols), 1));
+  return {
+    volZ,
+    volPct,
+    amihud: latestAmihud,
+    amihudPct,
+    rvExpansion,
+    avgVolume: average(vols),
+    latestVol,
+  };
+}
+
+function detectRegime(atr, vr, slopeNorm, z, liq) {
+  let label = "NEUTRO";
+  let type = "warn";
+  let mrScore = 50;
+  if (atr.percentile < 35) mrScore += 12;
+  if (atr.percentile > 75) mrScore -= 20;
+  if (vr < 0.95) mrScore += 12;
+  if (vr > 1.10) mrScore -= 14;
+  if (Math.abs(slopeNorm) > 1.6) mrScore -= 12;
+  if (Math.abs(z) >= 1.2) mrScore += 7;
+  if (liq.rvExpansion > 1.6) mrScore -= 10;
+  mrScore = clamp(mrScore, 0, 100);
+  if (mrScore >= 65) {
+    label = "MEAN REVERSION";
+    type = "ok";
+  } else if (mrScore <= 38) {
+    label = "TREND/RISCO";
+    type = "bad";
+  }
+  return { label, type, meanReversionScore: mrScore };
+}
+
+function backtestProxy(allBars, window) {
+  const multipliers = [1, 1.5, 2];
+  const rows = multipliers.map(m => ({ m, samples: 0, touches: 0, reversals: 0, obs: [] }));
+  for (let i = window; i < allBars.length; i += 1) {
+    const hist = allBars.slice(i - window, i);
+    const day = allBars[i];
+    const sigma = calcGarmanKlass(hist).points;
+    const anchor = allBars[i - 1].close;
+    rows.forEach(row => {
+      row.samples += 1;
+      const upper = anchor + row.m * sigma;
+      const lower = anchor - row.m * sigma;
+      const touchUp = day.high >= upper;
+      const touchDown = day.low <= lower;
+      if (touchUp || touchDown) {
+        row.touches += 1;
+        const revUp = touchUp && day.close <= anchor;
+        const revDown = touchDown && day.close >= anchor;
+        if (revUp || revDown) row.reversals += 1;
+      }
+    });
+  }
+  return rows.map(row => ({
+    ...row,
+    touchRate: row.samples ? row.touches / row.samples * 100 : 0,
+    reversalRate: row.touches ? row.reversals / row.touches * 100 : 0,
+  }));
+}
+
+function sigmaLevels(anchor, sigma) {
+  const out = [{ price: anchor, type: "valor", source: "VWAP", label: "VWAP", weight: SOURCE_WEIGHTS.VWAP }];
+  [1, 1.5, 2, 2.5].forEach(m => {
+    out.push({ price: anchor + m * sigma, type: "resistencia", source: "Sigma", label: `+${m} sigma`, weight: SOURCE_WEIGHTS.Sigma + m * 2 });
+    out.push({ price: anchor - m * sigma, type: "suporte", source: "Sigma", label: `-${m} sigma`, weight: SOURCE_WEIGHTS.Sigma + m * 2 });
+  });
+  return out;
+}
+
+function referenceDeviationLevels(referencePrice, sigma, currentPrice) {
+  const levels = [];
+  [1, 2, 3, 4].forEach(m => {
+    const sellPrice = referencePrice + m * sigma;
+    const buyPrice = referencePrice - m * sigma;
+    levels.push({
+      side: "Venda",
+      dir: "sell",
+      sigma: m,
+      price: sellPrice,
+      distReference: sellPrice - referencePrice,
+      distCurrent: sellPrice - currentPrice,
+      label: `Venda +${m} desvio`,
+    });
+    levels.push({
+      side: "Compra",
+      dir: "buy",
+      sigma: -m,
+      price: buyPrice,
+      distReference: buyPrice - referencePrice,
+      distCurrent: buyPrice - currentPrice,
+      label: `Compra -${m} desvio`,
+    });
+  });
+  return levels;
+}
+
+function openingDeviationLevels(open, sigma, currentPrice) {
+  return referenceDeviationLevels(open, sigma, currentPrice);
+}
+
+function percentVariationLevels(referencePrice, currentPrice) {
+  return PERCENT_VARIATIONS.map(pct => {
+    const price = Number.isFinite(referencePrice) ? referencePrice * (1 + pct / 100) : NaN;
+    return {
+      pct,
+      price,
+      distReference: Number.isFinite(price) ? price - referencePrice : NaN,
+      distCurrent: Number.isFinite(price) ? price - currentPrice : NaN,
+      dir: pct > 0 ? "up" : pct < 0 ? "down" : "base",
+    };
+  });
+}
+
+function percentVariationMaps(previousDay, intraday, profile) {
+  const references = [
+    {
+      key: "prevClose",
+      label: "Fechamento anterior",
+      shortLabel: "D-1 fechamento",
+      layer: "percentPrevClose",
+      color: COLORS.price,
+      price: previousDay?.close,
+      status: "real/csv",
+    },
+    {
+      key: "opening",
+      label: "Abertura atual",
+      shortLabel: "Abertura",
+      layer: "percentOpening",
+      color: COLORS.vwap,
+      price: intraday.open,
+      status: "real/input",
+    },
+    {
+      key: "poc",
+      label: "POC proxy",
+      shortLabel: "POC",
+      layer: "percentPoc",
+      color: COLORS.poc,
+      price: profile.poc.price,
+      status: "proxy diario",
+    },
+  ];
+  return references.map(ref => ({
+    ...ref,
+    levels: percentVariationLevels(ref.price, intraday.price),
+  }));
+}
+
+function percentReferenceWeight(key) {
+  if (key === "poc") return 15;
+  if (key === "opening") return 13;
+  return 12;
+}
+
+function percentLevelWeight(map, level) {
+  const absPct = Math.abs(level.pct);
+  const wholePercent = absPct > 0 && Number.isInteger(absPct);
+  const baseLine = level.pct === 0;
+  return percentReferenceWeight(map.key) + (baseLine ? 5 : wholePercent ? 4 : 2);
+}
+
+function percentInterestLevels(percentMaps, currentPrice) {
+  return percentMaps.flatMap(map => map.levels.map(level => ({
+    price: level.price,
+    type: level.pct > 0 ? "resistencia" : level.pct < 0 ? "suporte" : "valor",
+    source: "Percent",
+    label: `${map.shortLabel} ${percentChartLabel(level.pct)}`,
+    weight: percentLevelWeight(map, level),
+    percent: {
+      ref: map.key,
+      label: map.shortLabel,
+      pct: level.pct,
+      status: map.status,
+    },
+    distanceFromCurrent: level.price - currentPrice,
+  })));
+}
+
+function previousDayLevels(bar) {
+  if (!bar) return [];
+  return [
+    { label: "D-1 Abertura", price: bar.open, color: COLORS.vwap, dash: [3, 5] },
+    { label: "D-1 Maxima", price: bar.high, color: COLORS.resistance, dash: [4, 4] },
+    { label: "D-1 Minima", price: bar.low, color: COLORS.support, dash: [4, 4] },
+    { label: "D-1 Fechamento", price: bar.close, color: COLORS.price, dash: [3, 3] },
+  ];
+}
+
+function allWindowMetrics(allBars, intraday) {
+  return [21, 45, 63].filter(w => allBars.length >= w).map(w => {
+    const bars = allBars.slice(-w);
+    const gk = calcGarmanKlass(bars);
+    const yz = calcYangZhang(bars);
+    const atr = calcATR(bars);
+    const profile = volumeProfileProxy(bars);
+    const vr = varianceRatio(bars, 5);
+    return { window: w, gk, yz, atr, profile, vr };
+  });
+}
+
+function mergeInterestLevels(raw, context) {
+  const tolerance = Math.max(4, context.sigma * 0.12, context.profile.binWidth * 1.5);
+  const sorted = raw.filter(l => Number.isFinite(l.price)).sort((a, b) => a.price - b.price);
+  const clusters = [];
+  sorted.forEach(level => {
+    let cluster = clusters.find(c => Math.abs(c.price - level.price) <= tolerance);
+    if (!cluster) {
+      cluster = { price: level.price, items: [] };
+      clusters.push(cluster);
+    }
+    cluster.items.push(level);
+    cluster.price = average(cluster.items.map(i => i.price));
+  });
+
+  const multiWindowRefs = [];
+  context.compare.forEach(m => {
+    multiWindowRefs.push({ price: m.profile.poc.price, window: m.window, source: "POC" });
+    multiWindowRefs.push({ price: m.profile.vah, window: m.window, source: "VAH" });
+    multiWindowRefs.push({ price: m.profile.val, window: m.window, source: "VAL" });
+    sigmaLevels(context.anchor, m.gk.points).forEach(s => multiWindowRefs.push({ price: s.price, window: m.window, source: "Sigma" }));
+  });
+
+  const sourcePriority = {
+    POC: 1,
+    VAH: 2,
+    VAL: 2,
+    HVN: 3,
+    LVN: 4,
+    SR: 5,
+    Percent: 6,
+    Sigma: 7,
+    VWAP: 8,
+    AVWAP: 9,
+    Open: 10,
+    D1: 11,
+  };
+  const sourceNames = {
+    Percent: "Var %",
+    Open: "Abertura",
+    D1: "D-1",
+  };
+  const labelFor = item => item.percent
+    ? `${item.percent.label} ${percentChartLabel(item.percent.pct)}`
+    : (item.label || sourceNames[item.source] || item.source);
+  const sourceFor = source => sourceNames[source] || source;
+
+  return clusters.map(cluster => {
+    const sources = [...new Set(cluster.items.map(i => i.source))];
+    const labels = [...new Set(cluster.items.map(labelFor))]
+      .sort((a, b) => {
+        const ia = cluster.items.find(item => labelFor(item) === a);
+        const ib = cluster.items.find(item => labelFor(item) === b);
+        return (sourcePriority[ia?.source] || 99) - (sourcePriority[ib?.source] || 99);
+      });
+    const percentItems = cluster.items.filter(i => i.source === "Percent");
+    const percentRefs = [...new Set(percentItems.map(i => i.percent?.label).filter(Boolean))];
+    const percentPcts = [...new Set(percentItems.map(i => i.percent?.pct).filter(Number.isFinite))];
+    const samePctMax = percentPcts.reduce((max, pct) => {
+      const count = percentItems.filter(i => i.percent?.pct === pct).length;
+      return Math.max(max, count);
+    }, 0);
+    const nonPercentSources = sources.filter(s => s !== "Percent");
+    const displayedSources = [...new Set(sources.map(sourceFor))];
+    let type = "Magneto";
+    if (cluster.price > context.price + tolerance) type = "Resistencia";
+    else if (cluster.price < context.price - tolerance) type = "Suporte";
+    const baseRaw = cluster.items.reduce((s, i) => s + (i.weight || SOURCE_WEIGHTS[i.source] || 8), 0);
+    const base = Math.min(38, baseRaw * 0.42);
+    const proximity = Math.max(0, 10 - Math.abs(cluster.price - context.price) / Math.max(context.atr.value, 1) * 5);
+    const stableWindows = [...new Set(multiWindowRefs.filter(r => Math.abs(r.price - cluster.price) <= tolerance).map(r => r.window))];
+    const stability = stableWindows.length * 4.5;
+    const sourceDiversity = Math.min(12, Math.max(0, nonPercentSources.length - 1) * 3 + Math.max(0, percentRefs.length - 1) * 3);
+    const percentBoost = percentItems.length
+      ? Math.min(18, percentItems.length * 1.5 + percentRefs.length * 3.5 + Math.max(0, samePctMax - 1) * 2.5 + (percentPcts.includes(0) ? 3 : 0))
+      : 0;
+    const keyOverlapRaw = percentItems.length
+      ? (nonPercentSources.some(s => ["POC", "VAH", "VAL", "HVN"].includes(s)) ? 5 : 0)
+        + (nonPercentSources.includes("SR") ? 4 : 0)
+        + (nonPercentSources.includes("Sigma") ? 3 : 0)
+        + (nonPercentSources.includes("AVWAP") ? 2 : 0)
+        + (nonPercentSources.some(s => ["Open", "D1", "VWAP"].includes(s)) ? 2 : 0)
+      : 0;
+    const keyOverlap = Math.min(12, keyOverlapRaw);
+    const referenceRecency = (sources.includes("Open") ? 2 : 0) + (sources.includes("D1") ? 1.5 : 0);
+    const score = clamp(base + proximity + stability + sourceDiversity + percentBoost + keyOverlap + referenceRecency, 0, 100);
+    const refBits = [
+      stableWindows.length ? `${stableWindows.join("/")}d` : "",
+      percentRefs.length ? `% ${percentRefs.length} ref` : "",
+    ].filter(Boolean);
+    const evidence = labels.length > 5 ? `${labels.slice(0, 5).join(" + ")} +${labels.length - 5}` : labels.join(" + ");
+    return {
+      price: cluster.price,
+      score,
+      type,
+      sources: displayedSources,
+      rawSources: sources,
+      labels,
+      stableWindows,
+      percentRefs,
+      percentPcts,
+      evidence,
+      refLabel: refBits.join(" | ") || "--",
+      proxy: sources.some(s => ["POC", "VAH", "VAL", "HVN", "LVN"].includes(s)) || percentItems.some(i => i.percent?.status?.includes("proxy")),
+    };
+  }).sort((a, b) => b.score - a.score).slice(0, 18);
+}
+
+function buildResult() {
+  const allBars = state.bars;
+  const window = state.selectedWindow;
+  const bars = allBars.slice(-window);
+  const intraday = {
+    open: parseLocaleNumber(refs.inputs.open.value),
+    high: parseLocaleNumber(refs.inputs.high.value),
+    low: parseLocaleNumber(refs.inputs.low.value),
+    price: parseLocaleNumber(refs.inputs.price.value),
+    vwap: parseLocaleNumber(refs.inputs.vwap.value),
+    volume: parseLocaleNumber(refs.inputs.volume.value),
+  };
+  if (![intraday.open, intraday.high, intraday.low, intraday.price].every(Number.isFinite)) {
+    throw new Error("Preencha abertura, maxima, minima e preco atual.");
+  }
+  const anchor = Number.isFinite(intraday.vwap) ? intraday.vwap : (intraday.open + intraday.high + intraday.low + intraday.price) / 4;
+  const gk = calcGarmanKlass(bars);
+  const parkinson = calcParkinson(bars);
+  const rs = calcRogersSatchell(bars);
+  const yz = calcYangZhang(bars);
+  const cc = calcCloseToClose(bars);
+  const atr = calcATR(bars);
+  const z = (intraday.price - anchor) / Math.max(gk.points, 1);
+  const profile = volumeProfileProxy(bars);
+  const pivots = detectPivots(bars, 2);
+  const sr = supportResistanceEngine(bars, intraday.price, gk.points, atr.value);
+  const avwaps = anchoredVWAPs(bars, pivots);
+  const liq = liquidityContext(bars, intraday);
+  const vr = varianceRatio(bars, 5);
+  const slope = linearSlopeNormalized(bars, gk.points);
+  const regime = detectRegime(atr, vr, slope.normalized, z, liq);
+  const compare = allWindowMetrics(allBars, intraday);
+  const backtest = backtestProxy(allBars, window);
+  const openingLevels = openingDeviationLevels(intraday.open, gk.points, intraday.price);
+  const pocDeviationLevels = referenceDeviationLevels(profile.poc.price, gk.points, intraday.price);
+  const previousDay = bars[bars.length - 1] || null;
+  const previousLevels = previousDayLevels(previousDay);
+  const percentMaps = percentVariationMaps(previousDay, intraday, profile);
+  const percentLevels = percentInterestLevels(percentMaps, intraday.price);
+
+  const levels = [
+    ...sigmaLevels(anchor, gk.points),
+    { price: intraday.open, type: "valor", source: "Open", label: "Abertura atual", weight: SOURCE_WEIGHTS.Open },
+    ...previousLevels.map(level => ({
+      price: level.price,
+      type: level.label.includes("Maxima") ? "resistencia" : level.label.includes("Minima") ? "suporte" : "valor",
+      source: "D1",
+      label: level.label,
+      weight: level.label.includes("Fechamento") ? SOURCE_WEIGHTS.D1 + 3 : SOURCE_WEIGHTS.D1,
+    })),
+    { price: profile.poc.price, type: "valor", source: "POC", label: "POC proxy", weight: SOURCE_WEIGHTS.POC },
+    { price: profile.vah, type: "resistencia", source: "VAH", label: "VAH 70%", weight: SOURCE_WEIGHTS.VAH },
+    { price: profile.val, type: "suporte", source: "VAL", label: "VAL 70%", weight: SOURCE_WEIGHTS.VAL },
+    ...profile.hvn.map(b => ({ price: b.price, type: "valor", source: "HVN", label: "HVN", weight: SOURCE_WEIGHTS.HVN * b.rank })),
+    ...profile.lvn.map(b => ({ price: b.price, type: b.price > intraday.price ? "resistencia" : "suporte", source: "LVN", label: "LVN", weight: SOURCE_WEIGHTS.LVN })),
+    ...sr.map(l => ({ price: l.price, type: l.type === "suporte" ? "suporte" : l.type === "resistencia" ? "resistencia" : "valor", source: "SR", label: l.sources.join(", "), weight: 12 + l.strength * 0.45, sr: l })),
+    ...avwaps.map(a => ({ price: a.price, type: "valor", source: "AVWAP", label: a.label, weight: SOURCE_WEIGHTS.AVWAP })),
+    ...percentLevels,
+  ];
+  const confluence = mergeInterestLevels(levels, {
+    price: intraday.price,
+    anchor,
+    sigma: gk.points,
+    atr,
+    profile,
+    compare,
+  });
+
+  const warnings = [];
+  if (!Number.isFinite(intraday.vwap)) warnings.push("VWAP intraday nao informado: usando preco tipico parcial como ancora aproximada.");
+  warnings.push("POC, VAH, VAL, HVN e LVN sao proxies diarios por falta de volume por preco intraday.");
+  if (allBars.length < 63) warnings.push("CSV tem menos de 63 pregoes; comparacao multi-janela fica limitada.");
+  if (atr.percentile > 75) warnings.push("ATR no percentil alto: reversoes contra movimento tendem a exigir confirmacao adicional.");
+  if (Math.abs(slope.normalized) > 1.6) warnings.push("Slope normalizado elevado: contexto mais direcional que mean-reverting.");
+  if (liq.volZ > 2) warnings.push("Volume atual/historico em z-score alto: possivel participacao agressiva de players.");
+
+  return {
+    window,
+    allBars,
+    bars,
+    intraday,
+    anchor,
+    gk,
+    parkinson,
+    rs,
+    yz,
+    cc,
+    atr,
+    z,
+    profile,
+    pivots,
+    sr,
+    avwaps,
+    liq,
+    vr,
+    slope,
+    regime,
+    compare,
+    backtest,
+    openingLevels,
+    pocDeviationLevels,
+    percentMaps,
+    previousDay,
+    previousLevels,
+    levels,
+    confluence,
+    warnings,
+  };
+}
+
+function scoreTag(score) {
+  if (score >= 75) return "green";
+  if (score >= 55) return "blue";
+  if (score >= 35) return "amber";
+  return "red";
+}
+
+function typeTag(type) {
+  if (type === "Suporte") return "blue";
+  if (type === "Resistencia") return "red";
+  if (type === "Magneto") return "violet";
+  return "green";
+}
+
+function trimText(text, max = 82) {
+  const value = String(text || "--");
+  return value.length > max ? `${value.slice(0, max - 3)}...` : value;
+}
+
+function escapeHtml(value) {
+  return String(value ?? "--")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function renderCards(r) {
+  const divergence = Math.abs(r.gk.points - r.yz.points) / Math.max(r.gk.points, 1) * 100;
+  const rangeNow = r.intraday.high - r.intraday.low;
+  const rangePct = rangeNow / Math.max(r.atr.value, 1) * 100;
+  const cards = [
+    ["Sigma GK", `${fmt(r.gk.points)} pts`, `YZ ${fmt(r.yz.points)} / PK ${fmt(r.parkinson.points)}`],
+    ["Z-score", `${r.z >= 0 ? "+" : ""}${fmt(r.z, 2)}s`, `Ancora ${fmt(r.anchor)}`],
+    ["POC proxy", fmt(r.profile.poc.price), `VA ${fmt(r.profile.val)} - ${fmt(r.profile.vah)}`],
+    ["ATR", `${fmt(r.atr.value)} pts`, `P${fmt(r.atr.percentile, 0)} / range ${fmtPct(rangePct, 0)}`],
+    ["Regime", r.regime.label, `MR score ${fmt(r.regime.meanReversionScore, 0)}`],
+    ["Divergencia", fmtPct(divergence, 0), "GK vs Yang-Zhang"],
+  ];
+  refs.cards.innerHTML = cards.map(c => `
+    <div class="card">
+      <div class="card-label">${c[0]}</div>
+      <div class="card-value">${c[1]}</div>
+      <div class="card-sub">${c[2]}</div>
+    </div>
+  `).join("");
+}
+
+function renderLevels(r) {
+  refs.levelsBody.innerHTML = r.confluence.map(level => {
+    const dist = level.price - r.intraday.price;
+    return `
+      <tr>
+        <td class="strong">${fmt(level.price)}</td>
+        <td><span class="tag ${typeTag(level.type)}">${level.type}</span></td>
+        <td><span class="tag ${scoreTag(level.score)}">${fmt(level.score, 0)}</span></td>
+        <td>${dist >= 0 ? "+" : ""}${fmt(dist)}</td>
+        <td>${trimText(level.evidence || level.labels.slice(0, 3).join(" / "))}</td>
+        <td><span class="tag ${level.proxy ? "amber" : "green"}">${level.proxy ? "proxy" : "real/input"}</span></td>
+      </tr>
+    `;
+  }).join("");
+
+  refs.warnings.innerHTML = r.warnings.map(w => `<div class="warn-line">${w}</div>`).join("");
+}
+
+function renderOpeningMap(r) {
+  const sellRows = r.openingLevels.filter(l => l.dir === "sell").sort((a, b) => b.sigma - a.sigma);
+  const buyRows = r.openingLevels.filter(l => l.dir === "buy").sort((a, b) => b.sigma - a.sigma);
+  const renderLevelRow = level => `
+    <tr>
+      <td><span class="tag ${level.dir === "sell" ? "red" : "blue"}">${level.side}</span></td>
+      <td class="strong">${level.sigma > 0 ? "+" : ""}${level.sigma} desvio</td>
+      <td class="strong">${fmt(level.price)}</td>
+      <td>${level.distReference >= 0 ? "+" : ""}${fmt(level.distReference)} pts</td>
+      <td>${level.distCurrent >= 0 ? "+" : ""}${fmt(level.distCurrent)} pts</td>
+      <td>${level.dir === "sell" ? "Abertura + desvio" : "Abertura - desvio"}</td>
+    </tr>
+  `;
+  const openingDist = r.intraday.open - r.intraday.price;
+  const openingRow = `
+    <tr>
+      <td><span class="tag green">Abertura</span></td>
+      <td class="strong">0 desvio</td>
+      <td class="strong">${fmt(r.intraday.open)}</td>
+      <td>0,0 pts</td>
+      <td>${openingDist >= 0 ? "+" : ""}${fmt(openingDist)} pts</td>
+      <td>Preco de abertura do dia</td>
+    </tr>
+  `;
+  refs.openingBody.innerHTML = [
+    ...sellRows.map(renderLevelRow),
+    openingRow,
+    ...buyRows.map(renderLevelRow),
+  ].join("");
+
+  refs.openingKv.innerHTML = [
+    ["Abertura usada", fmt(r.intraday.open)],
+    ["Desvio da janela", `${fmt(r.gk.points)} pts`],
+    ["Janela estatistica", `${r.window} dias`],
+    ["Venda 1 desvio", fmt(r.intraday.open + r.gk.points)],
+    ["Compra 1 desvio", fmt(r.intraday.open - r.gk.points)],
+    ["Regra", "4 niveis acima e 4 abaixo da abertura"],
+  ].map(([k, v]) => `<div class="kv"><span>${k}</span><span>${v}</span></div>`).join("");
+}
+
+function renderPocDeviationMap(r) {
+  const sellRows = r.pocDeviationLevels.filter(l => l.dir === "sell").sort((a, b) => b.sigma - a.sigma);
+  const buyRows = r.pocDeviationLevels.filter(l => l.dir === "buy").sort((a, b) => b.sigma - a.sigma);
+  const pocPrice = r.profile.poc.price;
+  const renderLevelRow = level => `
+    <tr>
+      <td><span class="tag ${level.dir === "sell" ? "red" : "blue"}">${level.side}</span></td>
+      <td class="strong">${level.sigma > 0 ? "+" : ""}${level.sigma} desvio</td>
+      <td class="strong">${fmt(level.price)}</td>
+      <td>${level.distReference >= 0 ? "+" : ""}${fmt(level.distReference)} pts</td>
+      <td>${level.distCurrent >= 0 ? "+" : ""}${fmt(level.distCurrent)} pts</td>
+      <td>${level.dir === "sell" ? "POC + desvio" : "POC - desvio"}</td>
+    </tr>
+  `;
+  const pocDist = pocPrice - r.intraday.price;
+  const pocRow = `
+    <tr>
+      <td><span class="tag amber">POC</span></td>
+      <td class="strong">0 desvio</td>
+      <td class="strong">${fmt(pocPrice)}</td>
+      <td>0,0 pts</td>
+      <td>${pocDist >= 0 ? "+" : ""}${fmt(pocDist)} pts</td>
+      <td>Point of Control proxy</td>
+    </tr>
+  `;
+  refs.pocdevBody.innerHTML = [
+    ...sellRows.map(renderLevelRow),
+    pocRow,
+    ...buyRows.map(renderLevelRow),
+  ].join("");
+
+  refs.pocdevKv.innerHTML = [
+    ["POC usado", fmt(pocPrice)],
+    ["Desvio da janela", `${fmt(r.gk.points)} pts`],
+    ["Janela estatistica", `${r.window} dias`],
+    ["Venda 1 desvio", fmt(pocPrice + r.gk.points)],
+    ["Compra 1 desvio", fmt(pocPrice - r.gk.points)],
+    ["Status", "POC proxy por OHLCV diario"],
+  ].map(([k, v]) => `<div class="kv"><span>${k}</span><span>${v}</span></div>`).join("");
+}
+
+function percentHeatClass(pct) {
+  if (pct === 0) return "var-base";
+  const level = clamp(Math.round(Math.abs(pct) / 0.5), 1, 6);
+  return `${pct > 0 ? "var-up" : "var-down"} heat-${level}`;
+}
+
+function renderPercentVariationMap(r) {
+  refs.percentBody.innerHTML = PERCENT_VARIATIONS.map(pct => {
+    const cells = r.percentMaps.map(map => {
+      const level = map.levels.find(item => item.pct === pct);
+      return `<td class="strong">${fmt(level?.price)}</td>`;
+    }).join("");
+    return `
+      <tr class="${percentHeatClass(pct)}">
+        <td class="strong">${fmtPct(pct, 2)}</td>
+        ${cells}
+      </tr>
+    `;
+  }).join("");
+
+  refs.percentKv.innerHTML = [
+    ...r.percentMaps.map(map => [map.label, `${fmt(map.price)} (${map.status})`]),
+    ["Passo", "0,50%"],
+    ["Faixa", "+3,00% ate -3,00%"],
+    ["Formula", "referencia x (1 + variacao/100)"],
+    ["Grafico", "Ative Var % D-1, Var % Abertura ou Var % POC nas camadas"],
+  ].map(([k, v]) => `<div class="kv"><span>${k}</span><span>${v}</span></div>`).join("");
+}
+
+function renderProfile(r) {
+  const maxVol = Math.max(...r.profile.bins.map(b => b.volume), 1);
+  const near = [...r.profile.bins]
+    .sort((a, b) => Math.abs(a.price - r.intraday.price) - Math.abs(b.price - r.intraday.price))
+    .slice(0, 28)
+    .sort((a, b) => b.price - a.price);
+  refs.profileBars.innerHTML = near.map(b => {
+    const cls = Math.abs(b.price - r.profile.poc.price) < r.profile.binWidth / 2 ? "poc" : b.inValue ? "value" : "";
+    return `
+      <div class="profile-row">
+        <span>${fmt(b.price)}</span>
+        <div class="bar-track"><div class="bar-fill ${cls}" style="width:${Math.max(2, b.volume / maxVol * 100)}%"></div></div>
+        <span>${fmtPct(b.volume / Math.max(r.profile.total, 1) * 100, 1)}</span>
+      </div>
+    `;
+  }).join("");
+  refs.profileKv.innerHTML = [
+    ["POC proxy", fmt(r.profile.poc.price)],
+    ["VAH 70%", fmt(r.profile.vah)],
+    ["VAL 70%", fmt(r.profile.val)],
+    ["Largura do bin", `${fmt(r.profile.binWidth)} pts`],
+    ["HVNs detectados", r.profile.hvn.map(x => fmt(x.price)).join(", ") || "--"],
+    ["LVNs detectados", r.profile.lvn.map(x => fmt(x.price)).join(", ") || "--"],
+  ].map(([k, v]) => `<div class="kv"><span>${k}</span><span>${v}</span></div>`).join("");
+}
+
+function renderConfluence(r) {
+  refs.confluenceBody.innerHTML = r.confluence.map((level, idx) => `
+    <tr>
+      <td class="strong">${idx + 1}</td>
+      <td class="strong">${fmt(level.price)}</td>
+      <td><span class="tag ${scoreTag(level.score)}">${fmt(level.score, 0)}</span></td>
+      <td><span class="tag ${typeTag(level.type)}">${level.type}</span></td>
+      <td>${level.refLabel}</td>
+      <td>${trimText(level.evidence || level.sources.join(" + "), 96)}</td>
+    </tr>
+  `).join("");
+
+  refs.playerKv.innerHTML = [
+    ["Volume z-score", fmt(r.liq.volZ, 2)],
+    ["Volume percentile", `P${fmt(r.liq.volPct, 0)}`],
+    ["Amihud percentile", `P${fmt(r.liq.amihudPct, 0)}`],
+    ["Range x Volume", fmt(r.liq.rvExpansion, 2)],
+    ["Variance Ratio 5d", fmt(r.vr, 2)],
+    ["Slope normalizado", fmt(r.slope.normalized, 2)],
+    ["AVWAPs", r.avwaps.map(a => `${a.label}: ${fmt(a.price)}`).join(" | ")],
+  ].map(([k, v]) => `<div class="kv"><span>${k}</span><span>${v}</span></div>`).join("");
+}
+
+function renderBacktest(r) {
+  refs.backtestBody.innerHTML = r.backtest.map(row => `
+    <tr>
+      <td class="strong">${fmt(row.m, 1)} sigma</td>
+      <td>${row.samples}</td>
+      <td>${row.touches} (${fmtPct(row.touchRate, 1)})</td>
+      <td>${row.reversals}</td>
+      <td><span class="tag ${scoreTag(row.reversalRate)}">${fmtPct(row.reversalRate, 1)}</span></td>
+      <td>Ancora = fechamento anterior; calculo usa apenas janela passada.</td>
+    </tr>
+  `).join("");
+
+  refs.compareBody.innerHTML = r.compare.map(row => `
+    <tr>
+      <td class="strong">${row.window}d</td>
+      <td>${fmt(row.gk.points)}</td>
+      <td>${fmt(row.yz.points)}</td>
+      <td>${fmt(row.atr.value)}</td>
+      <td>${fmt(row.profile.poc.price)}</td>
+      <td>${fmt(row.vr, 2)}</td>
+    </tr>
+  `).join("");
+}
+
+function roundToTick(price, step = state.rtd.tickSize) {
+  if (!Number.isFinite(price)) return NaN;
+  return Math.round(price / step) * step;
+}
+
+function sameTick(a, b, step = state.rtd.tickSize) {
+  return Number.isFinite(a) && Number.isFinite(b) && Math.abs(a - b) < step / 2 + 1e-9;
+}
+
+function liveIntradayFromSnapshot(msg) {
+  const intraday = msg?.intraday || {};
+  return {
+    price: liveNumber(intraday.precoAtual),
+    open: liveNumber(intraday.abertura),
+    high: liveNumber(intraday.maximaParcial),
+    low: liveNumber(intraday.minimaParcial),
+    vwap: liveNumber(intraday.vwapIntraday),
+    volume: liveNumber(intraday.volumeAcumulado),
+  };
+}
+
+function liveBookFromSnapshot(msg) {
+  const book = msg?.book || {};
+  return {
+    bid: liveNumber(book.ofertaCompra),
+    ask: liveNumber(book.ofertaVenda),
+    bidVolume: liveNumber(book.volumeOfertaCompra),
+    askVolume: liveNumber(book.volumeOfertaVenda),
+    projectedVolume: liveNumber(book.volumeProjetado),
+  };
+}
+
+function currentDomPrice(msg) {
+  const livePrice = liveIntradayFromSnapshot(msg).price;
+  if (Number.isFinite(livePrice)) return livePrice;
+  return parseLocaleNumber(refs.inputs.price.value);
+}
+
+function domLevelTypeClass(level) {
+  const type = String(level.type || level.label || "").toLowerCase();
+  if (type.includes("suporte") || type.includes("val") || type.includes("min")) return "sup";
+  if (type.includes("resistencia") || type.includes("vah") || type.includes("max")) return "res";
+  if (type.includes("ultimo") || type.includes("atual")) return "current";
+  return "key";
+}
+
+function compactDomLevels(levels, step = state.rtd.tickSize) {
+  const byPrice = new Map();
+  levels.forEach(level => {
+    const price = roundToTick(liveNumber(level.price), step);
+    if (!Number.isFinite(price)) return;
+    const key = price.toFixed(3);
+    const existing = byPrice.get(key);
+    const next = {
+      ...level,
+      price,
+      score: Number.isFinite(level.score) ? level.score : 40,
+    };
+    if (!existing || next.score > existing.score) byPrice.set(key, next);
+  });
+  return [...byPrice.values()];
+}
+
+function collectDomLevels(msg) {
+  const r = state.result;
+  const intraday = r?.intraday || liveIntradayFromSnapshot(msg);
+  const levels = [];
+
+  const add = (price, label, type, score = 45) => {
+    const n = liveNumber(price);
+    if (Number.isFinite(n)) levels.push({ price: n, label, type, score });
+  };
+
+  add(intraday.price, "Ultimo", "Atual", 100);
+  add(intraday.open, "Abertura", "Valor", 70);
+  add(intraday.vwap, "VWAP/MED", "Valor", 72);
+  add(intraday.high, "Maxima", "Resistencia", 62);
+  add(intraday.low, "Minima", "Suporte", 62);
+
+  if (r) {
+    add(r.anchor, "Ancora", "Valor", 70);
+    add(r.profile?.poc?.price, "POC", "Magneto", 78);
+    add(r.profile?.vah, "VAH", "Resistencia", 66);
+    add(r.profile?.val, "VAL", "Suporte", 66);
+    add(r.bars?.[r.bars.length - 1]?.close, "Fech. D-1", "Valor", 55);
+
+    (r.openingLevels || []).forEach(level => add(level.price, `Open ${level.sigma > 0 ? "+" : ""}${level.sigma}s`, level.dir === "sell" ? "Resistencia" : "Suporte", 58));
+    (r.pocDeviationLevels || []).forEach(level => add(level.price, `POC ${level.sigma > 0 ? "+" : ""}${level.sigma}s`, level.dir === "sell" ? "Resistencia" : "Suporte", 58));
+    (r.confluence || []).slice(0, 10).forEach(level => add(level.price, trimText(level.labels?.[0] || level.refLabel || "Confluencia", 22), level.type, level.score));
+  }
+
+  return compactDomLevels(levels);
+}
+
+function registerDomTick(msg) {
+  const price = liveIntradayFromSnapshot(msg).price;
+  if (!Number.isFinite(price)) return;
+
+  const previous = state.rtd.lastPrice;
+  const delta = Number.isFinite(previous) ? price - previous : 0;
+  const changed = !Number.isFinite(previous) || Math.abs(delta) >= state.rtd.tickSize / 2;
+
+  state.rtd.lastPrice = price;
+  if (!changed && state.rtd.ticks.length) return;
+
+  const book = liveBookFromSnapshot(msg);
+  const side = Number.isFinite(book.ask) && price >= book.ask
+    ? "Compra"
+    : Number.isFinite(book.bid) && price <= book.bid
+      ? "Venda"
+      : delta > 0
+        ? "Subiu"
+        : delta < 0
+          ? "Caiu"
+          : "Inicial";
+
+  state.rtd.ticks.unshift({
+    time: msg.rtd?.HOR || new Date(msg.localTimestamp || Date.now()).toLocaleTimeString("pt-BR"),
+    price,
+    delta,
+    side,
+    volume: liveNumber(msg.intraday?.volumeAcumulado),
+  });
+
+  state.rtd.ticks = state.rtd.ticks.slice(0, 80);
+}
+
+function renderDomTape() {
+  if (!refs.domTape) return;
+  if (!state.rtd.ticks.length) {
+    refs.domTape.innerHTML = `<div class="warn-line">Aguardando ticks do RTD.</div>`;
+    return;
+  }
+
+  refs.domTape.innerHTML = state.rtd.ticks.slice(0, 28).map(tick => {
+    const dir = tick.delta > 0 ? "up" : tick.delta < 0 ? "down" : "flat";
+    const deltaText = tick.delta > 0 ? `+${fmt(tick.delta)}` : fmt(tick.delta);
+    return `
+      <div class="dom-tick ${dir}">
+        <span>${escapeHtml(tick.time)}</span>
+        <strong>${fmt(tick.price)}</strong>
+        <span>${deltaText}</span>
+        <span>${escapeHtml(tick.side)}</span>
+      </div>
+    `;
+  }).join("");
+}
+
+function renderDomKeyLevels(msg) {
+  if (!refs.domKeyLevels) return;
+  const price = currentDomPrice(msg);
+  const levels = collectDomLevels(msg)
+    .filter(level => Number.isFinite(price) && Number.isFinite(level.price) && Math.abs(level.price - price) > state.rtd.tickSize / 2)
+    .sort((a, b) => Math.abs(a.price - price) - Math.abs(b.price - price))
+    .slice(0, 14);
+
+  if (!levels.length) {
+    refs.domKeyLevels.innerHTML = `<div class="warn-line">Carregue o CSV para marcar POC, VAH, VAL, desvios e confluencias.</div>`;
+    return;
+  }
+
+  refs.domKeyLevels.innerHTML = levels.map(level => {
+    const dist = level.price - price;
+    const side = dist > 0 ? "above" : "below";
+    return `
+      <div class="dom-level ${side}">
+        <strong>${fmt(level.price)}</strong>
+        <span>${escapeHtml(level.label || level.type || "Nivel")}</span>
+        <span>${dist > 0 ? "+" : ""}${fmt(dist)}</span>
+      </div>
+    `;
+  }).join("");
+}
+
+function renderDomLadder(msg) {
+  if (!refs.domLadder) return;
+  const price = currentDomPrice(msg);
+  const book = liveBookFromSnapshot(msg);
+  const step = state.rtd.tickSize;
+  const center = roundToTick(price, step);
+
+  if (!Number.isFinite(center)) {
+    refs.domLadder.innerHTML = `<div class="warn-line">Aguardando preco atual para montar a escada.</div>`;
+    return;
+  }
+
+  const levels = collectDomLevels(msg);
+  const lastTick = state.rtd.ticks[0];
+  const lastDir = lastTick?.delta > 0 ? "up" : lastTick?.delta < 0 ? "down" : "flat";
+  const rows = [];
+
+  for (let offset = 15; offset >= -15; offset--) {
+    const rowPrice = center + offset * step;
+    const marks = levels
+      .filter(level => sameTick(level.price, rowPrice, step))
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 4);
+    const isLast = sameTick(price, rowPrice, step);
+    const isBid = sameTick(book.bid, rowPrice, step);
+    const isAsk = sameTick(book.ask, rowPrice, step);
+    const classes = ["dom-row"];
+    if (marks.length) classes.push("near");
+    if (isLast) classes.push("last", lastDir);
+    if (isBid) classes.push("bid-level");
+    if (isAsk) classes.push("ask-level");
+
+    rows.push(`
+      <div class="${classes.join(" ")}">
+        <div class="dom-cell dom-ask">${isAsk && Number.isFinite(book.askVolume) ? fmt(book.askVolume, 0) : ""}</div>
+        <div class="dom-cell dom-price">${fmt(rowPrice)}</div>
+        <div class="dom-cell dom-bid">${isBid && Number.isFinite(book.bidVolume) ? fmt(book.bidVolume, 0) : ""}</div>
+        <div class="dom-cell dom-marks">
+          ${marks.map(level => `<span class="dom-tag ${domLevelTypeClass(level)}">${escapeHtml(trimText(level.label || level.type, 16))}</span>`).join("")}
+        </div>
+      </div>
+    `);
+  }
+
+  refs.domLadder.innerHTML = rows.join("");
+}
+
+function renderDomSummary(msg) {
+  if (!refs.domLastPrice) return;
+  const price = currentDomPrice(msg);
+  const book = liveBookFromSnapshot(msg);
+  const lastTick = state.rtd.ticks[0];
+  const spread = Number.isFinite(book.bid) && Number.isFinite(book.ask) ? book.ask - book.bid : NaN;
+  const pressure = Number.isFinite(book.bidVolume) && Number.isFinite(book.askVolume) ? book.bidVolume - book.askVolume : NaN;
+  const ratio = Number.isFinite(book.bidVolume) && Number.isFinite(book.askVolume) && book.askVolume !== 0 ? book.bidVolume / book.askVolume : NaN;
+
+  refs.domLastPrice.textContent = fmt(price);
+  refs.domDirection.textContent = lastTick
+    ? `${lastTick.delta > 0 ? "+" : ""}${fmt(lastTick.delta)} | ${lastTick.side}`
+    : "--";
+  refs.domSpread.textContent = Number.isFinite(spread) ? `${fmt(spread)} pts` : "--";
+  refs.domPressure.textContent = Number.isFinite(pressure)
+    ? `${pressure > 0 ? "+" : ""}${fmt(pressure, 0)} (${fmt(ratio, 2)}x)`
+    : "--";
+}
+
+function renderDom(msg = state.rtd.lastSnapshot) {
+  renderDomSummary(msg);
+  renderDomLadder(msg);
+  renderDomTape();
+  renderDomKeyLevels(msg);
+}
+
+function currentSessionBar(r) {
+  return {
+    ativo: "WDO",
+    date: null,
+    dateKey: "Atual",
+    open: r.intraday.open,
+    high: Math.max(r.intraday.open, r.intraday.high, r.intraday.low, r.intraday.price),
+    low: Math.min(r.intraday.open, r.intraday.high, r.intraday.low, r.intraday.price),
+    close: r.intraday.price,
+    volume: Number.isFinite(r.intraday.volume) ? r.intraday.volume : null,
+    quantity: null,
+    isCurrent: true,
+  };
+}
+
+function chartBars(r) {
+  if (!r.bars.length) return [];
+  return [...r.bars.slice(0, -1), currentSessionBar(r)];
+}
+
+function clampChartView(total) {
+  const minSize = Math.min(6, total);
+  state.chartView.size = clamp(Math.round(state.chartView.size || 16), minSize, total);
+  state.chartView.start = clamp(Math.round(state.chartView.start || 0), 0, Math.max(0, total - state.chartView.size));
+}
+
+function setChartToCurrent() {
+  if (!state.result) return;
+  const total = chartBars(state.result).length;
+  clampChartView(total);
+  state.chartView.start = Math.max(0, total - state.chartView.size);
+}
+
+function setChartToAll() {
+  if (!state.result) return;
+  const total = chartBars(state.result).length;
+  state.chartView.size = total;
+  state.chartView.start = 0;
+}
+
+function panChart(days) {
+  if (!state.result) return;
+  const total = chartBars(state.result).length;
+  clampChartView(total);
+  state.chartView.start = clamp(state.chartView.start + days, 0, Math.max(0, total - state.chartView.size));
+}
+
+function zoomChart(delta) {
+  if (!state.result) return;
+  const total = chartBars(state.result).length;
+  const center = state.chartView.start + state.chartView.size / 2;
+  state.chartView.size = clamp(state.chartView.size + delta, Math.min(6, total), total);
+  state.chartView.start = Math.round(center - state.chartView.size / 2);
+  clampChartView(total);
+}
+
+function zoomPrice(multiplier) {
+  state.priceScale.factor = clamp((state.priceScale.factor || 1) * multiplier, 0.25, 6);
+}
+
+function resetPriceScale() {
+  state.priceScale.factor = 1;
+}
+
+function updateChartNav(total, start, end) {
+  const canPrev = start > 0;
+  const canNext = end < total - 1;
+  refs.chartPrev.disabled = !canPrev;
+  refs.chartNext.disabled = !canNext;
+  refs.chartCurrent.disabled = !canNext;
+  refs.chartAll.disabled = state.chartView.size >= total && start === 0;
+  refs.chartZoomIn.disabled = state.chartView.size <= Math.min(6, total);
+  refs.chartZoomOut.disabled = state.chartView.size >= total;
+  refs.priceZoomIn.disabled = false;
+  refs.priceZoomOut.disabled = false;
+  refs.priceAuto.disabled = Math.abs((state.priceScale.factor || 1) - 1) < 0.01;
+  const labelStart = start + 1;
+  const labelEnd = end + 1;
+  setPill(refs.rangePill, "", `Grafico: ${labelStart}-${labelEnd}/${total} | Y ${fmt(state.priceScale.factor || 1, 2)}x`);
+}
+
+function formatChartValue(value) {
+  return Number.isFinite(value) ? value.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : "--";
+}
+
+const hoverLineLabelsPlugin = {
+  id: "hoverLineLabels",
+  afterDatasetsDraw(chart) {
+    const activeElements = chart.getActiveElements();
+    if (!activeElements.length) return;
+    const active = activeElements[0];
+    if (!active) return;
+
+    const index = active.index;
+    const { ctx, chartArea, scales } = chart;
+    const xScale = scales.x;
+    const yScale = scales.y;
+    const x = xScale.getPixelForValue(index);
+    const items = [];
+
+    chart.data.datasets.forEach((dataset, datasetIndex) => {
+      if (dataset.type === "bar" || dataset.skipHoverLabel) return;
+      const raw = dataset.data?.[index];
+      const value = Array.isArray(raw) ? raw[1] : raw;
+      if (!Number.isFinite(value)) return;
+      const y = yScale.getPixelForValue(value);
+      if (y < chartArea.top - 2 || y > chartArea.bottom + 2) return;
+      const meta = chart.getDatasetMeta(datasetIndex);
+      if (meta.hidden) return;
+      items.push({
+        label: dataset.label || "",
+        value,
+        x,
+        y,
+        color: dataset.borderColor || dataset.backgroundColor || COLORS.text,
+      });
+    });
+
+    if (!items.length) return;
+    items.sort((a, b) => a.y - b.y);
+
+    ctx.save();
+    ctx.font = "11px Consolas, monospace";
+    ctx.textBaseline = "middle";
+    ctx.lineWidth = 1;
+
+    const occupied = [];
+    items.forEach(item => {
+      let y = item.y;
+      for (const prev of occupied) {
+        if (Math.abs(y - prev) < 17) y = prev + 17;
+      }
+      y = clamp(y, chartArea.top + 8, chartArea.bottom - 8);
+      occupied.push(y);
+
+      const text = `${item.label}: ${formatChartValue(item.value)}`;
+      const textWidth = ctx.measureText(text).width;
+      const boxW = Math.min(textWidth + 24, chartArea.right - chartArea.left - 12);
+      let boxX = item.x + 10;
+      if (boxX + boxW > chartArea.right - 4) boxX = item.x - boxW - 10;
+      boxX = clamp(boxX, chartArea.left + 4, chartArea.right - boxW - 4);
+      const boxY = y - 10;
+
+      ctx.fillStyle = "#11161cf2";
+      ctx.strokeStyle = "#303844";
+      ctx.beginPath();
+      if (ctx.roundRect) ctx.roundRect(boxX, boxY, boxW, 20, 4);
+      else ctx.rect(boxX, boxY, boxW, 20);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = item.color;
+      ctx.beginPath();
+      ctx.arc(item.x, item.y, 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#0b0d10";
+      ctx.stroke();
+
+      ctx.fillStyle = item.color;
+      ctx.fillRect(boxX + 6, y - 5, 10, 10);
+      ctx.strokeStyle = "#e8f5ff";
+      ctx.strokeRect(boxX + 6, y - 5, 10, 10);
+      ctx.fillStyle = "#eef2f6";
+      ctx.fillText(text, boxX + 20, y, Math.max(40, boxW - 24));
+    });
+    ctx.restore();
+  },
+};
+
+const candlestickPlugin = {
+  id: "candlestickBars",
+  beforeDatasetsDraw(chart) {
+    const datasetIndex = chart.data.datasets.findIndex(dataset => dataset.candleBars);
+    if (datasetIndex < 0) return;
+    const dataset = chart.data.datasets[datasetIndex];
+    const bars = dataset.candleBars || [];
+    if (!bars.length) return;
+
+    const { ctx, chartArea, scales } = chart;
+    const xScale = scales.x;
+    const yScale = scales.y;
+    const gap = bars.length > 1
+      ? Math.abs(xScale.getPixelForValue(1) - xScale.getPixelForValue(0))
+      : 12;
+    const bodyWidth = clamp(gap * 0.56, 4, 16);
+
+    ctx.save();
+    ctx.lineWidth = 1.2;
+    bars.forEach((bar, index) => {
+      const x = xScale.getPixelForValue(index);
+      if (x < chartArea.left - bodyWidth || x > chartArea.right + bodyWidth) return;
+      const isUp = bar.close >= bar.open;
+      const color = bar.isCurrent ? COLORS.current : isUp ? COLORS.vwap : COLORS.resistance;
+      const yHigh = yScale.getPixelForValue(bar.high);
+      const yLow = yScale.getPixelForValue(bar.low);
+      const yOpen = yScale.getPixelForValue(bar.open);
+      const yClose = yScale.getPixelForValue(bar.close);
+      const bodyTop = Math.min(yOpen, yClose);
+      const bodyBottom = Math.max(yOpen, yClose);
+      const bodyHeight = Math.max(2, bodyBottom - bodyTop);
+
+      ctx.strokeStyle = color;
+      ctx.fillStyle = bar.isCurrent ? "#f0659544" : isUp ? "#12b88655" : "#fa525255";
+
+      ctx.beginPath();
+      ctx.moveTo(x, yHigh);
+      ctx.lineTo(x, yLow);
+      ctx.stroke();
+
+      ctx.fillRect(x - bodyWidth / 2, bodyTop, bodyWidth, bodyHeight);
+      ctx.strokeRect(x - bodyWidth / 2, bodyTop, bodyWidth, bodyHeight);
+    });
+    ctx.restore();
+  },
+};
+
+function chartDataset(label, data, color, dash = [], width = 1.5) {
+  return {
+    label,
+    data,
+    borderColor: color,
+    backgroundColor: color,
+    borderDash: dash,
+    borderWidth: width,
+    pointRadius: 0,
+    pointHoverRadius: 4,
+    pointHitRadius: 12,
+    tension: 0,
+  };
+}
+
+function percentChartLabel(pct) {
+  return `${pct > 0 ? "+" : ""}${fmtPct(pct, 2)}`;
+}
+
+function confluenceChartColor(level) {
+  if (level.type === "Suporte") return COLORS.support;
+  if (level.type === "Resistencia") return COLORS.resistance;
+  if (level.type === "Magneto") return COLORS.avwap;
+  return COLORS.poc;
+}
+
+function confluenceChartWidth(score) {
+  if (score >= 90) return 2.2;
+  if (score >= 75) return 1.8;
+  return 1.4;
+}
+
+function renderChart(r) {
+  if (state.chart) state.chart.destroy();
+  refs.empty.classList.add("hidden");
+  refs.canvas.classList.remove("hidden");
+
+  const allChartBars = chartBars(r);
+  const viewKey = `${r.window}-${r.allBars.length}`;
+  if (state.chartView.key !== viewKey) {
+    state.chartView.key = viewKey;
+    state.chartView.size = allChartBars.length;
+    state.chartView.start = Math.max(0, allChartBars.length - state.chartView.size);
+    resetPriceScale();
+  }
+  clampChartView(allChartBars.length);
+  const start = state.chartView.start;
+  const end = Math.min(allChartBars.length - 1, start + state.chartView.size - 1);
+  const visibleBars = allChartBars.slice(start, end + 1);
+  const labels = visibleBars.map(b => b.isCurrent ? "Atual" : brDate(b.date));
+  const n = visibleBars.length;
+  const close = visibleBars.map(b => b.close);
+  const layers = state.chartLayers;
+  const datasets = [];
+  const visiblePrices = [];
+  const addDataset = (layer, dataset, prices = []) => {
+    if (!layers[layer]) return;
+    datasets.push(dataset);
+    visiblePrices.push(...prices.filter(Number.isFinite));
+  };
+  const candleDataset = {
+    label: "Candles",
+    data: close,
+    candleBars: visibleBars,
+    skipHoverLabel: true,
+    showLine: false,
+    borderColor: COLORS.vwap,
+    backgroundColor: COLORS.vwap,
+    pointRadius: 0,
+    pointHoverRadius: 0,
+    pointHitRadius: 0,
+    order: 2,
+  };
+  const line = chartDataset("Fechamento", close, "#eef2f6", [], 1.2);
+  line.order = 1;
+  addDataset("close", line, close);
+  addDataset("candles", candleDataset, visibleBars.flatMap(b => [b.high, b.low, b.open, b.close]));
+
+  const currentLine = chartDataset("Preco atual", Array(n).fill(r.intraday.price), COLORS.current, [4, 4], 1.4);
+  currentLine.order = 0;
+  addDataset("current", currentLine, [r.intraday.price]);
+
+  const anchorLine = chartDataset("VWAP/Ancora", Array(n).fill(r.anchor), COLORS.vwap, [7, 4], 2);
+  anchorLine.order = 1;
+  addDataset("anchor", anchorLine, [r.anchor]);
+
+  const pocLine = chartDataset("POC proxy", Array(n).fill(r.profile.poc.price), COLORS.poc, [], 2);
+  pocLine.order = 1;
+  addDataset("poc", pocLine, [r.profile.poc.price]);
+
+  const vahLine = chartDataset("VAH 70%", Array(n).fill(r.profile.vah), COLORS.vah, [5, 5], 1.3);
+  const valLine = chartDataset("VAL 70%", Array(n).fill(r.profile.val), COLORS.val, [5, 5], 1.3);
+  vahLine.order = 1;
+  valLine.order = 1;
+  addDataset("valueArea", vahLine, [r.profile.vah]);
+  addDataset("valueArea", valLine, [r.profile.val]);
+
+  const sigmaUp = chartDataset("+2 sigma", Array(n).fill(r.anchor + 2 * r.gk.points), COLORS.resistance, [], 1.2);
+  const sigmaDown = chartDataset("-2 sigma", Array(n).fill(r.anchor - 2 * r.gk.points), COLORS.support, [], 1.2);
+  sigmaUp.order = 1;
+  sigmaDown.order = 1;
+  addDataset("sigma", sigmaUp, [r.anchor + 2 * r.gk.points]);
+  addDataset("sigma", sigmaDown, [r.anchor - 2 * r.gk.points]);
+
+  const openingLine = chartDataset("Abertura do dia", Array(n).fill(r.intraday.open), COLORS.vwap, [2, 2], 1.6);
+  openingLine.order = 1;
+  addDataset("opening", openingLine, [r.intraday.open]);
+
+  r.openingLevels.forEach(level => {
+    const color = level.dir === "sell" ? COLORS.resistance : COLORS.support;
+    const d = chartDataset(`${level.side} abertura ${level.sigma > 0 ? "+" : ""}${level.sigma}σ`, Array(n).fill(level.price), color, [10, 4], 1);
+    d.order = 1;
+    addDataset("opening", d, [level.price]);
+  });
+
+  const pocDevLine = chartDataset("POC base desvios", Array(n).fill(r.profile.poc.price), COLORS.poc, [2, 2], 1.6);
+  pocDevLine.order = 1;
+  addDataset("pocDeviations", pocDevLine, [r.profile.poc.price]);
+
+  r.pocDeviationLevels.forEach(level => {
+    const color = level.dir === "sell" ? COLORS.resistance : COLORS.support;
+    const d = chartDataset(`${level.side} POC ${level.sigma > 0 ? "+" : ""}${level.sigma}σ`, Array(n).fill(level.price), color, [6, 3], 1);
+    d.order = 1;
+    addDataset("pocDeviations", d, [level.price]);
+  });
+
+  r.percentMaps.forEach(map => {
+    map.levels.forEach(level => {
+      const color = level.pct > 0 ? COLORS.resistance : level.pct < 0 ? COLORS.support : map.color;
+      const d = chartDataset(`${map.shortLabel} ${percentChartLabel(level.pct)}`, Array(n).fill(level.price), color, level.pct === 0 ? [2, 2] : [8, 4], level.pct === 0 ? 1.4 : 0.9);
+      d.order = 1;
+      addDataset(map.layer, d, [level.price]);
+    });
+  });
+
+  r.confluence.slice(0, 8).forEach((level, index) => {
+    const d = chartDataset(`Conf ${index + 1} ${fmt(level.score, 0)} ${level.type}`, Array(n).fill(level.price), confluenceChartColor(level), [12, 3, 2, 3], confluenceChartWidth(level.score));
+    d.order = 0;
+    addDataset("confluence", d, [level.price]);
+  });
+
+  r.previousLevels.forEach(level => {
+    const d = chartDataset(level.label, Array(n).fill(level.price), level.color, level.dash, 1.2);
+    d.order = 1;
+    addDataset("previousDay", d, [level.price]);
+  });
+
+  r.avwaps.slice(0, 3).forEach(a => {
+    const d = chartDataset(`AVWAP ${a.label}`, Array(n).fill(a.price), COLORS.avwap, [3, 3], 1.1);
+    d.order = 1;
+    addDataset("avwap", d, [a.price]);
+  });
+
+  r.sr.slice(0, 5).forEach(s => {
+    const d = chartDataset(`SR ${fmt(s.price)}`, Array(n).fill(s.price), s.type === "suporte" ? COLORS.support : s.type === "resistencia" ? COLORS.resistance : COLORS.poc, [2, 5], 1);
+    d.order = 1;
+    addDataset("sr", d, [s.price]);
+  });
+
+  const allPrices = visiblePrices.length ? visiblePrices : [
+    ...visibleBars.flatMap(b => [b.high, b.low]),
+    r.intraday.price,
+  ];
+  const min = Math.min(...allPrices);
+  const max = Math.max(...allPrices);
+  const pad = Math.max((max - min) * 0.08, 10);
+  const baseMin = min - pad;
+  const baseMax = max + pad;
+  const yCenter = (baseMin + baseMax) / 2;
+  const yRange = Math.max(10, (baseMax - baseMin) * (state.priceScale.factor || 1));
+  const yMin = yCenter - yRange / 2;
+  const yMax = yCenter + yRange / 2;
+
+  const ctx = refs.canvas.getContext("2d");
+  state.chart = new Chart(ctx, {
+    type: "line",
+    data: { labels, datasets },
+    plugins: [candlestickPlugin, hoverLineLabelsPlugin],
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: false,
+      interaction: { mode: "index", intersect: false },
+      plugins: {
+        legend: {
+          display: true,
+          labels: { color: COLORS.text, boxWidth: 10, font: { size: 10 } },
+        },
+        tooltip: {
+          enabled: false,
+        },
+      },
+      scales: {
+        x: {
+          grid: { color: COLORS.grid },
+          ticks: { color: COLORS.text, maxTicksLimit: 9, font: { size: 10 } },
+        },
+        y: {
+          position: "right",
+          min: yMin,
+          max: yMax,
+          grid: { color: COLORS.grid },
+          ticks: { color: COLORS.text, callback: v => fmt(v, 0), font: { size: 10 } },
+        },
+      },
+    },
+  });
+  updateChartNav(allChartBars.length, start, end);
+}
+
+function renderAll() {
+  const r = state.result;
+  if (!r) return;
+  renderCards(r);
+  renderLevels(r);
+  renderOpeningMap(r);
+  renderPocDeviationMap(r);
+  renderPercentVariationMap(r);
+  renderProfile(r);
+  renderConfluence(r);
+  renderBacktest(r);
+  renderChart(r);
+  renderDom();
+
+  setPill(refs.windowPill, "", `Janela ${r.window}d`);
+  setPill(refs.anchorPill, Number.isFinite(r.intraday.vwap) ? "ok" : "warn", `Ancora: ${Number.isFinite(r.intraday.vwap) ? "VWAP" : "proxy"}`);
+  setPill(refs.scorePill, scoreTag(r.regime.meanReversionScore), `MR ${fmt(r.regime.meanReversionScore, 0)}`);
+  setPill(refs.regimePill, r.regime.type, r.regime.label);
+}
+
+function recalc() {
+  try {
+    if (!state.bars.length) return;
+    if (state.bars.length < state.selectedWindow) throw new Error(`CSV tem menos de ${state.selectedWindow} pregoes.`);
+    state.result = buildResult();
+    renderAll();
+  } catch (err) {
+    showStatus(refs.fileStatus, "bad", err.message);
+  }
+}
+
+function updateReady() {
+  const hasBars = state.bars.length >= 21;
+  const hasIntraday = ["open", "high", "low", "price"].every(k => Number.isFinite(parseLocaleNumber(refs.inputs[k].value)));
+  refs.btn.disabled = !(hasBars && hasIntraday);
+}
+
+function autoFillIntraday(latest) {
+  refs.inputs.open.value = latest.open.toFixed(3);
+  refs.inputs.high.value = latest.high.toFixed(3);
+  refs.inputs.low.value = latest.low.toFixed(3);
+  refs.inputs.price.value = latest.close.toFixed(3);
+  refs.inputs.vwap.value = "";
+  refs.inputs.volume.value = latest.quantity ? Math.round(latest.quantity) : "";
+}
+
+function liveNumber(value) {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  return parseLocaleNumber(value);
+}
+
+function writeLiveInput(input, value, decimals = 3) {
+  const n = liveNumber(value);
+  if (!Number.isFinite(n)) return false;
+  input.value = decimals === 0 ? String(Math.round(n)) : n.toFixed(decimals);
+  input.classList.add("live-fed");
+  return true;
+}
+
+function setRtdStatus(type, text) {
+  setPill(refs.rtdPill, type, `RTD ${text}`);
+  setPill(refs.rtdStatus, type, text);
+}
+
+function scheduleLiveRecalc() {
+  updateReady();
+  if (refs.btn.disabled || state.rtd.recalcTimer) return;
+  state.rtd.recalcTimer = window.setTimeout(() => {
+    state.rtd.recalcTimer = null;
+    updateReady();
+    if (!refs.btn.disabled) recalc();
+  }, 1000);
+}
+
+function updateLiveMeta(msg) {
+  const rtd = msg.rtd || {};
+  const book = msg.book || {};
+  refs.rtdAsset.textContent = msg.asset || "WDOFUT_F_0";
+  refs.rtdLast.textContent = rtd.HOR || msg.localTimestamp || "--";
+
+  const bid = liveNumber(book.ofertaCompra);
+  const ask = liveNumber(book.ofertaVenda);
+  refs.rtdBook.textContent = Number.isFinite(bid) && Number.isFinite(ask)
+    ? `${fmt(bid)} / ${fmt(ask)}`
+    : "--";
+
+  const vpj = liveNumber(book.volumeProjetado);
+  refs.rtdVpj.textContent = Number.isFinite(vpj) ? fmt(vpj, 0) : "--";
+}
+
+function applyLiveSnapshot(msg) {
+  if (!state.rtd.enabled || !msg || msg.type !== "snapshot") return;
+  state.rtd.lastSnapshot = msg;
+  registerDomTick(msg);
+
+  const intraday = msg.intraday || {};
+  updateLiveMeta(msg);
+  setRtdStatus(msg.status === "connected" ? "ok" : "warn", msg.status === "connected" ? "Conectado" : "Reconectando");
+
+  writeLiveInput(refs.inputs.open, intraday.abertura);
+  writeLiveInput(refs.inputs.high, intraday.maximaParcial);
+  writeLiveInput(refs.inputs.low, intraday.minimaParcial);
+  writeLiveInput(refs.inputs.price, intraday.precoAtual);
+  writeLiveInput(refs.inputs.vwap, intraday.vwapIntraday);
+  writeLiveInput(refs.inputs.volume, intraday.volumeAcumulado, 0);
+
+  renderDom(msg);
+  scheduleLiveRecalc();
+}
+
+function rtdWebSocketUrl() {
+  if (location.protocol === "http:" || location.protocol === "https:") {
+    const scheme = location.protocol === "https:" ? "wss" : "ws";
+    return `${scheme}://${location.host}/ws`;
+  }
+  return "ws://localhost:5000/ws";
+}
+
+function connectRtdLive() {
+  if (!state.rtd.enabled) return;
+  if (state.rtd.socket && [WebSocket.OPEN, WebSocket.CONNECTING].includes(state.rtd.socket.readyState)) return;
+
+  setRtdStatus("warn", "Reconectando");
+  const socket = new WebSocket(rtdWebSocketUrl());
+  state.rtd.socket = socket;
+
+  socket.addEventListener("open", () => setRtdStatus("ok", "Conectado"));
+
+  socket.addEventListener("message", ev => {
+    let msg;
+    try {
+      msg = JSON.parse(ev.data);
+    } catch {
+      return;
+    }
+
+    if (msg.type === "snapshot") {
+      applyLiveSnapshot(msg);
+    } else if (msg.type === "status") {
+      const ok = msg.status === "connected";
+      setRtdStatus(ok ? "ok" : "warn", ok ? "Conectado" : "Reconectando");
+    } else if (msg.type === "error") {
+      setRtdStatus("bad", "Sem Profit");
+    }
+  });
+
+  socket.addEventListener("close", () => {
+    state.rtd.socket = null;
+    if (!state.rtd.enabled) return;
+    setRtdStatus("warn", "Reconectando");
+    window.clearTimeout(state.rtd.reconnectTimer);
+    state.rtd.reconnectTimer = window.setTimeout(connectRtdLive, 2000);
+  });
+
+  socket.addEventListener("error", () => {
+    setRtdStatus("bad", "Sem Profit");
+  });
+}
+
+function disconnectRtdLive() {
+  window.clearTimeout(state.rtd.reconnectTimer);
+  state.rtd.reconnectTimer = null;
+  if (state.rtd.socket) state.rtd.socket.close();
+  state.rtd.socket = null;
+  setRtdStatus("warn", "Manual");
+}
+
+async function handleFile(file) {
+  if (!file) return;
+  refs.fileName.textContent = file.name;
+  const buffer = await file.arrayBuffer();
+  const decoded = decodeCsv(buffer);
+  const parsed = parseDailyCsv(decoded.text);
+  if (!parsed.ok) {
+    state.bars = [];
+    state.uploadedCount = 0;
+    state.latest = null;
+    updateReady();
+    showStatus(refs.fileStatus, "bad", parsed.message);
+    setPill(refs.filePill, "bad", "CSV invalido");
+    return;
+  }
+  const activeBars = parsed.bars.slice(-63);
+  state.uploadedCount = parsed.bars.length;
+  state.bars = activeBars;
+  state.latest = parsed.bars[parsed.bars.length - 1];
+  autoFillIntraday(state.latest);
+  if (state.rtd.enabled && state.rtd.lastSnapshot) applyLiveSnapshot(state.rtd.lastSnapshot);
+  const ativo = state.latest.ativo || "WDO";
+  const message = `${parsed.bars.length} pregoes carregados | usando ultimos ${activeBars.length}: ${brDate(activeBars[0].date)} a ${brDate(state.latest.date)} | ${decoded.encoding}`;
+  showStatus(refs.fileStatus, activeBars.length >= 63 ? "ok" : "warn", message);
+  setPill(refs.filePill, "ok", `${ativo} ${activeBars.length}d ativos`);
+  setPill(refs.datePill, "", brDate(state.latest.date));
+  updateReady();
+  recalc();
+}
+
+refs.file.addEventListener("change", ev => handleFile(ev.target.files[0]));
+["dragenter", "dragover"].forEach(evt => refs.dropzone.addEventListener(evt, ev => {
+  ev.preventDefault();
+  refs.dropzone.classList.add("drag");
+}));
+["dragleave", "drop"].forEach(evt => refs.dropzone.addEventListener(evt, ev => {
+  ev.preventDefault();
+  refs.dropzone.classList.remove("drag");
+}));
+refs.dropzone.addEventListener("drop", ev => handleFile(ev.dataTransfer.files[0]));
+
+document.getElementById("window-group").addEventListener("click", ev => {
+  const btn = ev.target.closest("[data-window]");
+  if (!btn) return;
+  state.selectedWindow = Number(btn.dataset.window);
+  document.querySelectorAll(".seg").forEach(b => b.classList.toggle("active", b === btn));
+  updateReady();
+  recalc();
+});
+
+Object.values(refs.inputs).forEach(input => {
+  input.addEventListener("input", () => {
+    input.classList.remove("live-fed");
+    updateReady();
+    if (!refs.btn.disabled) recalc();
+  });
+});
+refs.btn.addEventListener("click", recalc);
+
+refs.rtdToggle.addEventListener("click", () => {
+  state.rtd.enabled = !state.rtd.enabled;
+  refs.rtdToggle.classList.toggle("active", state.rtd.enabled);
+  if (state.rtd.enabled) connectRtdLive();
+  else disconnectRtdLive();
+});
+
+function renderChartOnly() {
+  if (state.result) renderChart(state.result);
+}
+
+function syncLayerControls() {
+  refs.chartLayers.querySelectorAll("[data-layer]").forEach(input => {
+    input.checked = !!state.chartLayers[input.dataset.layer];
+  });
+}
+
+refs.chartLayers.addEventListener("change", ev => {
+  const input = ev.target.closest("[data-layer]");
+  if (!input) return;
+  state.chartLayers[input.dataset.layer] = input.checked;
+  saveChartLayers();
+  renderChartOnly();
+});
+
+refs.chartPrev.addEventListener("click", () => {
+  panChart(-4);
+  renderChartOnly();
+});
+
+refs.chartNext.addEventListener("click", () => {
+  panChart(4);
+  renderChartOnly();
+});
+
+refs.chartCurrent.addEventListener("click", () => {
+  setChartToCurrent();
+  renderChartOnly();
+});
+
+refs.chartAll.addEventListener("click", () => {
+  setChartToAll();
+  renderChartOnly();
+});
+
+refs.chartZoomIn.addEventListener("click", () => {
+  zoomChart(-4);
+  renderChartOnly();
+});
+
+refs.chartZoomOut.addEventListener("click", () => {
+  zoomChart(4);
+  renderChartOnly();
+});
+
+refs.priceZoomIn.addEventListener("click", () => {
+  zoomPrice(0.82);
+  renderChartOnly();
+});
+
+refs.priceZoomOut.addEventListener("click", () => {
+  zoomPrice(1.22);
+  renderChartOnly();
+});
+
+refs.priceAuto.addEventListener("click", () => {
+  resetPriceScale();
+  renderChartOnly();
+});
+
+refs.canvas.addEventListener("wheel", ev => {
+  if (!state.result) return;
+  ev.preventDefault();
+  if (ev.shiftKey) {
+    zoomPrice(ev.deltaY < 0 ? 0.86 : 1.16);
+  } else {
+    zoomChart(ev.deltaY < 0 ? -2 : 2);
+  }
+  renderChartOnly();
+}, { passive: false });
+
+refs.canvas.addEventListener("pointerdown", ev => {
+  if (!state.result) return;
+  const rect = refs.canvas.getBoundingClientRect();
+  const axisZone = ev.clientX > rect.right - Math.min(96, rect.width * 0.18);
+  state.chartView.drag = axisZone
+    ? { mode: "price", y: ev.clientY, factor: state.priceScale.factor || 1 }
+    : { mode: "time", x: ev.clientX, start: state.chartView.start, size: state.chartView.size };
+  refs.canvas.setPointerCapture?.(ev.pointerId);
+});
+
+refs.canvas.addEventListener("pointermove", ev => {
+  if (!state.result || !state.chartView.drag) return;
+  const drag = state.chartView.drag;
+  if (drag.mode === "price") {
+    const dy = ev.clientY - drag.y;
+    state.priceScale.factor = clamp(drag.factor * Math.exp(dy / 180), 0.25, 6);
+  } else {
+    const rect = refs.canvas.getBoundingClientRect();
+    const pxPerBar = Math.max(10, rect.width / Math.max(1, drag.size));
+    const deltaBars = Math.round((drag.x - ev.clientX) / pxPerBar);
+    const total = chartBars(state.result).length;
+    state.chartView.start = clamp(drag.start + deltaBars, 0, Math.max(0, total - state.chartView.size));
+  }
+  renderChartOnly();
+});
+
+["pointerup", "pointercancel", "pointerleave"].forEach(evt => refs.canvas.addEventListener(evt, ev => {
+  state.chartView.drag = null;
+  refs.canvas.releasePointerCapture?.(ev.pointerId);
+}));
+
+document.getElementById("tabs").addEventListener("click", ev => {
+  const tab = ev.target.closest("[data-tab]");
+  if (!tab) return;
+  document.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t === tab));
+  document.querySelectorAll(".tab-panel").forEach(panel => panel.classList.add("hidden"));
+  document.getElementById(`panel-${tab.dataset.tab}`).classList.remove("hidden");
+});
+
+setPill(refs.datePill, "", new Date().toLocaleDateString("pt-BR"));
+syncLayerControls();
+[refs.chartPrev, refs.chartNext, refs.chartCurrent, refs.chartAll, refs.chartZoomIn, refs.chartZoomOut, refs.priceZoomIn, refs.priceZoomOut, refs.priceAuto].forEach(btn => {
+  btn.disabled = true;
+});
+refs.cards.innerHTML = ["Sigma", "Z-score", "POC", "ATR", "Regime", "Divergencia"].map(label => `
+  <div class="card">
+    <div class="card-label">${label}</div>
+    <div class="card-value">--</div>
+    <div class="card-sub">Aguardando CSV</div>
+  </div>
+`).join("");
+renderDom();
+connectRtdLive();
+</script>
+</body>
+</html>
