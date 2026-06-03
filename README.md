@@ -10,6 +10,7 @@ Repositorio alvo: https://github.com/devfilipeivopereira/rtd_dolar
 - [Campos RTD](docs/campos_rtd.md)
 - [Validacao e troubleshooting](docs/validacao.md)
 - [Plano implementado](docs/plano_implementado.md)
+- [Plano do novo projeto nativo low-latency](docs/plano_novo_projeto_nativo_low_latency.md)
 
 ## Arquitetura
 
