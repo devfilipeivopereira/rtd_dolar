@@ -225,7 +225,11 @@ tr:hover td{background:#ffffff05}
 .bar-fill.poc{background:#dfad27}
 .bar-fill.value{background:#2f75a8}
 .dom-grid{display:grid;grid-template-columns:minmax(360px,1.15fr) minmax(280px,.75fr);gap:14px}
-.dom-ladder{font-family:var(--mono);font-size:12px}
+.dom-ladder{
+  font-family:var(--mono);font-size:12px;
+  max-height:620px;overflow-y:auto;overscroll-behavior:contain;
+  scrollbar-color:#3b4552 #10141a;scrollbar-width:thin;
+}
 .dom-row{
   display:grid;grid-template-columns:82px minmax(96px,1fr) 82px minmax(130px,1.05fr);
   min-height:28px;border-bottom:1px solid #ffffff0a;align-items:stretch;
@@ -748,6 +752,7 @@ const state = {
     ticks: [],
     lastPrice: null,
     tickSize: 0.5,
+    domVisibleTicks: 200,
   },
   chartLayers: loadChartLayers(),
   chartView: {
@@ -2287,6 +2292,8 @@ function renderDomLadder(msg) {
   const book = liveBookFromSnapshot(msg);
   const step = state.rtd.tickSize;
   const center = roundToTick(price, step);
+  const previousScrollTop = refs.domLadder.scrollTop;
+  const hadRows = !!refs.domLadder.querySelector(".dom-row");
 
   if (!Number.isFinite(center)) {
     refs.domLadder.innerHTML = `<div class="warn-line">Aguardando preco atual para montar a escada.</div>`;
@@ -2296,9 +2303,10 @@ function renderDomLadder(msg) {
   const levels = collectDomLevels(msg);
   const lastTick = state.rtd.ticks[0];
   const lastDir = lastTick?.delta > 0 ? "up" : lastTick?.delta < 0 ? "down" : "flat";
+  const ticksEachSide = Math.max(1, Math.round(state.rtd.domVisibleTicks / 2));
   const rows = [];
 
-  for (let offset = 15; offset >= -15; offset--) {
+  for (let offset = ticksEachSide; offset >= -ticksEachSide; offset--) {
     const rowPrice = center + offset * step;
     const marks = levels
       .filter(level => sameTick(level.price, rowPrice, step))
@@ -2314,7 +2322,7 @@ function renderDomLadder(msg) {
     if (isAsk) classes.push("ask-level");
 
     rows.push(`
-      <div class="${classes.join(" ")}">
+      <div class="${classes.join(" ")}"${isLast ? " data-current=\"true\"" : ""}>
         <div class="dom-cell dom-ask">${isAsk && Number.isFinite(book.askVolume) ? fmt(book.askVolume, 0) : ""}</div>
         <div class="dom-cell dom-price">${fmt(rowPrice)}</div>
         <div class="dom-cell dom-bid">${isBid && Number.isFinite(book.bidVolume) ? fmt(book.bidVolume, 0) : ""}</div>
@@ -2326,6 +2334,11 @@ function renderDomLadder(msg) {
   }
 
   refs.domLadder.innerHTML = rows.join("");
+  if (hadRows) {
+    refs.domLadder.scrollTop = previousScrollTop;
+  } else {
+    refs.domLadder.scrollTop = Math.max(0, (refs.domLadder.scrollHeight - refs.domLadder.clientHeight) / 2);
+  }
 }
 
 function renderDomSummary(msg) {
