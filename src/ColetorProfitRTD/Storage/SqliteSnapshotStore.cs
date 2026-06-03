@@ -3,6 +3,7 @@ using System.Data.SQLite;
 using System.Globalization;
 using System.IO;
 using System.Threading;
+using ColetorProfitRTD.Flow;
 using ColetorProfitRTD.MarketData;
 using ColetorProfitRTD.Web;
 
@@ -14,7 +15,9 @@ namespace ColetorProfitRTD.Storage
         private readonly Logger _log;
         private readonly object _lock = new object();
         private DateTime _lastSaveUtc = DateTime.MinValue;
+        private DateTime _lastFlowSaveUtc = DateTime.MinValue;
         private int _saving;
+        private int _flowSaving;
         private bool _initialized;
 
         public SqliteSnapshotStore(StorageConfig config, Logger log)
@@ -73,10 +76,101 @@ CREATE TABLE IF NOT EXISTS minute_snapshots (
     updated_at TEXT NOT NULL,
     PRIMARY KEY (trade_date, time_bucket, asset)
 );");
+
+                Execute(connection, @"
+CREATE TABLE IF NOT EXISTS flow_metrics (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    local_timestamp TEXT NOT NULL,
+    asset TEXT,
+    data_quality TEXT,
+    last_price REAL,
+    delta_5s REAL,
+    cumulative_delta REAL,
+    top_book_imbalance REAL,
+    order_flow_imbalance REAL,
+    vwap REAL,
+    poc REAL,
+    raw_json TEXT NOT NULL
+);");
+
+                Execute(connection, @"
+CREATE TABLE IF NOT EXISTS flow_signals (
+    id TEXT PRIMARY KEY,
+    local_timestamp TEXT NOT NULL,
+    asset TEXT,
+    setup TEXT,
+    direction TEXT,
+    price REAL,
+    score REAL,
+    confidence TEXT,
+    data_quality TEXT,
+    raw_json TEXT NOT NULL
+);");
             }
 
             _initialized = true;
             _log.Info("SQLite inicializado.");
+        }
+
+        public void QueueSaveFlowMetrics(FlowMetrics metrics)
+        {
+            if (!_config.Enabled || !_initialized || metrics == null)
+            {
+                return;
+            }
+
+            lock (_lock)
+            {
+                TimeSpan elapsed = DateTime.UtcNow - _lastFlowSaveUtc;
+
+                if (elapsed.TotalMilliseconds < Math.Max(_config.SnapshotIntervalMs, 250))
+                {
+                    return;
+                }
+
+                _lastFlowSaveUtc = DateTime.UtcNow;
+            }
+
+            if (Interlocked.CompareExchange(ref _flowSaving, 1, 0) != 0)
+            {
+                return;
+            }
+
+            ThreadPool.QueueUserWorkItem(_ =>
+            {
+                try
+                {
+                    SaveFlowMetrics(metrics);
+                }
+                catch (Exception ex)
+                {
+                    _log.Error("Falha ao salvar metricas de fluxo SQLite.", ex);
+                }
+                finally
+                {
+                    Interlocked.Exchange(ref _flowSaving, 0);
+                }
+            });
+        }
+
+        public void QueueSaveSignal(FlowSignal signal)
+        {
+            if (!_config.Enabled || !_initialized || signal == null)
+            {
+                return;
+            }
+
+            ThreadPool.QueueUserWorkItem(_ =>
+            {
+                try
+                {
+                    SaveSignal(signal);
+                }
+                catch (Exception ex)
+                {
+                    _log.Error("Falha ao salvar sinal de fluxo SQLite.", ex);
+                }
+            });
         }
 
         public void QueueSave(MarketSnapshot snapshot)
@@ -131,6 +225,69 @@ CREATE TABLE IF NOT EXISTS minute_snapshots (
                     InsertSnapshot(connection, tx, snapshot);
                     UpsertMinuteSnapshot(connection, tx, snapshot);
                     tx.Commit();
+                }
+            }
+        }
+
+        private void SaveFlowMetrics(FlowMetrics metrics)
+        {
+            using (var connection = new SQLiteConnection(_config.ConnectionString))
+            {
+                connection.Open();
+
+                using (SQLiteCommand command = connection.CreateCommand())
+                {
+                    command.CommandText = @"
+INSERT INTO flow_metrics (
+    local_timestamp, asset, data_quality, last_price, delta_5s, cumulative_delta,
+    top_book_imbalance, order_flow_imbalance, vwap, poc, raw_json
+) VALUES (
+    @local_timestamp, @asset, @data_quality, @last_price, @delta_5s, @cumulative_delta,
+    @top_book_imbalance, @order_flow_imbalance, @vwap, @poc, @raw_json
+);";
+
+                    command.Parameters.AddWithValue("@local_timestamp", metrics.Timestamp.ToString("o"));
+                    command.Parameters.AddWithValue("@asset", metrics.Asset ?? string.Empty);
+                    command.Parameters.AddWithValue("@data_quality", FlowProcessor.QualityName(metrics.DataQuality));
+                    command.Parameters.AddWithValue("@last_price", DbValue(metrics.LastPrice));
+                    command.Parameters.AddWithValue("@delta_5s", metrics.Delta5s);
+                    command.Parameters.AddWithValue("@cumulative_delta", metrics.CumulativeDelta);
+                    command.Parameters.AddWithValue("@top_book_imbalance", DbValue(metrics.TopBookImbalance));
+                    command.Parameters.AddWithValue("@order_flow_imbalance", DbValue(metrics.OrderFlowImbalance));
+                    command.Parameters.AddWithValue("@vwap", DbValue(metrics.Vwap));
+                    command.Parameters.AddWithValue("@poc", DbValue(metrics.Poc));
+                    command.Parameters.AddWithValue("@raw_json", JsonHelper.Serialize(metrics.ToMessage()));
+                    command.ExecuteNonQuery();
+                }
+            }
+        }
+
+        private void SaveSignal(FlowSignal signal)
+        {
+            using (var connection = new SQLiteConnection(_config.ConnectionString))
+            {
+                connection.Open();
+
+                using (SQLiteCommand command = connection.CreateCommand())
+                {
+                    command.CommandText = @"
+INSERT OR REPLACE INTO flow_signals (
+    id, local_timestamp, asset, setup, direction, price, score, confidence, data_quality, raw_json
+) VALUES (
+    @id, @local_timestamp, @asset, @setup, @direction, @price, @score, @confidence, @data_quality, @raw_json
+);";
+
+                    command.Parameters.AddWithValue("@id", signal.Id ?? Guid.NewGuid().ToString("N"));
+                    command.Parameters.AddWithValue("@local_timestamp", signal.Timestamp.ToString("o"));
+                    command.Parameters.AddWithValue("@asset", signal.Asset ?? string.Empty);
+                    command.Parameters.AddWithValue("@setup", signal.Setup ?? string.Empty);
+                    command.Parameters.AddWithValue("@direction", signal.Direction ?? string.Empty);
+                    command.Parameters.AddWithValue("@price", DbValue(signal.Price));
+                    command.Parameters.AddWithValue("@score", signal.Score);
+                    command.Parameters.AddWithValue("@confidence", signal.Confidence ?? string.Empty);
+                    command.Parameters.AddWithValue("@data_quality", FlowProcessor.QualityName(signal.DataQuality));
+                    command.Parameters.AddWithValue("@raw_json", JsonHelper.Serialize(signal.ToMessage()));
+                    command.ExecuteNonQuery();
                 }
             }
         }

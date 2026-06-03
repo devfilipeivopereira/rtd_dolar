@@ -73,6 +73,11 @@ namespace ColetorProfitRTD.MarketData
             };
         }
 
+        public decimal? GetFieldDecimal(string field)
+        {
+            return GetDecimal(field);
+        }
+
         private decimal? GetDecimal(string field)
         {
             if (!Rtd.TryGetValue(field, out object value))

@@ -13,6 +13,7 @@ namespace ColetorProfitRTD
         public WebConfig Web { get; set; } = new WebConfig();
         public StorageConfig Storage { get; set; } = new StorageConfig();
         public DiagnosticsConfig Diagnostics { get; set; } = new DiagnosticsConfig();
+        public FlowConfig Flow { get; set; } = new FlowConfig();
 
         public static AppConfig Load(string path)
         {
@@ -29,6 +30,7 @@ namespace ColetorProfitRTD
             config.Web = config.Web ?? new WebConfig();
             config.Storage = config.Storage ?? new StorageConfig();
             config.Diagnostics = config.Diagnostics ?? new DiagnosticsConfig();
+            config.Flow = config.Flow ?? new FlowConfig();
             config.Rtd.Fields = NormalizeFields(config.Rtd.Fields);
 
             return config;
@@ -74,5 +76,25 @@ namespace ColetorProfitRTD
     public sealed class DiagnosticsConfig
     {
         public string LogPath { get; set; } = "logs/coletor.log";
+    }
+
+    public sealed class FlowConfig
+    {
+        public bool Enabled { get; set; } = true;
+        public decimal TickSize { get; set; } = 0.5m;
+        public int CoalescingMs { get; set; } = 75;
+        public int BroadcastIntervalMs { get; set; } = 250;
+        public int MaxQueueSize { get; set; } = 2048;
+        public int MaxTradeBuffer { get; set; } = 5000;
+        public int MaxBookBuffer { get; set; } = 5000;
+        public int ScoreThreshold { get; set; } = 60;
+        public int StrongSignalThreshold { get; set; } = 75;
+        public int ExcellentSignalThreshold { get; set; } = 90;
+        public int SignalCooldownMs { get; set; } = 8000;
+        public int SignalTtlMs { get; set; } = 15000;
+        public int DataQualityCapTopOfBook { get; set; } = 78;
+        public int DataQualityCapDerivedTape { get; set; } = 85;
+        public bool UseProfitMedAsVwapFallback { get; set; } = true;
+        public string VolumeFieldMode { get; set; } = "Auto";
     }
 }

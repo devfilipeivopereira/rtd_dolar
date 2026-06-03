@@ -11,6 +11,7 @@ Repositorio alvo: https://github.com/devfilipeivopereira/rtd_dolar
 - [Validacao e troubleshooting](docs/validacao.md)
 - [Plano implementado](docs/plano_implementado.md)
 - [Plano do novo projeto nativo low-latency](docs/plano_novo_projeto_nativo_low_latency.md)
+- [Tape reading e order flow](docs/order_flow.md)
 
 ## Arquitetura
 
@@ -74,6 +75,8 @@ Endpoints:
 ```text
 GET /health
 GET /snapshot
+GET /flow
+GET /signals
 WS  /ws
 ```
 

@@ -269,6 +269,15 @@ tr:hover td{background:#ffffff05}
 .dom-level.below{border-color:#225d77}
 .dom-summary{display:grid;grid-template-columns:repeat(4,minmax(120px,1fr));gap:8px;margin-bottom:10px}
 .dom-summary .live-kv{padding:9px 10px}
+.flow-summary{grid-template-columns:repeat(6,minmax(110px,1fr))}
+.flow-debug-grid{display:grid;grid-template-columns:repeat(3,minmax(160px,1fr));gap:10px}
+.flow-signal{border-left:3px solid var(--line)}
+.flow-signal.buy{border-left-color:var(--green)}
+.flow-signal.sell{border-left-color:var(--red)}
+.flow-chip{display:inline-flex;align-items:center;height:20px;padding:0 6px;border:1px solid var(--line);border-radius:5px;font-size:10px;font-weight:900}
+.flow-chip.buy{border-color:#1f7a66;color:#9df2d5;background:#0d261f}
+.flow-chip.sell{border-color:#7a2b2b;color:#ff9b9b;background:#2b1111}
+.flow-chip.neutral,.flow-chip.unknown{border-color:#7a5f1f;color:#ffd66b;background:#28210d}
 .small-list{display:flex;flex-direction:column;gap:9px}
 .kv{display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid #ffffff0a;padding-bottom:7px}
 .kv:last-child{border-bottom:0;padding-bottom:0}
@@ -466,6 +475,9 @@ tr:hover td{background:#ffffff05}
 
       <nav class="tabs" id="tabs">
         <button class="tab active" data-tab="dom">DOM</button>
+        <button class="tab" data-tab="flow">Fluxo</button>
+        <button class="tab" data-tab="signals">Setups</button>
+        <button class="tab" data-tab="flowdebug">Debug Fluxo</button>
         <button class="tab" data-tab="levels">Niveis</button>
         <button class="tab" data-tab="openmap">Abertura</button>
         <button class="tab" data-tab="pocmap">POC</button>
@@ -504,6 +516,58 @@ tr:hover td{background:#ffffff05}
                   <div class="dom-levels" id="dom-key-levels"></div>
                 </div>
               </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="tab-panel hidden" id="panel-flow">
+          <div class="dom-summary flow-summary">
+            <div class="live-kv"><span>Delta 5s</span><strong id="flow-delta-5s">--</strong></div>
+            <div class="live-kv"><span>Delta acum.</span><strong id="flow-cum-delta">--</strong></div>
+            <div class="live-kv"><span>Imbalance</span><strong id="flow-imbalance">--</strong></div>
+            <div class="live-kv"><span>OFI</span><strong id="flow-ofi">--</strong></div>
+            <div class="live-kv"><span>Microbias</span><strong id="flow-microbias">--</strong></div>
+            <div class="live-kv"><span>Dist. VWAP</span><strong id="flow-vwap-dist">--</strong></div>
+          </div>
+          <div class="panel-grid">
+            <div class="panel">
+              <div class="panel-head">
+                <div class="panel-title">Metricas de fluxo</div>
+                <span class="tag amber" id="flow-quality">derivado</span>
+              </div>
+              <div class="panel-body"><div class="small-list" id="flow-kv"></div></div>
+            </div>
+            <div class="panel">
+              <div class="panel-head"><div class="panel-title">Trades derivados</div></div>
+              <div class="panel-body"><div class="dom-tape" id="flow-trades"></div></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="tab-panel hidden" id="panel-signals">
+          <div class="panel">
+            <div class="panel-head">
+              <div class="panel-title">Sinais operacionais</div>
+              <span class="tag amber">score + contexto</span>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Hora</th><th>Setup</th><th>Direcao</th><th>Preco</th><th>Score</th><th>Motivos</th>
+                  </tr>
+                </thead>
+                <tbody id="signals-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section class="tab-panel hidden" id="panel-flowdebug">
+          <div class="panel">
+            <div class="panel-head"><div class="panel-title">Debug do motor de fluxo</div></div>
+            <div class="panel-body">
+              <div class="flow-debug-grid" id="flow-debug-kv"></div>
             </div>
           </div>
         </section>
@@ -754,6 +818,14 @@ const state = {
     tickSize: 0.5,
     domVisibleTicks: 200,
   },
+  flow: {
+    lastMessage: null,
+    metrics: null,
+    signals: [],
+    trades: [],
+    maxSignals: 80,
+    maxTrades: 120,
+  },
   chartLayers: loadChartLayers(),
   chartView: {
     start: 0,
@@ -826,6 +898,17 @@ const refs = {
   domLadder: document.getElementById("dom-ladder"),
   domTape: document.getElementById("dom-tape"),
   domKeyLevels: document.getElementById("dom-key-levels"),
+  flowDelta5s: document.getElementById("flow-delta-5s"),
+  flowCumDelta: document.getElementById("flow-cum-delta"),
+  flowImbalance: document.getElementById("flow-imbalance"),
+  flowOfi: document.getElementById("flow-ofi"),
+  flowMicrobias: document.getElementById("flow-microbias"),
+  flowVwapDist: document.getElementById("flow-vwap-dist"),
+  flowQuality: document.getElementById("flow-quality"),
+  flowKv: document.getElementById("flow-kv"),
+  flowTrades: document.getElementById("flow-trades"),
+  signalsBody: document.getElementById("signals-body"),
+  flowDebugKv: document.getElementById("flow-debug-kv"),
   btn: document.getElementById("btn-calc"),
   levelsBody: document.getElementById("levels-body"),
   openingBody: document.getElementById("opening-body"),
@@ -874,6 +957,12 @@ function setPill(el, type, text) {
 function fmt(n, dec = 1) {
   if (!Number.isFinite(n)) return "--";
   return n.toLocaleString("pt-BR", { minimumFractionDigits: dec, maximumFractionDigits: dec });
+}
+
+function signedFmt(value, dec = 0) {
+  const n = liveNumber(value);
+  if (!Number.isFinite(n)) return "--";
+  return `${n > 0 ? "+" : ""}${fmt(n, dec)}`;
 }
 
 function fmtPct(n, dec = 1) {
@@ -2319,6 +2408,21 @@ function collectDomLevels(msg) {
     ));
   }
 
+  (state.flow.signals || []).forEach(signal => {
+    const price = liveNumber(signal.levelPrice ?? signal.price);
+    if (!Number.isFinite(price)) return;
+    const setup = signal.setup || "setup";
+    const direction = signal.direction || "neutral";
+    add(
+      price,
+      `${setup} ${direction} ${fmt(liveNumber(signal.score), 0)}`,
+      direction === "buy" ? "Suporte" : direction === "sell" ? "Resistencia" : "Magneto",
+      105,
+      "Flow",
+      "signal"
+    );
+  });
+
   return compactDomLevels(levels);
 }
 
@@ -2357,6 +2461,22 @@ function registerDomTick(msg) {
 
 function renderDomTape() {
   if (!refs.domTape) return;
+  if (state.flow.trades.length) {
+    refs.domTape.innerHTML = state.flow.trades.slice(0, 28).map(trade => {
+      const side = trade.side || trade.aggressorSide || "unknown";
+      const dir = side === "buy" ? "up" : side === "sell" ? "down" : "flat";
+      return `
+        <div class="dom-tick ${dir}">
+          <span>${escapeHtml(trade.time || "--")}</span>
+          <strong>${fmt(liveNumber(trade.price))}</strong>
+          <span>${fmt(liveNumber(trade.qty), 0)}</span>
+          <span>${escapeHtml(side)}${trade.derived ? " d" : ""}</span>
+        </div>
+      `;
+    }).join("");
+    return;
+  }
+
   if (!state.rtd.ticks.length) {
     refs.domTape.innerHTML = `<div class="warn-line">Aguardando ticks do RTD.</div>`;
     return;
@@ -2490,6 +2610,154 @@ function renderDom(msg = state.rtd.lastSnapshot) {
   renderDomLadder(msg);
   renderDomTape();
   renderDomKeyLevels(msg);
+}
+
+function signalKey(signal) {
+  return signal?.id || `${signal?.timestamp || ""}-${signal?.setup || ""}-${signal?.direction || ""}-${signal?.price || ""}`;
+}
+
+function tradeKey(trade) {
+  return trade?.sequence || `${trade?.timestamp || trade?.time || ""}-${trade?.price || ""}-${trade?.qty || ""}-${trade?.side || ""}`;
+}
+
+function mergeByKey(incoming, existing, keyFn, max) {
+  const seen = new Set();
+  const out = [];
+  [...(incoming || []), ...(existing || [])].forEach(item => {
+    const key = keyFn(item);
+    if (!key || seen.has(key)) return;
+    seen.add(key);
+    out.push(item);
+  });
+  return out.slice(0, max);
+}
+
+function applyFlowMessage(msg) {
+  if (!msg || msg.type !== "flow") return;
+  state.flow.lastMessage = msg;
+  state.flow.metrics = msg.metrics || {};
+  state.flow.trades = mergeByKey(msg.recentTrades, state.flow.trades, tradeKey, state.flow.maxTrades);
+  state.flow.signals = mergeByKey(msg.activeSignals, state.flow.signals, signalKey, state.flow.maxSignals);
+  renderFlow();
+  renderSignals();
+  renderFlowDebug();
+  renderDom();
+}
+
+function applySignalMessage(msg) {
+  const signal = msg?.signal;
+  if (!signal) return;
+  state.flow.signals = mergeByKey([signal], state.flow.signals, signalKey, state.flow.maxSignals);
+  renderSignals();
+  renderFlowDebug();
+  renderDom();
+}
+
+function applySignalsMessage(msg) {
+  if (!msg || !Array.isArray(msg.signals)) return;
+  state.flow.signals = mergeByKey(msg.signals, state.flow.signals, signalKey, state.flow.maxSignals);
+  renderSignals();
+  renderDom();
+}
+
+async function loadInitialFlow() {
+  try {
+    const [flowRes, signalsRes] = await Promise.all([
+      fetch("/flow"),
+      fetch("/signals"),
+    ]);
+    if (flowRes.ok) applyFlowMessage(await flowRes.json());
+    if (signalsRes.ok) applySignalsMessage(await signalsRes.json());
+  } catch (_) {}
+}
+
+function renderFlow() {
+  const m = state.flow.metrics || {};
+  if (!refs.flowDelta5s) return;
+  refs.flowDelta5s.textContent = signedFmt(m.delta5s, 0);
+  refs.flowCumDelta.textContent = signedFmt(m.cumulativeDelta, 0);
+  refs.flowImbalance.textContent = Number.isFinite(liveNumber(m.topBookImbalance)) ? fmt(liveNumber(m.topBookImbalance), 2) : "--";
+  refs.flowOfi.textContent = signedFmt(m.orderFlowImbalance, 0);
+  refs.flowMicrobias.textContent = `${signedFmt(m.microBiasTicks, 2)} t`;
+  refs.flowVwapDist.textContent = `${signedFmt(m.vwapDistanceTicks, 1)} t`;
+
+  const quality = state.flow.lastMessage?.dataQuality || "unknown";
+  refs.flowQuality.textContent = quality;
+  refs.flowQuality.className = `tag ${quality === "derivedTape" ? "green" : quality === "topOfBookOnly" ? "amber" : "red"}`;
+
+  const rows = [
+    ["Ultimo", fmt(liveNumber(m.lastPrice))],
+    ["Bid / Ask", `${fmt(liveNumber(m.bidPrice))} / ${fmt(liveNumber(m.askPrice))}`],
+    ["Spread", Number.isFinite(liveNumber(m.spread)) ? `${fmt(liveNumber(m.spread))} pts` : "--"],
+    ["Microprice", fmt(liveNumber(m.microPrice))],
+    ["Delta 1s / 15s / 60s", `${signedFmt(m.delta1s, 0)} / ${signedFmt(m.delta15s, 0)} / ${signedFmt(m.delta60s, 0)}`],
+    ["Volume 5s / 60s", `${fmt(liveNumber(m.volume5s), 0)} / ${fmt(liveNumber(m.volume60s), 0)}`],
+    ["VWAP", fmt(liveNumber(m.vwap))],
+    ["POC / VAH / VAL", `${fmt(liveNumber(m.poc))} / ${fmt(liveNumber(m.vah))} / ${fmt(liveNumber(m.val))}`],
+  ];
+  refs.flowKv.innerHTML = rows.map(([k, v]) => `<div class="kv"><span>${escapeHtml(k)}</span><span>${escapeHtml(v)}</span></div>`).join("");
+
+  renderFlowTrades();
+}
+
+function renderFlowTrades() {
+  if (!refs.flowTrades) return;
+  if (!state.flow.trades.length) {
+    refs.flowTrades.innerHTML = `<div class="warn-line">Aguardando trades derivados do RTD.</div>`;
+    return;
+  }
+
+  refs.flowTrades.innerHTML = state.flow.trades.slice(0, 40).map(trade => {
+    const side = trade.side || trade.aggressorSide || "unknown";
+    const dir = side === "buy" ? "up" : side === "sell" ? "down" : "flat";
+    return `
+      <div class="dom-tick ${dir}">
+        <span>${escapeHtml(trade.time || "--")}</span>
+        <strong>${fmt(liveNumber(trade.price))}</strong>
+        <span>${fmt(liveNumber(trade.qty), 0)}</span>
+        <span>${escapeHtml(side)} ${trade.derived ? "der" : ""}</span>
+      </div>
+    `;
+  }).join("");
+}
+
+function renderSignals() {
+  if (!refs.signalsBody) return;
+  if (!state.flow.signals.length) {
+    refs.signalsBody.innerHTML = `<tr><td colspan="6">Aguardando setups confirmados.</td></tr>`;
+    return;
+  }
+
+  refs.signalsBody.innerHTML = state.flow.signals.slice(0, state.flow.maxSignals).map(signal => {
+    const direction = signal.direction || "neutral";
+    const reasons = Array.isArray(signal.reasons) ? signal.reasons.join(" / ") : "";
+    const score = liveNumber(signal.score);
+    return `
+      <tr class="flow-signal ${escapeHtml(direction)}">
+        <td>${escapeHtml((signal.timestamp || "").slice(11, 19) || "--")}</td>
+        <td class="strong">${escapeHtml(signal.setup || "--")}</td>
+        <td><span class="flow-chip ${escapeHtml(direction)}">${escapeHtml(direction)}</span></td>
+        <td class="strong">${fmt(liveNumber(signal.price))}</td>
+        <td><span class="tag ${scoreTag(Number.isFinite(score) ? score : 0)}">${fmt(score, 0)}</span></td>
+        <td>${escapeHtml(trimText(reasons || signal.levelLabel || "--", 120))}</td>
+      </tr>
+    `;
+  }).join("");
+}
+
+function renderFlowDebug() {
+  if (!refs.flowDebugKv) return;
+  const m = state.flow.metrics || {};
+  const msg = state.flow.lastMessage || {};
+  const rows = [
+    ["Qualidade", msg.dataQuality || "unknown"],
+    ["Eventos", fmt(liveNumber(m.eventsProcessed), 0)],
+    ["Trades derivados", fmt(liveNumber(m.tradesDerived), 0)],
+    ["Sinais gerados", fmt(liveNumber(m.signalsGenerated), 0)],
+    ["Fila", fmt(liveNumber(m.queueSize), 0)],
+    ["Ultimo flow", msg.localTimestamp || "--"],
+  ];
+  refs.flowDebugKv.innerHTML = rows.map(([k, v]) => `<div class="live-kv"><span>${escapeHtml(k)}</span><strong>${escapeHtml(v)}</strong></div>`).join("");
 }
 
 function currentSessionBar(r) {
@@ -3047,7 +3315,10 @@ function connectRtdLive() {
   const socket = new WebSocket(rtdWebSocketUrl());
   state.rtd.socket = socket;
 
-  socket.addEventListener("open", () => setRtdStatus("ok", "Conectado"));
+  socket.addEventListener("open", () => {
+    setRtdStatus("ok", "Conectado");
+    loadInitialFlow();
+  });
 
   socket.addEventListener("message", ev => {
     let msg;
@@ -3059,6 +3330,12 @@ function connectRtdLive() {
 
     if (msg.type === "snapshot") {
       applyLiveSnapshot(msg);
+    } else if (msg.type === "flow") {
+      applyFlowMessage(msg);
+    } else if (msg.type === "signal") {
+      applySignalMessage(msg);
+    } else if (msg.type === "signals") {
+      applySignalsMessage(msg);
     } else if (msg.type === "status") {
       const ok = msg.status === "connected";
       setRtdStatus(ok ? "ok" : "warn", ok ? "Conectado" : "Reconectando");
@@ -3280,6 +3557,9 @@ refs.cards.innerHTML = ["Sigma", "Z-score", "POC", "ATR", "Regime", "Divergencia
   </div>
 `).join("");
 renderDom();
+renderFlow();
+renderSignals();
+renderFlowDebug();
 connectRtdLive();
 </script>
 </body>

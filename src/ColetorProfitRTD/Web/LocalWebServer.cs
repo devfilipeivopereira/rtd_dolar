@@ -16,6 +16,8 @@ namespace ColetorProfitRTD.Web
         private readonly string _webSocketPath;
         private readonly Func<object> _healthFactory;
         private readonly Func<object> _snapshotFactory;
+        private readonly Func<object> _flowFactory;
+        private readonly Func<object> _signalsFactory;
         private readonly WebSocketHub _hub;
         private CancellationTokenSource _cts;
 
@@ -25,6 +27,8 @@ namespace ColetorProfitRTD.Web
             string webSocketPath,
             Func<object> healthFactory,
             Func<object> snapshotFactory,
+            Func<object> flowFactory,
+            Func<object> signalsFactory,
             WebSocketHub hub,
             Logger log)
         {
@@ -33,6 +37,8 @@ namespace ColetorProfitRTD.Web
             _webSocketPath = string.IsNullOrWhiteSpace(webSocketPath) ? "/ws" : webSocketPath;
             _healthFactory = healthFactory;
             _snapshotFactory = snapshotFactory;
+            _flowFactory = flowFactory;
+            _signalsFactory = signalsFactory;
             _hub = hub;
             _log = log;
             _listener.Prefixes.Add("http://localhost:" + Port + "/");
@@ -110,6 +116,18 @@ namespace ColetorProfitRTD.Web
                 if (IsPath(path, "/snapshot"))
                 {
                     await WriteJsonAsync(context, _snapshotFactory());
+                    return;
+                }
+
+                if (IsPath(path, "/flow"))
+                {
+                    await WriteJsonAsync(context, _flowFactory());
+                    return;
+                }
+
+                if (IsPath(path, "/signals"))
+                {
+                    await WriteJsonAsync(context, _signalsFactory());
                     return;
                 }
 

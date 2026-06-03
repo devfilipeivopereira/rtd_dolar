@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using ColetorProfitRTD.Flow;
 using ColetorProfitRTD.MarketData;
 using ColetorProfitRTD.Rtd;
 using ColetorProfitRTD.Storage;
@@ -34,6 +35,7 @@ namespace ColetorProfitRTD
             log.Info("Dashboard: " + staticRoot);
 
             var rtdClient = new RtdClient(config.Rtd, log);
+            var flowProcessor = new FlowProcessor(config.Flow, log);
             var store = new SqliteSnapshotStore(config.Storage, log);
 
             try
@@ -57,6 +59,21 @@ namespace ColetorProfitRTD
                 store.QueueSave(snapshot);
                 string json = JsonHelper.Serialize(snapshot.ToLiveMessage());
                 Task.Run(() => hub.BroadcastAsync(json));
+                flowProcessor.Post(snapshot);
+            };
+
+            flowProcessor.FlowUpdated += (message, metrics) =>
+            {
+                store.QueueSaveFlowMetrics(metrics);
+                string json = JsonHelper.Serialize(message);
+                Task.Run(() => hub.BroadcastAsync(json));
+            };
+
+            flowProcessor.SignalGenerated += (message, signal) =>
+            {
+                store.QueueSaveSignal(signal);
+                string json = JsonHelper.Serialize(message);
+                Task.Run(() => hub.BroadcastAsync(json));
             };
 
             rtdClient.StatusChanged += (status, error) =>
@@ -78,20 +95,23 @@ namespace ColetorProfitRTD
                 config.Web.HttpPort,
                 staticRoot,
                 config.Web.WebSocketPath,
-                () => BuildHealth(config, rtdClient),
+                () => BuildHealth(config, rtdClient, flowProcessor),
                 () => rtdClient.CurrentSnapshot.ToLiveMessage(),
+                () => flowProcessor.CurrentFlowMessage(),
+                () => flowProcessor.CurrentSignalsMessage(),
                 hub,
                 log))
             {
-                Console.CancelKeyPress += (sender, args) =>
+                Console.CancelKeyPress += (sender, cancelArgs) =>
                 {
-                    args.Cancel = true;
+                    cancelArgs.Cancel = true;
                     Quit.Set();
                 };
 
                 try
                 {
                     server.Start();
+                    flowProcessor.Start();
                     rtdClient.Start();
 
                     Console.WriteLine();
@@ -109,6 +129,7 @@ namespace ColetorProfitRTD
                 finally
                 {
                     rtdClient.Stop();
+                    flowProcessor.Stop();
                     server.Stop();
                     log.Info("Aplicacao encerrada.");
                 }
@@ -148,7 +169,7 @@ namespace ColetorProfitRTD
             }
         }
 
-        private static Dictionary<string, object> BuildHealth(AppConfig config, RtdClient rtdClient)
+        private static Dictionary<string, object> BuildHealth(AppConfig config, RtdClient rtdClient, FlowProcessor flowProcessor)
         {
             MarketSnapshot snapshot = rtdClient.CurrentSnapshot;
             Exception lastError = rtdClient.LastError;
@@ -161,7 +182,8 @@ namespace ColetorProfitRTD
                 ["progId"] = config.Rtd.ProgId,
                 ["processArchitecture"] = Environment.Is64BitProcess ? "x64" : "x86",
                 ["lastUpdate"] = snapshot.LocalTimestamp.ToString("o"),
-                ["lastError"] = lastError == null ? null : lastError.Message
+                ["lastError"] = lastError == null ? null : lastError.Message,
+                ["flow"] = flowProcessor.Health()
             };
         }
 
