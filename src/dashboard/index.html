@@ -239,14 +239,14 @@ tr:hover td{background:#ffffff05}
 .dom-ask{justify-content:flex-end;color:#ffb1b1;background:#2b111120}
 .dom-bid{justify-content:flex-start;color:#96f2d7;background:#0d261f24}
 .dom-price{justify-content:center;color:var(--txt);font-weight:900;border-left:1px solid #ffffff0a;border-right:1px solid #ffffff0a}
-.dom-marks{gap:4px;flex-wrap:wrap}
+.dom-marks{gap:4px;flex-wrap:wrap;align-content:center;padding-top:3px;padding-bottom:3px}
 .dom-row.near .dom-price{background:#27303a}
 .dom-row.last .dom-price{background:#184433;color:#9df2d5}
 .dom-row.up .dom-price{box-shadow:inset 3px 0 0 var(--green)}
 .dom-row.down .dom-price{box-shadow:inset 3px 0 0 var(--red)}
 .dom-row.bid-level .dom-bid{background:#123125;color:#a8ffe1;font-weight:900}
 .dom-row.ask-level .dom-ask{background:#351515;color:#ffc9c9;font-weight:900}
-.dom-tag{display:inline-flex;align-items:center;max-width:100%;height:18px;padding:0 5px;border-radius:4px;border:1px solid var(--line);font-size:9px;font-weight:900;color:var(--muted);background:#10141a;white-space:nowrap}
+.dom-tag{display:inline-flex;align-items:center;max-width:100%;min-height:18px;padding:0 5px;border-radius:4px;border:1px solid var(--line);font-size:9px;font-weight:900;line-height:16px;color:var(--muted);background:#10141a;white-space:nowrap}
 .dom-tag.current{border-color:#1f8a70;color:#9df2d5;background:#0d261f}
 .dom-tag.key{border-color:#7a5f1f;color:#ffd66b;background:#28210d}
 .dom-tag.res{border-color:#7a2b2b;color:#ffb1b1;background:#2b1111}
@@ -2158,49 +2158,165 @@ function domLevelTypeClass(level) {
   return "key";
 }
 
+function normalizeDomLevelType(type, price, currentPrice) {
+  const raw = String(type || "").toLowerCase();
+  if (raw.includes("suporte")) return "Suporte";
+  if (raw.includes("resistencia")) return "Resistencia";
+  if (raw.includes("magnet")) return "Magneto";
+  if (raw.includes("atual")) return "Atual";
+  if (Number.isFinite(price) && Number.isFinite(currentPrice)) {
+    if (price > currentPrice) return "Resistencia";
+    if (price < currentPrice) return "Suporte";
+  }
+  return "Valor";
+}
+
+function domLevelLabel(level) {
+  if (level.domLabel) return level.domLabel;
+  if (level.label) return level.label;
+  if (Array.isArray(level.labels) && level.labels.length) return level.labels[0];
+  if (level.refLabel && level.refLabel !== "--") return level.refLabel;
+  if (level.source) return level.source;
+  return level.type || "Nivel";
+}
+
+function domLevelScore(level, fallback = 45) {
+  if (Number.isFinite(level.score)) return level.score;
+  if (Number.isFinite(level.weight)) return clamp(28 + level.weight, 0, 95);
+  if (Number.isFinite(level.strength)) return clamp(42 + level.strength, 0, 90);
+  return fallback;
+}
+
 function compactDomLevels(levels, step = state.rtd.tickSize) {
-  const byPrice = new Map();
+  const byLabel = new Map();
   levels.forEach(level => {
     const price = roundToTick(liveNumber(level.price), step);
     if (!Number.isFinite(price)) return;
-    const key = price.toFixed(3);
-    const existing = byPrice.get(key);
+    const label = trimText(domLevelLabel(level), 46);
+    const type = level.type || "Valor";
+    const source = level.source || level.layer || "";
     const next = {
       ...level,
       price,
-      score: Number.isFinite(level.score) ? level.score : 40,
+      label,
+      type,
+      source,
+      score: domLevelScore(level),
     };
-    if (!existing || next.score > existing.score) byPrice.set(key, next);
+    const key = `${price.toFixed(3)}|${label}`;
+    const existing = byLabel.get(key);
+    if (!existing || next.score > existing.score) byLabel.set(key, next);
   });
-  return [...byPrice.values()];
+  const out = [...byLabel.values()];
+  return out.sort((a, b) => b.score - a.score || a.price - b.price || a.label.localeCompare(b.label));
 }
 
 function collectDomLevels(msg) {
   const r = state.result;
   const intraday = r?.intraday || liveIntradayFromSnapshot(msg);
+  const currentPrice = intraday.price;
   const levels = [];
 
-  const add = (price, label, type, score = 45) => {
+  const add = (price, label, type, score = 45, source = "", layer = "") => {
     const n = liveNumber(price);
-    if (Number.isFinite(n)) levels.push({ price: n, label, type, score });
+    if (!Number.isFinite(n)) return;
+    const next = {
+      price: n,
+      label,
+      type: normalizeDomLevelType(type, n, currentPrice),
+      score,
+      source,
+      layer,
+    };
+    levels.push(next);
   };
 
-  add(intraday.price, "Ultimo", "Atual", 100);
-  add(intraday.open, "Abertura", "Valor", 70);
-  add(intraday.vwap, "VWAP/MED", "Valor", 72);
-  add(intraday.high, "Maxima", "Resistencia", 62);
-  add(intraday.low, "Minima", "Suporte", 62);
+  add(intraday.price, "Ultimo", "Atual", 100, "RTD", "current");
+  add(intraday.open, "Abertura", "Valor", 78, "RTD", "opening");
+  add(intraday.vwap, "VWAP/MED", "Valor", 76, "RTD", "anchor");
+  add(intraday.high, "Maxima atual", "Resistencia", 64, "RTD", "currentRange");
+  add(intraday.low, "Minima atual", "Suporte", 64, "RTD", "currentRange");
 
   if (r) {
-    add(r.anchor, "Ancora", "Valor", 70);
-    add(r.profile?.poc?.price, "POC", "Magneto", 78);
-    add(r.profile?.vah, "VAH", "Resistencia", 66);
-    add(r.profile?.val, "VAL", "Suporte", 66);
-    add(r.bars?.[r.bars.length - 1]?.close, "Fech. D-1", "Valor", 55);
+    (r.levels || []).forEach(level => {
+      const source = level.source || "Motor";
+      const label = source === "AVWAP"
+        ? `AVWAP ${level.label}`
+        : source === "SR"
+          ? `SR ${level.label}`
+          : level.label || source || "Nivel";
+      add(level.price, label, level.type, domLevelScore(level), source, "interest");
+    });
 
-    (r.openingLevels || []).forEach(level => add(level.price, `Open ${level.sigma > 0 ? "+" : ""}${level.sigma}s`, level.dir === "sell" ? "Resistencia" : "Suporte", 58));
-    (r.pocDeviationLevels || []).forEach(level => add(level.price, `POC ${level.sigma > 0 ? "+" : ""}${level.sigma}s`, level.dir === "sell" ? "Resistencia" : "Suporte", 58));
-    (r.confluence || []).slice(0, 10).forEach(level => add(level.price, trimText(level.labels?.[0] || level.refLabel || "Confluencia", 22), level.type, level.score));
+    add(r.anchor, "VWAP/Ancora", "Valor", 76, "Ancora", "anchor");
+    add(r.profile?.poc?.price, "POC proxy", "Magneto", 82, "POC", "poc");
+    add(r.profile?.vah, "VAH 70%", "Resistencia", 70, "Value Area", "valueArea");
+    add(r.profile?.val, "VAL 70%", "Suporte", 70, "Value Area", "valueArea");
+
+    (r.openingLevels || []).forEach(level => add(
+      level.price,
+      `Abertura ${level.sigma > 0 ? "+" : ""}${level.sigma} desvio`,
+      level.dir === "sell" ? "Resistencia" : "Suporte",
+      68,
+      "Abertura",
+      "opening"
+    ));
+
+    (r.pocDeviationLevels || []).forEach(level => add(
+      level.price,
+      `POC ${level.sigma > 0 ? "+" : ""}${level.sigma} desvio`,
+      level.dir === "sell" ? "Resistencia" : "Suporte",
+      68,
+      "POC",
+      "pocDeviations"
+    ));
+
+    (r.percentMaps || []).forEach(map => {
+      (map.levels || []).forEach(level => add(
+        level.price,
+        `${map.shortLabel} ${percentChartLabel(level.pct)}`,
+        level.pct > 0 ? "Resistencia" : level.pct < 0 ? "Suporte" : "Valor",
+        percentLevelWeight(map, level) + 32,
+        "Var %",
+        map.layer
+      ));
+    });
+
+    (r.previousLevels || []).forEach(level => add(
+      level.price,
+      level.label,
+      level.label.includes("Maxima") ? "Resistencia" : level.label.includes("Minima") ? "Suporte" : "Valor",
+      level.label.includes("Fechamento") ? 64 : 58,
+      "D-1",
+      "previousDay"
+    ));
+
+    (r.avwaps || []).forEach(level => add(
+      level.price,
+      `AVWAP ${level.label}`,
+      "Valor",
+      62,
+      "AVWAP",
+      "avwap"
+    ));
+
+    (r.sr || []).forEach(level => add(
+      level.price,
+      `SR ${level.sources?.join(", ") || fmt(level.price)}`,
+      level.type === "suporte" ? "Suporte" : level.type === "resistencia" ? "Resistencia" : "Valor",
+      54 + liveNumber(level.strength) * 0.35,
+      "Sup/Res",
+      "sr"
+    ));
+
+    (r.confluence || []).forEach((level, index) => add(
+      level.price,
+      `Conf ${index + 1} ${fmt(level.score, 0)} ${level.type}`,
+      level.type,
+      Math.min(120, 80 + liveNumber(level.score) * 0.25),
+      "Confluencia",
+      "confluence"
+    ));
   }
 
   return compactDomLevels(levels);
@@ -2265,8 +2381,7 @@ function renderDomKeyLevels(msg) {
   const price = currentDomPrice(msg);
   const levels = collectDomLevels(msg)
     .filter(level => Number.isFinite(price) && Number.isFinite(level.price) && Math.abs(level.price - price) > state.rtd.tickSize / 2)
-    .sort((a, b) => Math.abs(a.price - price) - Math.abs(b.price - price))
-    .slice(0, 14);
+    .sort((a, b) => Math.abs(a.price - price) - Math.abs(b.price - price) || b.score - a.score);
 
   if (!levels.length) {
     refs.domKeyLevels.innerHTML = `<div class="warn-line">Carregue o CSV para marcar POC, VAH, VAL, desvios e confluencias.</div>`;
@@ -2276,10 +2391,11 @@ function renderDomKeyLevels(msg) {
   refs.domKeyLevels.innerHTML = levels.map(level => {
     const dist = level.price - price;
     const side = dist > 0 ? "above" : "below";
+    const label = [level.label || level.type || "Nivel", level.source].filter(Boolean).join(" | ");
     return `
       <div class="dom-level ${side}">
         <strong>${fmt(level.price)}</strong>
-        <span>${escapeHtml(level.label || level.type || "Nivel")}</span>
+        <span title="${escapeHtml(label)}">${escapeHtml(label)}</span>
         <span>${dist > 0 ? "+" : ""}${fmt(dist)}</span>
       </div>
     `;
@@ -2304,14 +2420,19 @@ function renderDomLadder(msg) {
   const lastTick = state.rtd.ticks[0];
   const lastDir = lastTick?.delta > 0 ? "up" : lastTick?.delta < 0 ? "down" : "flat";
   const ticksEachSide = Math.max(1, Math.round(state.rtd.domVisibleTicks / 2));
+  const levelOffsets = levels
+    .map(level => roundToTick(level.price, step))
+    .filter(Number.isFinite)
+    .map(levelPrice => Math.round((levelPrice - center) / step));
+  const maxOffset = Math.max(ticksEachSide, ...levelOffsets);
+  const minOffset = Math.min(-ticksEachSide, ...levelOffsets);
   const rows = [];
 
-  for (let offset = ticksEachSide; offset >= -ticksEachSide; offset--) {
+  for (let offset = maxOffset; offset >= minOffset; offset--) {
     const rowPrice = center + offset * step;
     const marks = levels
       .filter(level => sameTick(level.price, rowPrice, step))
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 4);
+      .sort((a, b) => b.score - a.score || a.label.localeCompare(b.label));
     const isLast = sameTick(price, rowPrice, step);
     const isBid = sameTick(book.bid, rowPrice, step);
     const isAsk = sameTick(book.ask, rowPrice, step);
@@ -2327,7 +2448,11 @@ function renderDomLadder(msg) {
         <div class="dom-cell dom-price">${fmt(rowPrice)}</div>
         <div class="dom-cell dom-bid">${isBid && Number.isFinite(book.bidVolume) ? fmt(book.bidVolume, 0) : ""}</div>
         <div class="dom-cell dom-marks">
-          ${marks.map(level => `<span class="dom-tag ${domLevelTypeClass(level)}">${escapeHtml(trimText(level.label || level.type, 16))}</span>`).join("")}
+          ${marks.map(level => {
+            const label = level.label || level.type || "Nivel";
+            const title = [label, level.source, `${fmt(level.score, 0)} pts`].filter(Boolean).join(" | ");
+            return `<span class="dom-tag ${domLevelTypeClass(level)}" title="${escapeHtml(title)}">${escapeHtml(trimText(label, 22))}</span>`;
+          }).join("")}
         </div>
       </div>
     `);
