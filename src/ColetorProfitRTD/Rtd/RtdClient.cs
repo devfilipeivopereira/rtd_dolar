@@ -173,9 +173,7 @@ namespace ColetorProfitRTD.Rtd
 
             foreach (string field in _config.Fields.Select(x => x.Trim().ToUpperInvariant()).Distinct())
             {
-                bool getNewValues = true;
-                Array topicArgs = new[] { _config.Asset, field };
-                object initialValue = server.ConnectData(topicId, ref topicArgs, ref getNewValues);
+                object initialValue = ConnectDataWithFallback(server, topicId, _config.Asset, field);
 
                 var topic = new RtdTopic
                 {
@@ -193,10 +191,48 @@ namespace ColetorProfitRTD.Rtd
             }
         }
 
+        private object ConnectDataWithFallback(IRtdServer server, int topicId, string asset, string field)
+        {
+            var attempts = new List<Tuple<string, Func<object>>>
+            {
+                Tuple.Create<string, Func<object>>("object[] zero-based", () =>
+                {
+                    bool getNewValues = true;
+                    object[] topicArgs = new object[] { asset, field };
+                    return server.ConnectData(topicId, ref topicArgs, ref getNewValues);
+                }),
+                Tuple.Create<string, Func<object>>("object[] with empty server slot", () =>
+                {
+                    bool getNewValues = true;
+                    object[] topicArgs = new object[] { string.Empty, asset, field };
+                    return server.ConnectData(topicId, ref topicArgs, ref getNewValues);
+                })
+            };
+
+            Exception lastError = null;
+
+            foreach (Tuple<string, Func<object>> attempt in attempts)
+            {
+                try
+                {
+                    object value = attempt.Item2();
+                    _log.Info("ConnectData OK " + asset + ":" + field + " usando " + attempt.Item1 + ".");
+                    return value;
+                }
+                catch (Exception ex)
+                {
+                    lastError = ex;
+                    _log.Warn("ConnectData falhou " + asset + ":" + field + " usando " + attempt.Item1 + " | " + ex.GetType().Name + ": " + ex.Message);
+                }
+            }
+
+            throw new InvalidOperationException("Falha ao assinar RTD " + asset + ":" + field + ". Ultima tentativa tambem falhou.", lastError);
+        }
+
         private void PumpRefreshData(IRtdServer server)
         {
             int topicCount = 0;
-            Array data = server.RefreshData(ref topicCount);
+            object[,] data = server.RefreshData(ref topicCount);
 
             if (data == null || topicCount <= 0)
             {

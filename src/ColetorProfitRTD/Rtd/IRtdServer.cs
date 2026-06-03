@@ -12,10 +12,14 @@ namespace ColetorProfitRTD.Rtd
         int ServerStart(IRTDUpdateEvent callback);
 
         [DispId(11)]
-        object ConnectData(int topicId, ref Array strings, ref bool getNewValues);
+        object ConnectData(
+            int topicId,
+            [MarshalAs(UnmanagedType.SafeArray, SafeArraySubType = VarEnum.VT_VARIANT)] ref object[] strings,
+            ref bool getNewValues);
 
         [DispId(12)]
-        Array RefreshData(ref int topicCount);
+        [return: MarshalAs(UnmanagedType.SafeArray, SafeArraySubType = VarEnum.VT_VARIANT)]
+        object[,] RefreshData(ref int topicCount);
 
         [DispId(13)]
         void DisconnectData(int topicId);

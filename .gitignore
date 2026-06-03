@@ -2,6 +2,8 @@ bin/
 obj/
 .vs/
 packages/
+tools/
+dist/
 *.user
 *.suo
 *.sqlite

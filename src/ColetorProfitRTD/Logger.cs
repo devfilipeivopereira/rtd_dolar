@@ -38,6 +38,11 @@ namespace ColetorProfitRTD
             Write("ERROR", message, exception);
         }
 
+        public void Debug(string message)
+        {
+            Write("DEBUG", message, null);
+        }
+
         private void Write(string level, string message, Exception exception)
         {
             string line = $"{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff} [{level}] {message}";
@@ -45,6 +50,11 @@ namespace ColetorProfitRTD
             if (exception != null)
             {
                 line += " | " + exception.GetType().Name + ": " + exception.Message;
+
+                if (!string.IsNullOrWhiteSpace(exception.StackTrace))
+                {
+                    line += Environment.NewLine + exception.StackTrace;
+                }
             }
 
             lock (_lock)
