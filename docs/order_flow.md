@@ -23,6 +23,8 @@ MarketSnapshot
 
 O RTD continua rodando em thread STA. O `FlowProcessor` recebe snapshots em fila bounded/drop-old e usa coalescing para evitar interpretar updates campo-a-campo como negocios separados.
 
+Com varios ativos ligados, o `FlowProcessor` mantem `SnapshotCoalescer`, `FlowEngine`, trades, VWAP, profile e sinais separados por ativo. A mensagem `/flow` continua retornando o ultimo fluxo visto para compatibilidade, enquanto o WebSocket transmite cada `flow` com o respectivo `asset`.
+
 ## Endpoints
 
 ```text
@@ -55,4 +57,3 @@ O dashboard tem tres abas novas:
 - `Debug Fluxo`: qualidade, eventos, trades derivados, sinais e fila.
 
 A aba `DOM` tambem marca sinais ativos como pontos de flow.
-

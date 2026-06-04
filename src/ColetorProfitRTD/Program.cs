@@ -83,6 +83,7 @@ namespace ColetorProfitRTD
                     ["type"] = "status",
                     ["status"] = status,
                     ["asset"] = config.Rtd.Asset,
+                    ["assets"] = rtdClient.AssetStates(),
                     ["localTimestamp"] = DateTimeOffset.Now.ToString("o"),
                     ["error"] = error == null ? null : error.Message
                 };
@@ -99,6 +100,9 @@ namespace ColetorProfitRTD
                 () => rtdClient.CurrentSnapshot.ToLiveMessage(),
                 () => flowProcessor.CurrentFlowMessage(),
                 () => flowProcessor.CurrentSignalsMessage(),
+                () => BuildAssets(rtdClient),
+                body => AddAsset(rtdClient, body),
+                body => ToggleAsset(rtdClient, body),
                 hub,
                 log))
             {
@@ -183,8 +187,74 @@ namespace ColetorProfitRTD
                 ["processArchitecture"] = Environment.Is64BitProcess ? "x64" : "x86",
                 ["lastUpdate"] = snapshot.LocalTimestamp.ToString("o"),
                 ["lastError"] = lastError == null ? null : lastError.Message,
+                ["assets"] = rtdClient.AssetStates(),
                 ["flow"] = flowProcessor.Health()
             };
+        }
+
+        private static Dictionary<string, object> BuildAssets(RtdClient rtdClient)
+        {
+            return new Dictionary<string, object>
+            {
+                ["type"] = "assets",
+                ["assets"] = rtdClient.AssetStates(),
+                ["localTimestamp"] = DateTimeOffset.Now.ToString("o")
+            };
+        }
+
+        private static Dictionary<string, object> AddAsset(RtdClient rtdClient, Dictionary<string, object> body)
+        {
+            string asset = GetString(body, "asset");
+            bool enabled = GetBool(body, "enabled", true);
+            Dictionary<string, object> state = rtdClient.AddAsset(asset, enabled);
+
+            return new Dictionary<string, object>
+            {
+                ["type"] = "asset",
+                ["asset"] = state,
+                ["assets"] = rtdClient.AssetStates(),
+                ["localTimestamp"] = DateTimeOffset.Now.ToString("o")
+            };
+        }
+
+        private static Dictionary<string, object> ToggleAsset(RtdClient rtdClient, Dictionary<string, object> body)
+        {
+            string asset = GetString(body, "asset");
+            bool enabled = GetBool(body, "enabled", true);
+            Dictionary<string, object> state = rtdClient.SetAssetEnabled(asset, enabled);
+
+            return new Dictionary<string, object>
+            {
+                ["type"] = "asset",
+                ["asset"] = state,
+                ["assets"] = rtdClient.AssetStates(),
+                ["localTimestamp"] = DateTimeOffset.Now.ToString("o")
+            };
+        }
+
+        private static string GetString(Dictionary<string, object> body, string key)
+        {
+            if (body == null || !body.TryGetValue(key, out object value) || value == null)
+            {
+                return null;
+            }
+
+            return value.ToString();
+        }
+
+        private static bool GetBool(Dictionary<string, object> body, string key, bool fallback)
+        {
+            if (body == null || !body.TryGetValue(key, out object value) || value == null)
+            {
+                return fallback;
+            }
+
+            if (value is bool boolValue)
+            {
+                return boolValue;
+            }
+
+            return bool.TryParse(value.ToString(), out bool parsed) ? parsed : fallback;
         }
 
         private static string ResolveConfigPath()

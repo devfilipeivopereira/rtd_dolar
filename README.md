@@ -23,6 +23,8 @@ Profit Pro conectado
   -> WDO_Reversal_Engine.html adaptado com RTD Live
 ```
 
+O coletor pode assinar varios ativos RTD ao mesmo tempo. No dashboard, a secao `Ativos RTD` permite adicionar um simbolo, escolher qual ativo a tela esta exibindo e ligar/desligar a assinatura desse ativo sem fechar o aplicativo.
+
 O historico diario continua sendo carregado por CSV no navegador. O RTD preenche os campos intraday usados pelo motor quant:
 
 - Abertura: `ABE`
@@ -61,6 +63,7 @@ Use o MSBuild do Visual Studio 2022/Build Tools. O MSBuild antigo de `C:\Windows
 3. Abra `http://localhost:5000`.
 4. Carregue o CSV diario no HTML.
 5. Deixe o modo `RTD Live` ativo para preencher o intraday automaticamente.
+6. Em `Ativos RTD`, adicione novos simbolos, clique em `Ver` para selecionar o ativo da tela e use `Ligado/Desligado` para controlar a assinatura RTD daquele ativo.
 
 Para uma prova minima sem dashboard:
 
@@ -77,6 +80,9 @@ GET /health
 GET /snapshot
 GET /flow
 GET /signals
+GET /assets
+POST /assets
+POST /assets/toggle
 WS  /ws
 ```
 
@@ -85,9 +91,21 @@ WS  /ws
 Edite `src/ColetorProfitRTD/appsettings.json`:
 
 - `Rtd.Asset`: ativo RTD, padrao `WDOFUT_F_0`
+- `Rtd.Assets`: ativos cadastrados ao iniciar o aplicativo
+- `Rtd.ActiveAssets`: ativos que ja iniciam ligados
 - `Rtd.Fields`: campos assinados no RTD
 - `Web.HttpPort`: porta HTTP/WebSocket
 - `Storage.Enabled`: liga/desliga SQLite auxiliar
+
+Exemplo para iniciar com dois ativos cadastrados, mas apenas WDO ligado:
+
+```json
+"Rtd": {
+  "Asset": "WDOFUT_F_0",
+  "Assets": ["WDOFUT_F_0", "WINFUT_F_0"],
+  "ActiveAssets": ["WDOFUT_F_0"]
+}
+```
 
 O catalogo de campos conhecidos fica em `src/ColetorProfitRTD/Rtd/RtdFieldCatalog.cs`.
 
@@ -110,8 +128,5 @@ logs/                   logs em runtime
 3. x64/x86: testar ambas se o COM nao registrar na primeira arquitetura.
 4. CSV + RTD: carregar CSV e confirmar que o RTD atualiza os campos intraday.
 5. Manual: desligar `RTD Live` e editar os campos manualmente.
-6. SQLite: confirmar criacao de `data/marketdata.sqlite` quando o provider for restaurado pelo NuGet.
-
-## Observacao de ambiente
-
-Neste workspace nao havia SDK .NET nem MSBuild moderno disponivel para compilar localmente. O MSBuild legado do .NET Framework foi encontrado, mas ele nao suporta `PackageReference`. A solucao foi criada para Visual Studio/.NET Framework 4.8 e deve ser validada no Visual Studio com restore NuGet.
+6. Multiativo: adicionar um novo ativo em `Ativos RTD`, ligar/desligar e confirmar `/assets`.
+7. SQLite: confirmar criacao de `data/marketdata.sqlite` quando o provider for restaurado pelo NuGet.

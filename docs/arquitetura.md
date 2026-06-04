@@ -8,7 +8,7 @@ O projeto transforma o RTD do Profit em uma fonte local de dados em tempo real p
 Profit Pro
   -> RTDTrading.RTDServer
   -> RtdClient C# em thread STA
-  -> MarketSnapshot
+  -> MarketSnapshot por ativo
   -> WebSocket ws://localhost:5000/ws
   -> Dashboard HTML
 ```
@@ -18,11 +18,19 @@ Profit Pro
 O backend fica em `src/ColetorProfitRTD`.
 
 - `Rtd/`: interfaces COM, catalogo de campos e cliente RTD.
-- `MarketData/`: parsing pt-BR e snapshot consolidado.
-- `Web/`: `HttpListener`, arquivos estaticos, `/health`, `/snapshot` e `/ws`.
+- `MarketData/`: parsing pt-BR e snapshots consolidados por ativo.
+- `Web/`: `HttpListener`, arquivos estaticos, `/health`, `/snapshot`, `/flow`, `/signals`, `/assets` e `/ws`.
 - `Storage/`: SQLite auxiliar para snapshots e buckets por minuto.
+- `Flow/`: order flow derivado por ativo, com delta, VWAP, profile intraday e sinais.
 
 O RTD roda em uma thread STA dedicada. Isso evita misturar chamadas COM com o loop HTTP/WebSocket.
+
+O cadastro de ativos tem dois niveis:
+
+- `Rtd.Assets`: ativos conhecidos ao iniciar;
+- `Rtd.ActiveAssets`: ativos que ja iniciam assinados.
+
+Durante a execucao, o dashboard chama `POST /assets` para adicionar ativo e `POST /assets/toggle` para ligar/desligar a assinatura daquele simbolo. Desligar remove os topicos RTD daquele ativo no servidor COM.
 
 ## Frontend
 
@@ -37,6 +45,8 @@ O CSV diario continua sendo a fonte do historico 21/45/63. O RTD preenche o intr
 - VWAP/ancora opcional;
 - volume acumulado;
 - book e volume projetado.
+
+A secao `Ativos RTD` seleciona qual ativo aparece nos campos intraday, DOM, fluxo e setups. Snapshots de ativos diferentes ficam em caches separados no navegador.
 
 ## Aba DOM
 

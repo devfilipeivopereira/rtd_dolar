@@ -5,12 +5,13 @@
 - Solucao Visual Studio `ColetorProfitRTD.sln`.
 - Projeto C# .NET Framework 4.8 com configuracoes AnyCPU, x64 e x86.
 - Cliente RTD em thread STA dedicada.
+- Controle multiativo com cadastro, liga/desliga e assinatura dinamica por ativo.
 - Catalogo RTD com os campos colados pelo usuario.
 - Snapshot consolidado com `rtd`, `intraday` e `book`.
-- Servidor local `HttpListener` com `/`, `/health`, `/snapshot` e `/ws`.
-- WebSocket com broadcast de snapshots e status.
+- Servidor local `HttpListener` com `/`, `/health`, `/snapshot`, `/flow`, `/signals`, `/assets` e `/ws`.
+- WebSocket com broadcast de snapshots, status, flow e signals.
 - SQLite auxiliar para snapshots de 1 segundo e consolidado por minuto.
-- HTML do `dolar-points` importado e adaptado com modo `RTD Live`.
+- HTML do `dolar-points` importado e adaptado com modo `RTD Live`, DOM, fluxo, setups e controle de ativos.
 
 ## Fluxo de validacao
 
@@ -20,7 +21,8 @@
 4. Se o RTD nao conectar, compilar x86.
 5. Carregar CSV diario no HTML.
 6. Confirmar que os campos intraday sao preenchidos por RTD.
+7. Adicionar outro ativo em `Ativos RTD`, testar `Ver`, `Ligado` e `Desligado`.
 
-## Limite atual
+## Build validado
 
-O ambiente Codex desta execucao tem runtime .NET 8, sem SDK .NET e sem MSBuild moderno. O MSBuild legado do .NET Framework foi encontrado, mas falhou antes da compilacao porque nao entende `PackageReference`. A compilacao deve ocorrer no Visual Studio 2022/Build Tools com restore NuGet.
+O build foi validado com `csc.exe` do pacote `Microsoft.Net.Compilers.Toolset.4.8.0`. Para desenvolvimento normal, use Visual Studio 2022/Build Tools com restore NuGet.

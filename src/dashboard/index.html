@@ -63,6 +63,28 @@ button{cursor:pointer}
 .live-kv strong{display:block;color:var(--txt);font-family:var(--mono);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .rtd-toggle.active{background:#123125;border-color:#1f8a70;color:#8ef2d2}
 input.live-fed{border-color:#1f8a70;box-shadow:0 0 0 2px #12b88618}
+.asset-compose{display:grid;grid-template-columns:minmax(0,1fr) 94px;gap:8px;margin-bottom:8px}
+.asset-add{
+  height:36px;border:1px solid #1f8a70;background:#123125;color:#8ef2d2;
+  border-radius:6px;font-size:11px;font-weight:900;text-transform:uppercase;
+}
+.asset-list{display:flex;flex-direction:column;gap:7px;max-height:190px;overflow:auto}
+.asset-row{
+  display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;
+  border:1px solid var(--line);background:#10141a;border-radius:6px;padding:8px;
+}
+.asset-row.selected{border-color:#1f8a70;background:#123125}
+.asset-name{min-width:0}
+.asset-name strong{display:block;font-family:var(--mono);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.asset-name span{display:block;color:var(--muted);font-size:10px;margin-top:3px}
+.asset-actions{display:flex;gap:5px}
+.asset-action{
+  height:28px;border:1px solid var(--line);background:#0e1318;color:var(--muted);
+  border-radius:5px;padding:0 8px;font-size:10px;font-weight:900;
+}
+.asset-action.view{border-color:#285d80;color:#9bd7ff;background:#10202b}
+.asset-action.on{border-color:#1f7a66;color:#9df2d5;background:#0d261f}
+.asset-action.off{border-color:#7a2b2b;color:#ff9b9b;background:#2b1111}
 .layout{
   display:grid;grid-template-columns:360px minmax(0,1fr);gap:0;
   min-height:calc(100vh - 64px);
@@ -104,12 +126,12 @@ input.live-fed{border-color:#1f8a70;box-shadow:0 0 0 2px #12b88618}
 .field-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
 .field{display:flex;flex-direction:column;gap:5px;min-width:0}
 label{font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.05em}
-input[type=number]{
+input[type=number],input[type=text]{
   width:100%;height:36px;background:#10141a;border:1px solid var(--line);
   color:var(--txt);border-radius:6px;padding:0 10px;font-family:var(--mono);font-size:12px;
   outline:none;transition:.15s border,.15s box-shadow;
 }
-input[type=number]:focus{border-color:#407ea6;box-shadow:0 0 0 3px #4dabf724}
+input[type=number]:focus,input[type=text]:focus{border-color:#407ea6;box-shadow:0 0 0 3px #4dabf724}
 .window-group{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
 .seg{
   height:38px;border:1px solid var(--line);background:#10141a;color:var(--muted);
@@ -356,6 +378,15 @@ tr:hover td{background:#ffffff05}
           <button class="seg" data-window="45">45 dias</button>
           <button class="seg" data-window="63">63 dias</button>
         </div>
+      </section>
+
+      <section class="section">
+        <div class="section-title">Ativos RTD</div>
+        <div class="asset-compose">
+          <input type="text" id="asset-input" placeholder="WDOFUT_F_0" autocomplete="off">
+          <button class="asset-add" id="asset-add" type="button">Adicionar</button>
+        </div>
+        <div class="asset-list" id="asset-list"></div>
       </section>
 
       <section class="section">
@@ -812,13 +843,19 @@ const state = {
     socket: null,
     reconnectTimer: null,
     recalcTimer: null,
+    selectedAsset: "WDOFUT_F_0",
+    assets: [],
+    snapshotsByAsset: {},
     lastSnapshot: null,
+    ticksByAsset: {},
+    lastPriceByAsset: {},
     ticks: [],
     lastPrice: null,
     tickSize: 0.5,
     domVisibleTicks: 200,
   },
   flow: {
+    byAsset: {},
     lastMessage: null,
     metrics: null,
     signals: [],
@@ -878,6 +915,9 @@ const refs = {
   rtdPill: document.getElementById("rtd-pill"),
   rtdToggle: document.getElementById("rtd-toggle"),
   rtdStatus: document.getElementById("rtd-status"),
+  assetInput: document.getElementById("asset-input"),
+  assetAdd: document.getElementById("asset-add"),
+  assetList: document.getElementById("asset-list"),
   rtdAsset: document.getElementById("rtd-asset"),
   rtdLast: document.getElementById("rtd-last"),
   rtdBook: document.getElementById("rtd-book"),
@@ -943,6 +983,161 @@ const refs = {
     volume: document.getElementById("in-volume"),
   },
 };
+
+function normalizeAsset(asset) {
+  return String(asset || "").trim().toUpperCase() || "WDOFUT_F_0";
+}
+
+function selectedAsset() {
+  return normalizeAsset(state.rtd.selectedAsset);
+}
+
+function sameAsset(asset, target = selectedAsset()) {
+  return normalizeAsset(asset) === normalizeAsset(target);
+}
+
+function flowBucket(asset) {
+  const key = normalizeAsset(asset);
+  if (!state.flow.byAsset[key]) {
+    state.flow.byAsset[key] = {
+      lastMessage: null,
+      metrics: null,
+      signals: [],
+      trades: [],
+    };
+  }
+  return state.flow.byAsset[key];
+}
+
+function syncSelectedFlow() {
+  const bucket = flowBucket(selectedAsset());
+  state.flow.lastMessage = bucket.lastMessage;
+  state.flow.metrics = bucket.metrics;
+  state.flow.signals = bucket.signals;
+  state.flow.trades = bucket.trades;
+}
+
+function syncSelectedTicks() {
+  const asset = selectedAsset();
+  state.rtd.ticks = state.rtd.ticksByAsset[asset] || [];
+  state.rtd.lastPrice = state.rtd.lastPriceByAsset[asset] ?? null;
+}
+
+function updateAssetsMessage(msg) {
+  if (!msg || !Array.isArray(msg.assets)) return;
+  state.rtd.assets = msg.assets;
+
+  if (!state.rtd.assets.some(item => sameAsset(item.asset))) {
+    const first = state.rtd.assets[0]?.asset;
+    if (first) state.rtd.selectedAsset = normalizeAsset(first);
+  }
+
+  renderAssetList();
+}
+
+function renderAssetList() {
+  if (!refs.assetList) return;
+  const assets = state.rtd.assets || [];
+
+  if (!assets.length) {
+    refs.assetList.innerHTML = `<div class="warn-line">Nenhum ativo RTD cadastrado.</div>`;
+    return;
+  }
+
+  refs.assetList.innerHTML = assets.map(item => {
+    const asset = normalizeAsset(item.asset);
+    const selected = sameAsset(asset);
+    const enabled = !!item.enabled;
+    const subscribed = !!item.subscribed;
+    const status = enabled ? (subscribed ? "assinado" : "ligando") : "desligado";
+    return `
+      <div class="asset-row ${selected ? "selected" : ""}">
+        <div class="asset-name">
+          <strong>${escapeHtml(asset)}</strong>
+          <span>${escapeHtml(status)}${item.isDefault ? " | padrao" : ""}</span>
+        </div>
+        <div class="asset-actions">
+          <button class="asset-action view" type="button" data-asset-view="${escapeHtml(asset)}">Ver</button>
+          <button class="asset-action ${enabled ? "on" : "off"}" type="button" data-asset-toggle="${escapeHtml(asset)}" data-enabled="${enabled ? "false" : "true"}">${enabled ? "Ligado" : "Desligado"}</button>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function renderSelectedAsset() {
+  const asset = selectedAsset();
+  const snapshot = state.rtd.snapshotsByAsset[asset] || null;
+  state.rtd.lastSnapshot = snapshot;
+  syncSelectedTicks();
+  syncSelectedFlow();
+  updateLiveMeta(snapshot || { asset });
+  renderFlow();
+  renderSignals();
+  renderFlowDebug();
+  renderDom(snapshot);
+  renderAssetList();
+}
+
+function selectAsset(asset) {
+  state.rtd.selectedAsset = normalizeAsset(asset);
+  renderSelectedAsset();
+  if (state.rtd.lastSnapshot) {
+    const intraday = state.rtd.lastSnapshot.intraday || {};
+    writeLiveInput(refs.inputs.open, intraday.abertura);
+    writeLiveInput(refs.inputs.high, intraday.maximaParcial);
+    writeLiveInput(refs.inputs.low, intraday.minimaParcial);
+    writeLiveInput(refs.inputs.price, intraday.precoAtual);
+    writeLiveInput(refs.inputs.vwap, intraday.vwapIntraday);
+    writeLiveInput(refs.inputs.volume, intraday.volumeAcumulado, 0);
+    scheduleLiveRecalc();
+  }
+}
+
+async function loadAssets() {
+  try {
+    const res = await fetch("/assets");
+    if (res.ok) updateAssetsMessage(await res.json());
+  } catch (_) {}
+}
+
+async function addAssetFromInput() {
+  const raw = String(refs.assetInput?.value || "").trim();
+  if (!raw) return;
+  const asset = normalizeAsset(raw);
+
+  try {
+    const res = await fetch("/assets", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ asset, enabled: true }),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    const msg = await res.json();
+    updateAssetsMessage(msg);
+    selectAsset(asset);
+    refs.assetInput.value = "";
+  } catch (err) {
+    setRtdStatus("bad", "Falha ativo");
+  }
+}
+
+async function toggleAsset(asset, enabled) {
+  const normalized = normalizeAsset(asset);
+
+  try {
+    const res = await fetch("/assets/toggle", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ asset: normalized, enabled }),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    updateAssetsMessage(await res.json());
+    if (sameAsset(normalized)) renderSelectedAsset();
+  } catch (_) {
+    setRtdStatus("bad", "Falha ativo");
+  }
+}
 
 function showStatus(el, type, message) {
   el.className = `status show ${type}`;
@@ -2427,15 +2622,17 @@ function collectDomLevels(msg) {
 }
 
 function registerDomTick(msg) {
+  const asset = normalizeAsset(msg?.asset);
   const price = liveIntradayFromSnapshot(msg).price;
   if (!Number.isFinite(price)) return;
 
-  const previous = state.rtd.lastPrice;
+  const ticks = state.rtd.ticksByAsset[asset] || [];
+  const previous = state.rtd.lastPriceByAsset[asset];
   const delta = Number.isFinite(previous) ? price - previous : 0;
   const changed = !Number.isFinite(previous) || Math.abs(delta) >= state.rtd.tickSize / 2;
 
-  state.rtd.lastPrice = price;
-  if (!changed && state.rtd.ticks.length) return;
+  state.rtd.lastPriceByAsset[asset] = price;
+  if (!changed && ticks.length) return;
 
   const book = liveBookFromSnapshot(msg);
   const side = Number.isFinite(book.ask) && price >= book.ask
@@ -2448,7 +2645,7 @@ function registerDomTick(msg) {
           ? "Caiu"
           : "Inicial";
 
-  state.rtd.ticks.unshift({
+  ticks.unshift({
     time: msg.rtd?.HOR || new Date(msg.localTimestamp || Date.now()).toLocaleTimeString("pt-BR"),
     price,
     delta,
@@ -2456,7 +2653,11 @@ function registerDomTick(msg) {
     volume: liveNumber(msg.intraday?.volumeAcumulado),
   });
 
-  state.rtd.ticks = state.rtd.ticks.slice(0, 80);
+  state.rtd.ticksByAsset[asset] = ticks.slice(0, 80);
+
+  if (sameAsset(asset)) {
+    syncSelectedTicks();
+  }
 }
 
 function renderDomTape() {
@@ -2634,10 +2835,18 @@ function mergeByKey(incoming, existing, keyFn, max) {
 
 function applyFlowMessage(msg) {
   if (!msg || msg.type !== "flow") return;
-  state.flow.lastMessage = msg;
-  state.flow.metrics = msg.metrics || {};
-  state.flow.trades = mergeByKey(msg.recentTrades, state.flow.trades, tradeKey, state.flow.maxTrades);
-  state.flow.signals = mergeByKey(msg.activeSignals, state.flow.signals, signalKey, state.flow.maxSignals);
+  const asset = normalizeAsset(msg.asset);
+  const bucket = flowBucket(asset);
+  bucket.lastMessage = msg;
+  bucket.metrics = msg.metrics || {};
+  bucket.trades = mergeByKey(msg.recentTrades, bucket.trades, tradeKey, state.flow.maxTrades);
+  bucket.signals = mergeByKey(msg.activeSignals, bucket.signals, signalKey, state.flow.maxSignals);
+  if (!sameAsset(asset)) {
+    renderAssetList();
+    return;
+  }
+
+  syncSelectedFlow();
   renderFlow();
   renderSignals();
   renderFlowDebug();
@@ -2647,7 +2856,15 @@ function applyFlowMessage(msg) {
 function applySignalMessage(msg) {
   const signal = msg?.signal;
   if (!signal) return;
-  state.flow.signals = mergeByKey([signal], state.flow.signals, signalKey, state.flow.maxSignals);
+  const asset = normalizeAsset(signal.asset);
+  const bucket = flowBucket(asset);
+  bucket.signals = mergeByKey([signal], bucket.signals, signalKey, state.flow.maxSignals);
+  if (!sameAsset(asset)) {
+    renderAssetList();
+    return;
+  }
+
+  syncSelectedFlow();
   renderSignals();
   renderFlowDebug();
   renderDom();
@@ -2655,7 +2872,11 @@ function applySignalMessage(msg) {
 
 function applySignalsMessage(msg) {
   if (!msg || !Array.isArray(msg.signals)) return;
-  state.flow.signals = mergeByKey(msg.signals, state.flow.signals, signalKey, state.flow.maxSignals);
+  msg.signals.filter(Boolean).forEach(signal => {
+    const bucket = flowBucket(signal?.asset);
+    bucket.signals = mergeByKey([signal], bucket.signals, signalKey, state.flow.maxSignals);
+  });
+  syncSelectedFlow();
   renderSignals();
   renderDom();
 }
@@ -2665,6 +2886,7 @@ async function loadInitialFlow() {
     const [flowRes, signalsRes] = await Promise.all([
       fetch("/flow"),
       fetch("/signals"),
+      loadAssets(),
     ]);
     if (flowRes.ok) applyFlowMessage(await flowRes.json());
     if (signalsRes.ok) applySignalsMessage(await signalsRes.json());
@@ -3261,10 +3483,10 @@ function scheduleLiveRecalc() {
 }
 
 function updateLiveMeta(msg) {
-  const rtd = msg.rtd || {};
-  const book = msg.book || {};
-  refs.rtdAsset.textContent = msg.asset || "WDOFUT_F_0";
-  refs.rtdLast.textContent = rtd.HOR || msg.localTimestamp || "--";
+  const rtd = msg?.rtd || {};
+  const book = msg?.book || {};
+  refs.rtdAsset.textContent = normalizeAsset(msg?.asset || selectedAsset());
+  refs.rtdLast.textContent = rtd.HOR || msg?.localTimestamp || "--";
 
   const bid = liveNumber(book.ofertaCompra);
   const ask = liveNumber(book.ofertaVenda);
@@ -3278,8 +3500,17 @@ function updateLiveMeta(msg) {
 
 function applyLiveSnapshot(msg) {
   if (!state.rtd.enabled || !msg || msg.type !== "snapshot") return;
-  state.rtd.lastSnapshot = msg;
+  const asset = normalizeAsset(msg.asset);
+  state.rtd.snapshotsByAsset[asset] = msg;
   registerDomTick(msg);
+
+  if (!sameAsset(asset)) {
+    renderAssetList();
+    return;
+  }
+
+  state.rtd.lastSnapshot = msg;
+  syncSelectedTicks();
 
   const intraday = msg.intraday || {};
   updateLiveMeta(msg);
@@ -3337,6 +3568,7 @@ function connectRtdLive() {
     } else if (msg.type === "signals") {
       applySignalsMessage(msg);
     } else if (msg.type === "status") {
+      updateAssetsMessage(msg);
       const ok = msg.status === "connected";
       setRtdStatus(ok ? "ok" : "warn", ok ? "Conectado" : "Reconectando");
     } else if (msg.type === "error") {
@@ -3429,6 +3661,26 @@ refs.rtdToggle.addEventListener("click", () => {
   refs.rtdToggle.classList.toggle("active", state.rtd.enabled);
   if (state.rtd.enabled) connectRtdLive();
   else disconnectRtdLive();
+});
+
+refs.assetAdd.addEventListener("click", addAssetFromInput);
+refs.assetInput.addEventListener("keydown", ev => {
+  if (ev.key === "Enter") {
+    ev.preventDefault();
+    addAssetFromInput();
+  }
+});
+refs.assetList.addEventListener("click", ev => {
+  const view = ev.target.closest("[data-asset-view]");
+  if (view) {
+    selectAsset(view.dataset.assetView);
+    return;
+  }
+
+  const toggle = ev.target.closest("[data-asset-toggle]");
+  if (toggle) {
+    toggleAsset(toggle.dataset.assetToggle, toggle.dataset.enabled === "true");
+  }
 });
 
 function renderChartOnly() {
@@ -3560,6 +3812,7 @@ renderDom();
 renderFlow();
 renderSignals();
 renderFlowDebug();
+loadAssets();
 connectRtdLive();
 </script>
 </body>

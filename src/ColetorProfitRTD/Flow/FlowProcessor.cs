@@ -10,8 +10,7 @@ namespace ColetorProfitRTD.Flow
     {
         private readonly FlowConfig _config;
         private readonly Logger _log;
-        private readonly SnapshotCoalescer _coalescer = new SnapshotCoalescer();
-        private readonly FlowEngine _engine;
+        private readonly Dictionary<string, AssetFlowState> _states = new Dictionary<string, AssetFlowState>(StringComparer.OrdinalIgnoreCase);
         private readonly Queue<MarketSnapshot> _queue = new Queue<MarketSnapshot>();
         private readonly AutoResetEvent _wake = new AutoResetEvent(false);
         private readonly object _lock = new object();
@@ -25,14 +24,23 @@ namespace ColetorProfitRTD.Flow
         {
             _config = config ?? new FlowConfig();
             _log = log;
-            _engine = new FlowEngine(_config);
         }
 
         public event Action<Dictionary<string, object>, FlowMetrics> FlowUpdated;
         public event Action<Dictionary<string, object>, FlowSignal> SignalGenerated;
 
         public bool Enabled => _config.Enabled;
-        public FlowMetrics CurrentMetrics => _engine.CurrentMetrics;
+        public FlowMetrics CurrentMetrics
+        {
+            get
+            {
+                lock (_lock)
+                {
+                    AssetFlowState state = LatestStateUnlocked();
+                    return state == null ? new FlowMetrics() : state.Engine.CurrentMetrics;
+                }
+            }
+        }
 
         public void Start()
         {
@@ -86,29 +94,49 @@ namespace ColetorProfitRTD.Flow
         {
             lock (_lock)
             {
-                return _lastFlowMessage ?? BuildFlowMessage(_engine.CurrentMetrics);
+                if (_lastFlowMessage != null)
+                {
+                    return _lastFlowMessage;
+                }
+
+                AssetFlowState state = LatestStateUnlocked();
+                return state == null ? BuildFlowMessage(new AssetFlowState(_config)) : BuildFlowMessage(state);
             }
         }
 
         public Dictionary<string, object> CurrentSignalsMessage()
         {
+            List<Dictionary<string, object>> signals;
+
+            lock (_lock)
+            {
+                signals = _states.Values
+                    .SelectMany(x => x.Engine.ActiveSignals)
+                    .OrderByDescending(x => x.Timestamp)
+                    .Take(80)
+                    .Select(x => x.ToMessage())
+                    .ToList();
+            }
+
             return new Dictionary<string, object>
             {
                 ["type"] = "signals",
                 ["localTimestamp"] = DateTimeOffset.Now.ToString("o"),
-                ["signals"] = _engine.ActiveSignals.Select(x => x.ToMessage()).ToList()
+                ["signals"] = signals
             };
         }
 
         public Dictionary<string, object> Health()
         {
-            FlowMetrics metrics = _engine.CurrentMetrics;
+            FlowMetrics metrics = CurrentMetrics;
 
             return new Dictionary<string, object>
             {
                 ["enabled"] = _config.Enabled,
                 ["dataQuality"] = QualityName(metrics.DataQuality),
                 ["queueSize"] = QueueSize(),
+                ["assetCount"] = AssetCount(),
+                ["asset"] = metrics.Asset,
                 ["events"] = metrics.EventsProcessed,
                 ["trades"] = metrics.TradesDerived,
                 ["signals"] = metrics.SignalsGenerated,
@@ -133,45 +161,50 @@ namespace ColetorProfitRTD.Flow
                     break;
                 }
 
-                MarketSnapshot latest = DrainLatest();
+                List<MarketSnapshot> snapshots = DrainLatestByAsset();
 
-                if (latest == null)
+                if (snapshots.Count == 0)
                 {
                     continue;
                 }
 
                 Thread.Sleep(Math.Max(_config.CoalescingMs, 0));
 
-                MarketSnapshot newer = DrainLatest();
-                if (newer != null)
+                List<MarketSnapshot> newer = DrainLatestByAsset();
+                if (newer.Count > 0)
                 {
-                    latest = newer;
+                    snapshots = newer;
                 }
 
-                try
+                foreach (MarketSnapshot snapshot in snapshots)
                 {
-                    Process(latest);
-                }
-                catch (Exception ex)
-                {
-                    _log.Error("Falha no FlowProcessor.", ex);
+                    try
+                    {
+                        Process(snapshot);
+                    }
+                    catch (Exception ex)
+                    {
+                        _log.Error("Falha no FlowProcessor.", ex);
+                    }
                 }
             }
         }
 
         private void Process(MarketSnapshot snapshot)
         {
-            NormalizedMarketEvent ev = _coalescer.Build(snapshot);
+            AssetFlowState state = GetOrCreateState(snapshot.Asset);
+            NormalizedMarketEvent ev = state.Coalescer.Build(snapshot);
             if (ev == null)
             {
                 return;
             }
 
-            List<FlowSignal> signals = _engine.Process(ev, QueueSize());
-            Dictionary<string, object> message = BuildFlowMessage(_engine.CurrentMetrics);
+            List<FlowSignal> signals = state.Engine.Process(ev, QueueSize());
+            Dictionary<string, object> message = BuildFlowMessage(state);
 
             lock (_lock)
             {
+                state.LastFlowMessage = message;
                 _lastFlowMessage = message;
             }
 
@@ -186,15 +219,17 @@ namespace ColetorProfitRTD.Flow
             }
 
             DateTime now = DateTime.UtcNow;
-            if ((now - _lastBroadcastUtc).TotalMilliseconds >= Math.Max(_config.BroadcastIntervalMs, 50))
+            if ((now - state.LastBroadcastUtc).TotalMilliseconds >= Math.Max(_config.BroadcastIntervalMs, 50))
             {
+                state.LastBroadcastUtc = now;
                 _lastBroadcastUtc = now;
-                FlowUpdated?.Invoke(message, _engine.CurrentMetrics);
+                FlowUpdated?.Invoke(message, state.Engine.CurrentMetrics);
             }
         }
 
-        private Dictionary<string, object> BuildFlowMessage(FlowMetrics metrics)
+        private Dictionary<string, object> BuildFlowMessage(AssetFlowState state)
         {
+            FlowMetrics metrics = state.Engine.CurrentMetrics;
             if (metrics == null)
             {
                 metrics = new FlowMetrics();
@@ -207,27 +242,29 @@ namespace ColetorProfitRTD.Flow
                 ["localTimestamp"] = metrics.Timestamp == default(DateTimeOffset) ? DateTimeOffset.Now.ToString("o") : metrics.Timestamp.ToString("o"),
                 ["dataQuality"] = QualityName(metrics.DataQuality),
                 ["metrics"] = metrics.ToMessage(),
-                ["recentTrades"] = _engine.RecentTrades.Take(40).Select(x => x.ToMessage()).ToList(),
-                ["activeSignals"] = _engine.ActiveSignals.Select(x => x.ToMessage()).ToList()
+                ["recentTrades"] = state.Engine.RecentTrades.Take(40).Select(x => x.ToMessage()).ToList(),
+                ["activeSignals"] = state.Engine.ActiveSignals.Select(x => x.ToMessage()).ToList()
             };
         }
 
-        private MarketSnapshot DrainLatest()
+        private List<MarketSnapshot> DrainLatestByAsset()
         {
             lock (_lock)
             {
                 if (_queue.Count == 0)
                 {
-                    return null;
+                    return new List<MarketSnapshot>();
                 }
 
-                MarketSnapshot latest = null;
+                var byAsset = new Dictionary<string, MarketSnapshot>(StringComparer.OrdinalIgnoreCase);
                 while (_queue.Count > 0)
                 {
-                    latest = _queue.Dequeue();
+                    MarketSnapshot snapshot = _queue.Dequeue();
+                    string asset = string.IsNullOrWhiteSpace(snapshot.Asset) ? string.Empty : snapshot.Asset;
+                    byAsset[asset] = snapshot;
                 }
 
-                return latest;
+                return byAsset.Values.ToList();
             }
         }
 
@@ -237,6 +274,37 @@ namespace ColetorProfitRTD.Flow
             {
                 return _queue.Count;
             }
+        }
+
+        private int AssetCount()
+        {
+            lock (_lock)
+            {
+                return _states.Count;
+            }
+        }
+
+        private AssetFlowState GetOrCreateState(string asset)
+        {
+            string key = string.IsNullOrWhiteSpace(asset) ? "UNKNOWN" : asset.Trim().ToUpperInvariant();
+
+            lock (_lock)
+            {
+                if (!_states.TryGetValue(key, out AssetFlowState state))
+                {
+                    state = new AssetFlowState(_config);
+                    _states[key] = state;
+                }
+
+                return state;
+            }
+        }
+
+        private AssetFlowState LatestStateUnlocked()
+        {
+            return _states.Values
+                .OrderByDescending(x => x.Engine.CurrentMetrics.Timestamp)
+                .FirstOrDefault();
         }
 
         public static string QualityName(MarketDataQuality quality)
@@ -254,6 +322,20 @@ namespace ColetorProfitRTD.Flow
                 default:
                     return "unknown";
             }
+        }
+
+        private sealed class AssetFlowState
+        {
+            public AssetFlowState(FlowConfig config)
+            {
+                Coalescer = new SnapshotCoalescer();
+                Engine = new FlowEngine(config);
+            }
+
+            public SnapshotCoalescer Coalescer { get; }
+            public FlowEngine Engine { get; }
+            public DateTime LastBroadcastUtc { get; set; } = DateTime.MinValue;
+            public Dictionary<string, object> LastFlowMessage { get; set; }
         }
     }
 }

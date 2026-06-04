@@ -24,13 +24,29 @@ Resultado esperado:
 4. Carregar CSV diario no dashboard.
 5. Confirmar status `RTD Conectado`.
 6. Confirmar que a aba `DOM` mostra preco, tape e pontos principais.
+7. Adicionar um ativo em `Ativos RTD`, selecionar com `Ver` e ligar/desligar sem reiniciar o app.
 
 ## Endpoints
 
 ```text
 GET http://localhost:5000/health
 GET http://localhost:5000/snapshot
+GET http://localhost:5000/flow
+GET http://localhost:5000/signals
+GET http://localhost:5000/assets
+POST http://localhost:5000/assets
+POST http://localhost:5000/assets/toggle
 WS  ws://localhost:5000/ws
+```
+
+Exemplos:
+
+```json
+POST /assets
+{ "asset": "WINFUT_F_0", "enabled": true }
+
+POST /assets/toggle
+{ "asset": "WINFUT_F_0", "enabled": false }
 ```
 
 ## x64 ou x86
@@ -55,10 +71,17 @@ Com o Profit fechado:
 
 Sem CSV, a aba DOM ainda pode mostrar ticks RTD, bid/ask e tape. Pontos como POC, VAH, VAL, desvios e confluencias so aparecem depois do CSV.
 
+## Multiativo
+
+- `/assets` deve listar `enabled`, `subscribed` e `isDefault`.
+- Ativo desligado deve parar de receber novos snapshots.
+- Ao selecionar outro ativo no dashboard, campos intraday, DOM, fluxo e setups devem mostrar somente aquele ativo.
+- Order flow, delta e sinais nao devem misturar ativos diferentes.
+
 ## SQLite
 
 SQLite e auxiliar. Se o provider nao restaurar no NuGet ou se o banco falhar, o RTD e o WebSocket seguem funcionando.
 
 ## Build no ambiente Codex
 
-Nesta maquina foi encontrado apenas o MSBuild legado do .NET Framework, que nao entende `PackageReference`. Compile com Visual Studio 2022 ou Build Tools modernos.
+Nesta maquina, a validacao foi feita com o `csc.exe` restaurado em `packages/Microsoft.Net.Compilers.Toolset.4.8.0`. Para uso normal, compile com Visual Studio 2022 ou Build Tools modernos.

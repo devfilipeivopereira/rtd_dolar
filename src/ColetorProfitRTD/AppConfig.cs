@@ -31,6 +31,8 @@ namespace ColetorProfitRTD
             config.Storage = config.Storage ?? new StorageConfig();
             config.Diagnostics = config.Diagnostics ?? new DiagnosticsConfig();
             config.Flow = config.Flow ?? new FlowConfig();
+            config.Rtd.Assets = NormalizeAssets(config.Rtd.Asset, config.Rtd.Assets);
+            config.Rtd.ActiveAssets = NormalizeAssets(config.Rtd.Asset, config.Rtd.ActiveAssets);
             config.Rtd.Fields = NormalizeFields(config.Rtd.Fields);
 
             return config;
@@ -48,12 +50,27 @@ namespace ColetorProfitRTD
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .ToList();
         }
+
+        private static List<string> NormalizeAssets(string defaultAsset, List<string> assets)
+        {
+            IEnumerable<string> source = assets == null || assets.Count == 0
+                ? (IEnumerable<string>)new[] { defaultAsset }
+                : assets;
+
+            return source
+                .Where(x => !string.IsNullOrWhiteSpace(x))
+                .Select(x => x.Trim().ToUpperInvariant())
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+        }
     }
 
     public sealed class RtdConfig
     {
         public string ProgId { get; set; } = "RTDTrading.RTDServer";
         public string Asset { get; set; } = "WDOFUT_F_0";
+        public List<string> Assets { get; set; } = new List<string> { "WDOFUT_F_0" };
+        public List<string> ActiveAssets { get; set; } = new List<string> { "WDOFUT_F_0" };
         public int PollIntervalMs { get; set; } = 250;
         public int ReconnectIntervalMs { get; set; } = 5000;
         public List<string> Fields { get; set; } = RtdFieldCatalog.DefaultLiveFields.ToList();

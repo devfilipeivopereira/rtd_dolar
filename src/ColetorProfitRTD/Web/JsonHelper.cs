@@ -16,5 +16,13 @@ namespace ColetorProfitRTD.Web
                 return Serializer.Serialize(value);
             }
         }
+
+        public static T Deserialize<T>(string json)
+        {
+            lock (Serializer)
+            {
+                return Serializer.Deserialize<T>(json);
+            }
+        }
     }
 }

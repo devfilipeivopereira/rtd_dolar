@@ -18,6 +18,9 @@ namespace ColetorProfitRTD.Web
         private readonly Func<object> _snapshotFactory;
         private readonly Func<object> _flowFactory;
         private readonly Func<object> _signalsFactory;
+        private readonly Func<object> _assetsFactory;
+        private readonly Func<Dictionary<string, object>, object> _assetAddHandler;
+        private readonly Func<Dictionary<string, object>, object> _assetToggleHandler;
         private readonly WebSocketHub _hub;
         private CancellationTokenSource _cts;
 
@@ -29,6 +32,9 @@ namespace ColetorProfitRTD.Web
             Func<object> snapshotFactory,
             Func<object> flowFactory,
             Func<object> signalsFactory,
+            Func<object> assetsFactory,
+            Func<Dictionary<string, object>, object> assetAddHandler,
+            Func<Dictionary<string, object>, object> assetToggleHandler,
             WebSocketHub hub,
             Logger log)
         {
@@ -39,6 +45,9 @@ namespace ColetorProfitRTD.Web
             _snapshotFactory = snapshotFactory;
             _flowFactory = flowFactory;
             _signalsFactory = signalsFactory;
+            _assetsFactory = assetsFactory;
+            _assetAddHandler = assetAddHandler;
+            _assetToggleHandler = assetToggleHandler;
             _hub = hub;
             _log = log;
             _listener.Prefixes.Add("http://localhost:" + Port + "/");
@@ -131,6 +140,29 @@ namespace ColetorProfitRTD.Web
                     return;
                 }
 
+                if (IsPath(path, "/assets"))
+                {
+                    if (string.Equals(context.Request.HttpMethod, "GET", StringComparison.OrdinalIgnoreCase))
+                    {
+                        await WriteJsonAsync(context, _assetsFactory());
+                        return;
+                    }
+
+                    if (string.Equals(context.Request.HttpMethod, "POST", StringComparison.OrdinalIgnoreCase))
+                    {
+                        Dictionary<string, object> body = await ReadJsonBodyAsync(context);
+                        await WriteJsonAsync(context, _assetAddHandler(body));
+                        return;
+                    }
+                }
+
+                if (IsPath(path, "/assets/toggle") && string.Equals(context.Request.HttpMethod, "POST", StringComparison.OrdinalIgnoreCase))
+                {
+                    Dictionary<string, object> body = await ReadJsonBodyAsync(context);
+                    await WriteJsonAsync(context, _assetToggleHandler(body));
+                    return;
+                }
+
                 await WriteStaticAsync(context, path);
             }
             catch (Exception ex)
@@ -167,6 +199,20 @@ namespace ColetorProfitRTD.Web
         private static Task WriteJsonAsync(HttpListenerContext context, object value, int statusCode = 200)
         {
             return WriteTextAsync(context, JsonHelper.Serialize(value), "application/json; charset=utf-8", statusCode);
+        }
+
+        private static async Task<Dictionary<string, object>> ReadJsonBodyAsync(HttpListenerContext context)
+        {
+            using (var reader = new StreamReader(context.Request.InputStream, context.Request.ContentEncoding ?? Encoding.UTF8))
+            {
+                string json = await reader.ReadToEndAsync();
+                if (string.IsNullOrWhiteSpace(json))
+                {
+                    return new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+                }
+
+                return JsonHelper.Deserialize<Dictionary<string, object>>(json) ?? new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+            }
         }
 
         private static async Task WriteTextAsync(HttpListenerContext context, string text, string contentType, int statusCode)

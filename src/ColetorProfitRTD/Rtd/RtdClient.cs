@@ -11,19 +11,55 @@ namespace ColetorProfitRTD.Rtd
     {
         private readonly RtdConfig _config;
         private readonly Logger _log;
-        private readonly MarketState _state = new MarketState();
+        private readonly MarketState _state;
         private readonly object _statusLock = new object();
+        private readonly object _assetLock = new object();
+        private readonly object _commandLock = new object();
+        private readonly object _topicLock = new object();
         private readonly Dictionary<int, RtdTopic> _topics = new Dictionary<int, RtdTopic>();
+        private readonly Dictionary<string, int> _topicByKey = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        private readonly HashSet<string> _knownAssets = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        private readonly HashSet<string> _activeAssets = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        private readonly Queue<Action<IRtdServer>> _controlCommands = new Queue<Action<IRtdServer>>();
         private Thread _thread;
         private RtdUpdateEvent _callback;
         private volatile bool _stopRequested;
         private string _status = "starting";
         private Exception _lastError;
+        private int _nextTopicId = 1;
 
         public RtdClient(RtdConfig config, Logger log)
         {
             _config = config;
             _log = log;
+            _state = new MarketState(config.Asset);
+
+            IEnumerable<string> configuredAssets = config.Assets == null || config.Assets.Count == 0
+                ? (IEnumerable<string>)new[] { config.Asset }
+                : config.Assets;
+
+            foreach (string asset in configuredAssets)
+            {
+                string normalized = NormalizeAsset(asset);
+                if (!string.IsNullOrWhiteSpace(normalized))
+                {
+                    _knownAssets.Add(normalized);
+                }
+            }
+
+            IEnumerable<string> activeAssets = config.ActiveAssets == null || config.ActiveAssets.Count == 0
+                ? (IEnumerable<string>)_knownAssets
+                : config.ActiveAssets;
+
+            foreach (string asset in activeAssets)
+            {
+                string normalized = NormalizeAsset(asset);
+                if (!string.IsNullOrWhiteSpace(normalized))
+                {
+                    _knownAssets.Add(normalized);
+                    _activeAssets.Add(normalized);
+                }
+            }
         }
 
         public event Action<MarketSnapshot> SnapshotReceived;
@@ -51,7 +87,107 @@ namespace ColetorProfitRTD.Rtd
             }
         }
 
-        public MarketSnapshot CurrentSnapshot => _state.Current();
+        public MarketSnapshot CurrentSnapshot => _state.Current(_config.Asset);
+
+        public List<MarketSnapshot> CurrentSnapshots => _state.All();
+
+        public IReadOnlyList<string> ActiveAssets
+        {
+            get
+            {
+                lock (_assetLock)
+                {
+                    return _activeAssets.OrderBy(x => x).ToList();
+                }
+            }
+        }
+
+        public List<Dictionary<string, object>> AssetStates()
+        {
+            List<string> knownAssets;
+            List<string> activeAssets;
+            List<string> subscribedAssets;
+
+            lock (_assetLock)
+            {
+                knownAssets = _knownAssets.OrderBy(x => x).ToList();
+                activeAssets = _activeAssets.ToList();
+            }
+
+            lock (_topicLock)
+            {
+                subscribedAssets = _topics.Values
+                    .Select(topic => topic.Asset)
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .ToList();
+            }
+
+            return knownAssets
+                .Select(asset => new Dictionary<string, object>
+                {
+                    ["asset"] = asset,
+                    ["enabled"] = activeAssets.Contains(asset, StringComparer.OrdinalIgnoreCase),
+                    ["subscribed"] = subscribedAssets.Contains(asset, StringComparer.OrdinalIgnoreCase),
+                    ["isDefault"] = string.Equals(asset, _config.Asset, StringComparison.OrdinalIgnoreCase)
+                })
+                .ToList();
+        }
+
+        public Dictionary<string, object> AddAsset(string asset, bool enabled)
+        {
+            string normalized = NormalizeAsset(asset);
+            if (string.IsNullOrWhiteSpace(normalized))
+            {
+                throw new ArgumentException("Ativo invalido.", nameof(asset));
+            }
+
+            lock (_assetLock)
+            {
+                _knownAssets.Add(normalized);
+                if (enabled)
+                {
+                    _activeAssets.Add(normalized);
+                }
+            }
+
+            if (enabled)
+            {
+                EnqueueControl(server => SubscribeAsset(server, normalized));
+            }
+
+            return AssetStates().First(x => string.Equals((string)x["asset"], normalized, StringComparison.OrdinalIgnoreCase));
+        }
+
+        public Dictionary<string, object> SetAssetEnabled(string asset, bool enabled)
+        {
+            string normalized = NormalizeAsset(asset);
+            if (string.IsNullOrWhiteSpace(normalized))
+            {
+                throw new ArgumentException("Ativo invalido.", nameof(asset));
+            }
+
+            bool changed;
+
+            lock (_assetLock)
+            {
+                _knownAssets.Add(normalized);
+                changed = enabled ? _activeAssets.Add(normalized) : _activeAssets.Remove(normalized);
+            }
+
+            if (changed)
+            {
+                if (enabled)
+                {
+                    EnqueueControl(server => SubscribeAsset(server, normalized));
+                }
+                else
+                {
+                    EnqueueControl(server => DisconnectAsset(server, normalized));
+                }
+            }
+
+            return AssetStates().First(x => string.Equals((string)x["asset"], normalized, StringComparison.OrdinalIgnoreCase));
+        }
 
         public void Start()
         {
@@ -110,7 +246,12 @@ namespace ColetorProfitRTD.Rtd
             try
             {
                 SetStatus("connecting", null);
-                _topics.Clear();
+                lock (_topicLock)
+                {
+                    _topics.Clear();
+                    _topicByKey.Clear();
+                    _nextTopicId = 1;
+                }
 
                 Type rtdType = Type.GetTypeFromProgID(_config.ProgId);
 
@@ -131,7 +272,7 @@ namespace ColetorProfitRTD.Rtd
                     throw new InvalidOperationException("ServerStart falhou. Codigo: " + startResult);
                 }
 
-                SubscribeAll(server);
+                SubscribeAllActive(server);
                 SetStatus("connected", null);
 
                 DateTime nextHeartbeat = DateTime.UtcNow.AddSeconds(5);
@@ -139,6 +280,7 @@ namespace ColetorProfitRTD.Rtd
                 while (!_stopRequested)
                 {
                     PumpRefreshData(server);
+                    DrainControlCommands(server);
 
                     if (DateTime.UtcNow >= nextHeartbeat)
                     {
@@ -167,27 +309,97 @@ namespace ColetorProfitRTD.Rtd
             }
         }
 
-        private void SubscribeAll(IRtdServer server)
+        private void SubscribeAllActive(IRtdServer server)
         {
-            int topicId = 1;
+            List<string> assets;
+            lock (_assetLock)
+            {
+                assets = _activeAssets.OrderBy(x => x).ToList();
+            }
+
+            foreach (string asset in assets)
+            {
+                SubscribeAsset(server, asset);
+            }
+        }
+
+        private void SubscribeAsset(IRtdServer server, string asset)
+        {
+            if (server == null)
+            {
+                return;
+            }
+
+            string normalizedAsset = NormalizeAsset(asset);
 
             foreach (string field in _config.Fields.Select(x => x.Trim().ToUpperInvariant()).Distinct())
             {
-                object initialValue = ConnectDataWithFallback(server, topicId, _config.Asset, field);
+                string key = normalizedAsset + ":" + field;
+                lock (_topicLock)
+                {
+                    if (_topicByKey.ContainsKey(key))
+                    {
+                        continue;
+                    }
+                }
+
+                int topicId;
+
+                lock (_topicLock)
+                {
+                    topicId = _nextTopicId++;
+                }
+
+                object initialValue = ConnectDataWithFallback(server, topicId, normalizedAsset, field);
 
                 var topic = new RtdTopic
                 {
                     TopicId = topicId,
-                    Asset = _config.Asset,
+                    Asset = normalizedAsset,
                     Field = field,
                     LastValue = initialValue
                 };
 
-                _topics[topicId] = topic;
+                lock (_topicLock)
+                {
+                    _topics[topicId] = topic;
+                    _topicByKey[key] = topicId;
+                }
+
                 _log.Info("Assinado RTD " + topic.Key + ".");
                 Publish(topic, initialValue);
+            }
+        }
 
-                topicId++;
+        private void DisconnectAsset(IRtdServer server, string asset)
+        {
+            string normalizedAsset = NormalizeAsset(asset);
+            List<RtdTopic> topics;
+
+            lock (_topicLock)
+            {
+                topics = _topics.Values
+                    .Where(topic => string.Equals(topic.Asset, normalizedAsset, StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+            }
+
+            foreach (RtdTopic topic in topics)
+            {
+                try
+                {
+                    server.DisconnectData(topic.TopicId);
+                    _log.Info("RTD desligado " + topic.Key + ".");
+                }
+                catch (Exception ex)
+                {
+                    _log.Warn("Falha ao desconectar topico " + topic.Key + ": " + ex.Message);
+                }
+
+                lock (_topicLock)
+                {
+                    _topics.Remove(topic.TopicId);
+                    _topicByKey.Remove(topic.Key);
+                }
             }
         }
 
@@ -254,13 +466,50 @@ namespace ColetorProfitRTD.Rtd
 
                 int topicId = Convert.ToInt32(idObject);
 
-                if (!_topics.TryGetValue(topicId, out RtdTopic topic))
+                RtdTopic topic;
+
+                lock (_topicLock)
                 {
-                    continue;
+                    if (!_topics.TryGetValue(topicId, out topic))
+                    {
+                        continue;
+                    }
                 }
 
-                topic.LastValue = value;
+                lock (_topicLock)
+                {
+                    topic.LastValue = value;
+                }
+
                 Publish(topic, value);
+            }
+        }
+
+        private void EnqueueControl(Action<IRtdServer> command)
+        {
+            lock (_commandLock)
+            {
+                _controlCommands.Enqueue(command);
+            }
+        }
+
+        private void DrainControlCommands(IRtdServer server)
+        {
+            while (true)
+            {
+                Action<IRtdServer> command;
+
+                lock (_commandLock)
+                {
+                    if (_controlCommands.Count == 0)
+                    {
+                        return;
+                    }
+
+                    command = _controlCommands.Dequeue();
+                }
+
+                command(server);
             }
         }
 
@@ -277,7 +526,14 @@ namespace ColetorProfitRTD.Rtd
                 return;
             }
 
-            foreach (RtdTopic topic in _topics.Values.ToList())
+            List<RtdTopic> topics;
+
+            lock (_topicLock)
+            {
+                topics = _topics.Values.ToList();
+            }
+
+            foreach (RtdTopic topic in topics)
             {
                 try
                 {
@@ -330,6 +586,11 @@ namespace ColetorProfitRTD.Rtd
                 Thread.Sleep(chunk);
                 remaining -= chunk;
             }
+        }
+
+        private string NormalizeAsset(string asset)
+        {
+            return string.IsNullOrWhiteSpace(asset) ? null : asset.Trim().ToUpperInvariant();
         }
     }
 }
