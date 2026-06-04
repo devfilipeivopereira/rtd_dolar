@@ -50,6 +50,10 @@ if (!/\.workspace-status\{[\s\S]*?border:1px solid/i.test(css) || !/\bfunction\s
   failures.push("Workspace menu must expose compact operational status badges.");
 }
 
+if (!/\.command-status\{[\s\S]*?border:1px solid/i.test(css) || !/\bfunction\s+buildCommandItems[\s\S]*workspaceGroupStatus\(group\.id\)[\s\S]*assetFeedFreshness\(asset,\s*item\)/.test(html)) {
+  failures.push("Command palette must expose grouped operational statuses and asset freshness.");
+}
+
 if (failures.length) {
   console.error(failures.join("\n"));
   process.exit(1);

@@ -166,7 +166,12 @@ input.live-fed{border-color:#1f8a70;outline:2px solid #123125;outline-offset:-2p
 .command-text{display:block;min-width:0}
 .command-text strong{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.03em}
 .command-text span{display:block;color:var(--muted);font-size:10px;margin-top:3px}
+.command-badges{display:flex;align-items:center;justify-content:flex-end;gap:5px;flex-wrap:wrap}
 .command-item .command-kind{height:22px;display:inline-flex;align-items:center;border:1px solid #39424f;background:#0B0C0A;color:#9aa7b5;padding:0 7px;font-size:9px;font-weight:900;text-transform:uppercase}
+.command-status{height:22px;display:inline-flex;align-items:center;border:1px solid #39424f;background:#0B0C0A;color:#9aa7b5;padding:0 7px;font-size:9px;font-weight:900;text-transform:uppercase}
+.command-status.ok{border-color:#1f7a66;background:#0d261f;color:#9df2d5}
+.command-status.warn{border-color:#7a5f1f;background:#28210d;color:#ffd66b}
+.command-status.bad{border-color:#7a2b2b;background:#2b1111;color:#ff9b9b}
 .asset-row-channels{display:flex;gap:5px;flex-wrap:wrap}
 .asset-chip{
   display:inline-flex;align-items:center;gap:5px;min-height:24px;border:1px solid var(--line);
@@ -4046,13 +4051,62 @@ function renderConnections() {
 }
 
 function commandSearchText(item) {
-  return [item.label, item.detail, item.kind, item.asset, item.tab].filter(Boolean).join(" ").toLowerCase();
+  return [item.label, item.detail, item.kind, item.asset, item.tab, item.group, item.status, item.hotkey].filter(Boolean).join(" ").toLowerCase();
+}
+
+function dashboardCommandContext() {
+  const asset = selectedAsset();
+  const config = selectedAssetConfig();
+  const snapshot = state.rtd.snapshotsByAsset[asset] || null;
+  const intraday = liveIntradayFromSnapshot(snapshot);
+  const flow = flowBucket(asset);
+  const csvOk = historyHasCsv(config?.history) || state.uploadedCount > 0;
+  const priceOk = !!snapshot && Number.isFinite(intraday.price);
+  const bookOk = !!liveBookDepthForAsset(asset) || sourceIsOk(config?.bookRtd);
+  const timesOk = !!state.rtd.timesTradesByAsset[asset] || sourceIsOk(config?.timesRtd);
+  const hasFlow = !!flow.lastMessage || Number.isFinite(liveNumber(flow.metrics?.delta5s));
+  const quant = quantReversalAssessment(snapshot, flow);
+  return { config, priceOk, csvOk, bookOk, timesOk, hasFlow, quant };
 }
 
 function buildCommandItems(query = "") {
+  const next = dashboardNextStep(dashboardCommandContext());
+  const nextItem = {
+    label: `Proximo passo: ${next.label}`,
+    detail: next.detail,
+    kind: "Acao",
+    status: "AGORA",
+    tone: "warn",
+    tab: next.tab,
+    execute() {
+      showMainTab(next.tab);
+    },
+  };
+
+  const groupItems = WORKSPACE_GROUPS.map(group => {
+    const status = workspaceGroupStatus(group.id);
+    const labels = group.tabs.map(tab => TAB_META[tab]?.label || tab).join(", ");
+    return {
+      label: group.label,
+      detail: labels,
+      kind: "Grupo",
+      group: group.id,
+      status: status.label,
+      tone: status.tone,
+      execute() {
+        showWorkspaceGroup(group.id);
+      },
+    };
+  });
+
   const screenItems = COMMAND_ACTIONS.map(action => ({
     ...action,
     kind: "Tela",
+    group: workspaceGroupForTab(action.tab).label,
+    hotkey: hotkeyForTab(action.tab),
+    detail: `${workspaceGroupForTab(action.tab).label}${hotkeyForTab(action.tab) ? ` | ${hotkeyForTab(action.tab)}` : ""} | ${action.detail}`,
+    status: hotkeyForTab(action.tab) || workspaceGroupForTab(action.tab).label,
+    tone: action.tab === state.ui.mainTab ? "ok" : "",
     execute() {
       showMainTab(action.tab);
     },
@@ -4061,10 +4115,18 @@ function buildCommandItems(query = "") {
   const assetItems = (state.rtd.assets || []).map(item => {
     const asset = normalizeAsset(item.asset);
     const label = item.label && item.label !== asset ? `${asset} ${item.label}` : asset;
+    const feed = assetFeedFreshness(asset, item);
+    const channels = [
+      `P:${sourceIsOk(item.priceRtd) ? "OK" : item.priceRtd?.enabled ? "..." : "off"}`,
+      `B:${sourceIsOk(item.bookRtd) ? "OK" : item.bookRtd?.enabled ? "..." : "off"}`,
+      `T:${sourceIsOk(item.timesRtd) ? "OK" : item.timesRtd?.enabled ? "..." : "off"}`,
+    ].join(" ");
     return {
       label,
-      detail: item.enabled ? "Ativo cadastrado ligado" : "Ativo cadastrado desligado",
+      detail: `${item.enabled ? "ligado" : "desligado"} | ${feed.label} ${feed.detail} | ${channels}`,
       kind: "Ativo",
+      status: feed.label,
+      tone: feedToneClass(feed.tone),
       asset,
       execute() {
         selectAsset(asset);
@@ -4073,7 +4135,7 @@ function buildCommandItems(query = "") {
     };
   });
 
-  const items = [...screenItems, ...assetItems];
+  const items = [nextItem, ...groupItems, ...screenItems, ...assetItems];
   const q = String(query || "").trim().toLowerCase();
   if (!q) return items.slice(0, 18);
   return items.filter(item => commandSearchText(item).includes(q)).slice(0, 18);
@@ -4092,7 +4154,10 @@ function renderCommandPalette() {
         <strong>${escapeHtml(item.label)}</strong>
         <span>${escapeHtml(item.detail || "--")}</span>
       </span>
-      <span class="command-kind">${escapeHtml(item.kind || "Item")}</span>
+      <span class="command-badges">
+        ${item.status ? `<span class="command-status ${escapeHtml(item.tone || "")}">${escapeHtml(item.status)}</span>` : ""}
+        <span class="command-kind">${escapeHtml(item.kind || "Item")}</span>
+      </span>
     </button>
   `).join("") : `<div class="warn-line">Nenhum item encontrado.</div>`;
 }

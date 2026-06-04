@@ -97,7 +97,7 @@ Cada grupo do menu superior tem um selo operacional calculado no navegador a par
 
 A hotbar de analise fica abaixo da faixa superior e abre telas de uso frequente por clique ou `Alt+1` a `Alt+9`. Ela tambem mostra a trilha `Grupo / Tela` e o resumo curto da tela ativa, acelerando a leitura sem substituir o menu superior, que continua agrupando todas as funcionalidades.
 
-A paleta `Ctrl+K` busca telas e ativos cadastrados. Quando o item escolhido e um ativo, a UI seleciona o ativo e abre `Monitor`.
+A paleta `Ctrl+K` busca grupos, telas e ativos cadastrados. Ela mostra `Proximo passo`, status operacional dos grupos, atalhos das telas e feed/fontes `P/B/T` dos ativos. Quando o item escolhido e um ativo, a UI seleciona o ativo e abre `Monitor`.
 
 A tela `Painel` e a entrada de analise. Ela resume RTD, ativo selecionado, ultimo preco, leitura rapida de contexto, fluxo, nivel proximo, radar e feed, alem de checklist de prontidao, atalhos para as telas principais, setups recentes, oportunidades e alertas.
 

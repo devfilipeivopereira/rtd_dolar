@@ -78,7 +78,7 @@ O render ao vivo do navegador usa fila coalescida por motivo (`snapshot`, `book`
 
 O terminal tambem diferencia RTD conectado de dado realmente atualizado. A faixa superior mostra `Feed` como `Ao vivo`, `Atrasado`, `Parado`, `Sem preco` ou `Manual`, com idade do ultimo snapshot do ativo selecionado. O `/health` expoe `lastUpdateAgeMs`, cada item de `/assets` traz `feedStatus` e `lastUpdateAgeMs`, e `Cotacoes`/`Conexoes` mostram freshness por ativo.
 
-`Ctrl+K` abre a paleta de busca para localizar telas e ativos cadastrados.
+`Ctrl+K` abre a paleta de comando para localizar telas, grupos e ativos cadastrados. O topo mostra `Proximo passo`, os grupos aparecem com status operacional e cada ativo mostra feed e fontes `P/B/T`, acelerando a troca de contexto durante o RTD ao vivo.
 
 A aba `DOM` mostra:
 
@@ -213,7 +213,7 @@ logs/                   logs em runtime
 15. Conexoes: confirmar polling de `/health`, arquitetura x64/x86, Profit RTD, WebSocket e status `Preco`, `Book`, `Times` por ativo.
 16. Ajustes: alternar presets `Rapido`, `Equilibrado` e `Detalhado`; depois alterar niveis do DOM e intervalo de renderizacao, salvar, recarregar a pagina e confirmar persistencia local.
 17. Navegacao: confirmar grupos superiores, trilha `Grupo / Tela`, hotbar contextual, memoria da ultima tela por grupo e atalhos `Alt+1` a `Alt+9`, sem disparar quando o foco esta em campos de texto.
-18. Paleta: confirmar `Ctrl+K`, busca de telas, busca de ativos, setas, `Enter` e `Esc`.
+18. Paleta: confirmar `Ctrl+K`, `Proximo passo`, busca de grupos/telas/ativos, status de feed/fontes, setas, `Enter` e `Esc`.
 19. Performance: confirmar que a aba ativa segue responsiva com RTD ativo; campos intraday devem atualizar imediatamente e telas invisiveis nao devem causar travamento perceptivel.
 20. Telemetria: confirmar que `Latencia WS`, `Msg/s` e `Render UI` mudam quando chegam mensagens WebSocket. Essas leituras medem backend local -> navegador e custo de desenho da tela, nao latencia de bolsa ou Profit.
 21. Design QA: rodar `node tools/validate-dashboard-design.js` e confirmar `Dashboard design tokens OK`, incluindo os selos operacionais do menu superior.

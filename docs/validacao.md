@@ -42,7 +42,7 @@ Resultado esperado:
 22. Confirmar hotbar por clique e atalhos `Alt+1` a `Alt+9`.
 23. Confirmar que os grupos superiores exibem selos operacionais reais, como feed, cadastro completo/parcial, fluxo, ideias/alertas e health.
 24. Confirmar que os atalhos nao disparam quando o foco esta em campos de texto, select ou textarea.
-25. Confirmar `Ctrl+K`, busca de telas e ativos, navegacao por setas, `Enter` para abrir e `Esc` para fechar.
+25. Confirmar `Ctrl+K`, `Proximo passo`, busca de grupos/telas/ativos, status de feed/fontes, navegacao por setas, `Enter` para abrir e `Esc` para fechar.
 26. Confirmar que `Latencia WS`, `Msg/s` e `Render UI` aparecem na faixa superior e no `Sistema` quando chegam mensagens do WebSocket.
 27. Confirmar no `Painel` que `Score Quant`, `Indicadores Quant`, `Base Quant` e `Evidencias Quant` aparecem.
 28. Confirmar que o `Score Quant` fica aguardando ou penalizado quando faltar CSV, preco RTD, fluxo/T&T ou quando o feed estiver atrasado/parado.
@@ -136,7 +136,7 @@ Sem CSV, a aba DOM ainda pode mostrar ticks RTD, bid/ask e tape. Pontos como POC
 - `Conexoes` deve consultar `/health` periodicamente e separar status do feed local do debug de fluxo.
 - O menu superior deve mostrar selos operacionais por grupo, usando estado real de feed, cadastro, fluxo, ideias/alertas e sistema.
 - A hotbar deve espelhar a aba ativa, mostrar a trilha `Grupo / Tela` e permitir troca rapida para Monitor, DOM, Book, T&T, Fluxo, Oportunidades, Ativos, Conexoes e Sistema.
-- A paleta `Ctrl+K` deve buscar telas e ativos cadastrados sem depender de recarregar a pagina.
+- A paleta `Ctrl+K` deve buscar grupos, telas e ativos cadastrados sem depender de recarregar a pagina, mostrando `Proximo passo`, status operacional, atalhos e feed/fontes dos ativos.
 - `Book` e `T&T` devem atualizar sem travar a pagina mesmo com muitos campos RTD, respeitando coalescing do backend.
 - Campos intraday devem ser preenchidos a cada snapshot; o lote curto configuravel deve renderizar principalmente a aba ativa para manter a UI responsiva com RTD intenso.
 - `Latencia WS` deve ser tratada como diagnostico backend local -> navegador, e `Render UI` como custo de desenho da tela ativa; nenhuma delas mede latencia de bolsa ou Profit.
@@ -169,7 +169,7 @@ Resultado esperado:
 Dashboard design tokens OK
 ```
 
-Esse check falha se o dashboard reintroduzir sombras, gradientes, filtros decorativos, fontes fora da familia mono ou remover os selos operacionais do menu superior.
+Esse check falha se o dashboard reintroduzir sombras, gradientes, filtros decorativos, fontes fora da familia mono, remover os selos operacionais do menu superior ou remover status operacional da paleta `Ctrl+K`.
 
 ## Linguagem de Produto
 
@@ -242,4 +242,5 @@ No navegador, confirme:
 1. Os grupos superiores `Inicio`, `Cadastro`, `Mercado`, `Fluxo`, `Analise` e `Sistema` trocam a hotbar contextual e a trilha `Grupo / Tela`.
 2. Ao voltar para um grupo, a hotbar reabre a ultima tela usada naquele grupo.
 3. `Buscar`, `Ctrl+K`, setas, `Enter` e `Esc` continuam funcionando.
-4. `Alt+1` a `Alt+9` continuam abrindo as telas frequentes quando o foco nao esta em campo de texto.
+4. A paleta mostra `Proximo passo`, grupos, telas, ativos, status operacional e feed/fontes por ativo.
+5. `Alt+1` a `Alt+9` continuam abrindo as telas frequentes quando o foco nao esta em campo de texto.

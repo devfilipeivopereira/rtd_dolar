@@ -25,7 +25,7 @@
 - Tela `Conexoes` para polling de `/health`, estado do coletor, Profit RTD, WebSocket e fontes por ativo.
 - Hotbar de analise contextual por grupo, com trilha `Grupo / Tela`, memoria da ultima tela usada e atalhos `Alt+1` a `Alt+9` para telas de uso frequente.
 - Selos operacionais no menu superior, calculados por grupo a partir de feed, cadastro, fluxo, ideias/alertas e health.
-- Paleta `Ctrl+K` para buscar telas e ativos cadastrados.
+- Paleta `Ctrl+K` para buscar grupos, telas e ativos cadastrados, com `Proximo passo`, status operacional, atalhos e feed/fontes por ativo.
 - Faixa superior de contexto com ativo selecionado, ultimo preco, bid/ask, Book, Times, delta e CSV.
 - `Score Quant` no `Painel`, com `Indicadores Quant`, `Base Quant` e `Evidencias Quant` combinando CSV estatistico, RTD de preco, fluxo derivado/T&T, confluencia e backtest proxy.
 - Telemetria no frontend com latencia WebSocket local, mensagens por segundo, render da UI, reconexoes e contadores por tipo de mensagem.
@@ -60,7 +60,7 @@
 15. Em `Ajustes`, alternar `Rapido`, `Equilibrado` e `Detalhado` e confirmar DOM/render/memoria no resumo.
 16. Confirmar `Conexoes` com `/health`, arquitetura, Profit RTD, WebSocket e fontes por ativo.
 17. Confirmar grupos superiores, selos operacionais, trilha `Grupo / Tela`, hotbar contextual, memoria da ultima tela por grupo e atalhos `Alt+1` a `Alt+9`.
-18. Confirmar paleta `Ctrl+K` para telas e ativos.
+18. Confirmar paleta `Ctrl+K` para grupos, telas, ativos, `Proximo passo`, status operacional e feed/fontes.
 19. Confirmar `Latencia WS`, `Msg/s`, `Render UI` e contadores no `Sistema`.
 20. Rodar `node tools/validate-dashboard-design.js`.
 21. Rodar `node tools/validate-product-language.js`.
