@@ -85,6 +85,8 @@ A faixa superior fica disponivel em todas as telas e mostra ativo selecionado, u
 
 A hotbar operacional fica abaixo da faixa superior e abre telas de uso frequente por clique ou `Alt+1` a `Alt+9`. Ela acelera a rotina sem substituir o menu superior, que continua agrupando todas as funcionalidades.
 
+A paleta `Ctrl+K` busca telas e ativos cadastrados. Quando o item escolhido e um ativo, a UI seleciona o ativo e abre `Monitor`.
+
 A tela `Painel` e a entrada operacional. Ela resume RTD, ativo selecionado, ultimo preco, checklist de prontidao, atalhos para as telas principais, setups recentes, planos da boleta e alertas.
 
 A tela `Monitor` e a mesa de acompanhamento ao vivo. Ela junta watchlist compacta, estado do ativo selecionado, setups ativos, tape, planos e alertas sem editar cadastro nem parametros.

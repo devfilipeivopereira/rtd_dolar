@@ -22,6 +22,7 @@
 - Tela `Ajustes` para parametros locais de tick, DOM, renderizacao, memoria de tape/sinais e valor por ponto.
 - Tela `Conexoes` para polling de `/health`, estado do coletor, Profit RTD, WebSocket e fontes por ativo.
 - Hotbar operacional com atalhos `Alt+1` a `Alt+9` para telas de uso frequente.
+- Paleta `Ctrl+K` para buscar telas e ativos cadastrados.
 - Faixa superior operacional com ativo selecionado, ultimo preco, bid/ask, Book, Times, delta e CSV.
 - Telemetria WebSocket no frontend com latencia local, mensagens por segundo, reconexoes e contadores por tipo de mensagem.
 - Coalescing auxiliar para `bookDepth` e `timesTrades`, reduzindo repintura sem bloquear snapshots de preco.
@@ -43,7 +44,8 @@
 12. Abrir `Book`, `T&T`, `Alertas`, `Risco`, `Historico`, `Ajustes`, `Conexoes` e `Sistema`.
 13. Confirmar `Conexoes` com `/health`, arquitetura, Profit RTD, WebSocket e fontes por ativo.
 14. Confirmar hotbar por clique e atalhos `Alt+1` a `Alt+9`.
-15. Confirmar `Latencia WS`, `Msg/s` e contadores no `Sistema`.
+15. Confirmar paleta `Ctrl+K` para telas e ativos.
+16. Confirmar `Latencia WS`, `Msg/s` e contadores no `Sistema`.
 
 ## Build validado
 

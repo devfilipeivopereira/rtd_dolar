@@ -39,7 +39,8 @@ Resultado esperado:
 19. Em `Ajustes`, mudar niveis do DOM e intervalo de renderizacao, salvar, recarregar a pagina e confirmar que os valores persistem.
 20. Confirmar hotbar por clique e atalhos `Alt+1` a `Alt+9`.
 21. Confirmar que os atalhos nao disparam quando o foco esta em campos de texto, select ou textarea.
-22. Confirmar que `Latencia WS` e `Msg/s` aparecem na faixa superior e no `Sistema` quando chegam mensagens do WebSocket.
+22. Confirmar `Ctrl+K`, busca de telas e ativos, navegacao por setas, `Enter` para executar e `Esc` para fechar.
+23. Confirmar que `Latencia WS` e `Msg/s` aparecem na faixa superior e no `Sistema` quando chegam mensagens do WebSocket.
 
 ## Endpoints
 
@@ -122,6 +123,7 @@ Sem CSV, a aba DOM ainda pode mostrar ticks RTD, bid/ask e tape. Pontos como POC
 - `Ajustes` deve persistir em `wdo-ui-settings` e aplicar tamanho do tick, niveis do DOM, intervalo de renderizacao, limite de trades/sinais e valor por ponto padrao.
 - `Conexoes` deve consultar `/health` periodicamente e separar status do feed local do debug de fluxo.
 - A hotbar deve espelhar a aba ativa e permitir troca rapida para Monitor, DOM, Book, T&T, Fluxo, Boleta, Ativos, Conexoes e Sistema.
+- A paleta `Ctrl+K` deve buscar telas e ativos cadastrados sem depender de recarregar a pagina.
 - `Book` e `T&T` devem atualizar sem travar a pagina mesmo com muitos campos RTD, respeitando coalescing do backend.
 - Campos intraday devem ser preenchidos a cada snapshot; DOM, `Painel`, `Monitor`, `Cotacoes` e `Historico` podem atualizar em lote curto configuravel para manter a UI responsiva.
 - `Latencia WS` deve ser tratada como diagnostico backend local -> navegador, nao como latencia de bolsa, Profit ou execucao.

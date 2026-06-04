@@ -89,4 +89,6 @@ O dashboard usa o menu superior:
 
 A hotbar operacional abre as telas mais usadas com `Alt+1` a `Alt+9`, mantendo `Monitor`, `DOM`, `Book`, `T&T`, `Fluxo`, `Boleta`, `Ativos`, `Conexoes` e `Sistema` a um comando.
 
+A paleta `Ctrl+K` tambem abre telas e seleciona ativos cadastrados sem sair do fluxo de observacao.
+
 A aba `DOM` tambem marca sinais ativos como pontos de flow.

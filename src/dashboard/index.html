@@ -131,6 +131,20 @@ input.live-fed{border-color:#1f8a70;box-shadow:0 0 0 2px #12b88618}
 .asset-action.on{border-color:#1f7a66;color:#9df2d5;background:#0d261f}
 .asset-action.off{border-color:#7a2b2b;color:#ff9b9b;background:#2b1111}
 .asset-action.delete{border-color:#7a2b2b;color:#ff9b9b;background:#2b1111}
+.command-overlay{position:fixed;inset:0;z-index:60;background:#000000a8;display:grid;place-items:start center;padding-top:92px}
+.command-box{width:min(720px,calc(100vw - 32px));border:1px solid #2f8f75;background:#0B0C0A}
+.command-head{display:flex;align-items:center;justify-content:space-between;gap:10px;border-bottom:1px solid var(--line);padding:10px 12px}
+.command-head span{font-size:10px;color:var(--muted);font-weight:900;text-transform:uppercase;letter-spacing:.08em}
+.command-close{height:26px;border:1px solid var(--line);background:#10141a;color:var(--muted);padding:0 8px;font-size:10px;font-weight:900;text-transform:uppercase}
+.command-input{width:100%;height:44px;border:0;border-bottom:1px solid var(--line);background:#10141a;color:var(--txt);outline:none;padding:0 12px;font-size:13px;font-weight:900}
+.command-results{max-height:420px;overflow:auto;padding:8px}
+.command-item{width:100%;min-height:48px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;border:1px solid var(--line);background:#10141a;color:var(--txt);padding:8px 10px;margin-bottom:6px;text-align:left}
+.command-item:last-child{margin-bottom:0}
+.command-item.active{border-color:#1f8a70;background:#123125}
+.command-text{display:block;min-width:0}
+.command-text strong{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.03em}
+.command-text span{display:block;color:var(--muted);font-size:10px;margin-top:3px}
+.command-item .command-kind{height:22px;display:inline-flex;align-items:center;border:1px solid #39424f;background:#0B0C0A;color:#9aa7b5;padding:0 7px;font-size:9px;font-weight:900;text-transform:uppercase}
 .asset-row-channels{display:flex;gap:5px;flex-wrap:wrap}
 .asset-chip{
   display:inline-flex;align-items:center;gap:5px;min-height:24px;border:1px solid var(--line);
@@ -573,6 +587,17 @@ tr:hover td{background:#ffffff05}
     <button class="main-tab" data-hot-tab="connections" type="button"><span class="hotkey">Alt+8</span>Conexoes</button>
     <button class="main-tab" data-hot-tab="diagnostics" type="button"><span class="hotkey">Alt+9</span>Sistema</button>
   </nav>
+
+  <div class="command-overlay hidden" id="command-palette">
+    <div class="command-box">
+      <div class="command-head">
+        <span>Comando rapido</span>
+        <button class="command-close" id="command-close" type="button">Fechar</button>
+      </div>
+      <input class="command-input" id="command-input" type="text" placeholder="Buscar tela ou ativo" autocomplete="off">
+      <div class="command-results" id="command-results"></div>
+    </div>
+  </div>
 
   <section class="asset-screen active" id="asset-screen">
     <div class="asset-workbench">
@@ -1727,11 +1752,33 @@ const HOTKEY_TABS = {
   "8": "connections",
   "9": "diagnostics",
 };
+const COMMAND_ACTIONS = [
+  { label: "Painel", detail: "Checklist e atalhos", tab: "dashboard" },
+  { label: "Monitor", detail: "Watchlist, setups e tape", tab: "monitor" },
+  { label: "Ativos", detail: "Cadastro RTD e CSV", tab: "assets" },
+  { label: "Cotacoes", detail: "Lista completa de ativos", tab: "quotes" },
+  { label: "Grafico", detail: "Niveis e estudos", tab: "panorama" },
+  { label: "DOM", detail: "Escada de preco", tab: "dom" },
+  { label: "Book", detail: "Ofertas RTD", tab: "book" },
+  { label: "T&T", detail: "Times & Trades", tab: "times" },
+  { label: "Fluxo", detail: "Delta e metricas", tab: "flow" },
+  { label: "Setups", detail: "Sinais ativos", tab: "signals" },
+  { label: "Boleta", detail: "Plano local", tab: "orders" },
+  { label: "Alertas", detail: "Alertas de preco", tab: "alerts" },
+  { label: "Risco", detail: "Calculadora local", tab: "risk" },
+  { label: "Historico", detail: "CSV e ticks", tab: "history" },
+  { label: "Ajustes", detail: "Parametros locais", tab: "settings" },
+  { label: "Conexoes", detail: "Feed e fontes", tab: "connections" },
+  { label: "Sistema", detail: "Diagnostico", tab: "diagnostics" },
+];
 
 const state = {
   ui: {
     mainTab: loadMainTab(),
     settings: loadUiSettings(),
+    commandOpen: false,
+    commandIndex: 0,
+    commandItems: [],
   },
   bars: [],
   uploadedCount: 0,
@@ -1848,6 +1895,10 @@ const refs = {
   app: document.querySelector(".app"),
   mainTabs: document.getElementById("main-tabs"),
   moduleHotbar: document.getElementById("module-hotbar"),
+  commandPalette: document.getElementById("command-palette"),
+  commandInput: document.getElementById("command-input"),
+  commandResults: document.getElementById("command-results"),
+  commandClose: document.getElementById("command-close"),
   assetScreen: document.getElementById("asset-screen"),
   terminalMain: document.getElementById("terminal-main"),
   topAssetSelect: document.getElementById("top-asset-select"),
@@ -2142,6 +2193,7 @@ function updateAssetsMessage(msg) {
   renderMonitor();
   renderQuotesPanel();
   renderConnections();
+  if (state.ui.commandOpen) renderCommandPalette();
   const selected = selectedAssetConfig();
   populateAssetForm(selected);
   if (historyHasCsv(selected?.history) && state.assetEditor.loadedHistoryAsset !== selectedAsset()) {
@@ -3113,6 +3165,79 @@ function renderConnections() {
       </tr>
     `;
   }).join("") : `<tr><td colspan="6">Nenhum ativo cadastrado.</td></tr>`;
+}
+
+function commandSearchText(item) {
+  return [item.label, item.detail, item.kind, item.asset, item.tab].filter(Boolean).join(" ").toLowerCase();
+}
+
+function buildCommandItems(query = "") {
+  const screenItems = COMMAND_ACTIONS.map(action => ({
+    ...action,
+    kind: "Tela",
+    execute() {
+      showMainTab(action.tab);
+    },
+  }));
+
+  const assetItems = (state.rtd.assets || []).map(item => {
+    const asset = normalizeAsset(item.asset);
+    const label = item.label && item.label !== asset ? `${asset} ${item.label}` : asset;
+    return {
+      label,
+      detail: item.enabled ? "Ativo cadastrado ligado" : "Ativo cadastrado desligado",
+      kind: "Ativo",
+      asset,
+      execute() {
+        selectAsset(asset);
+        showMainTab("monitor");
+      },
+    };
+  });
+
+  const items = [...screenItems, ...assetItems];
+  const q = String(query || "").trim().toLowerCase();
+  if (!q) return items.slice(0, 18);
+  return items.filter(item => commandSearchText(item).includes(q)).slice(0, 18);
+}
+
+function renderCommandPalette() {
+  if (!refs.commandResults) return;
+  const query = refs.commandInput?.value || "";
+  const items = buildCommandItems(query);
+  state.ui.commandItems = items;
+  state.ui.commandIndex = items.length ? Math.min(state.ui.commandIndex, items.length - 1) : 0;
+
+  refs.commandResults.innerHTML = items.length ? items.map((item, index) => `
+    <button class="command-item ${index === state.ui.commandIndex ? "active" : ""}" type="button" data-command-index="${index}">
+      <span class="command-text">
+        <strong>${escapeHtml(item.label)}</strong>
+        <span>${escapeHtml(item.detail || "--")}</span>
+      </span>
+      <span class="command-kind">${escapeHtml(item.kind || "Comando")}</span>
+    </button>
+  `).join("") : `<div class="warn-line">Nenhum comando encontrado.</div>`;
+}
+
+function openCommandPalette(seed = "") {
+  state.ui.commandOpen = true;
+  state.ui.commandIndex = 0;
+  refs.commandPalette.classList.remove("hidden");
+  refs.commandInput.value = seed;
+  renderCommandPalette();
+  window.setTimeout(() => refs.commandInput.focus(), 0);
+}
+
+function closeCommandPalette() {
+  state.ui.commandOpen = false;
+  refs.commandPalette.classList.add("hidden");
+}
+
+function executeCommandPalette(index = state.ui.commandIndex) {
+  const item = state.ui.commandItems[index];
+  if (!item) return;
+  closeCommandPalette();
+  item.execute();
 }
 
 async function loadHealth() {
@@ -6158,7 +6283,53 @@ refs.moduleHotbar.addEventListener("click", ev => {
   showMainTab(tab.dataset.hotTab);
 });
 
+refs.commandClose.addEventListener("click", closeCommandPalette);
+refs.commandInput.addEventListener("input", () => {
+  state.ui.commandIndex = 0;
+  renderCommandPalette();
+});
+refs.commandResults.addEventListener("click", ev => {
+  const item = ev.target.closest("[data-command-index]");
+  if (!item) return;
+  executeCommandPalette(Number(item.dataset.commandIndex));
+});
+refs.commandPalette.addEventListener("click", ev => {
+  if (ev.target === refs.commandPalette) closeCommandPalette();
+});
+
 document.addEventListener("keydown", ev => {
+  if ((ev.ctrlKey || ev.metaKey) && ev.key.toLowerCase() === "k") {
+    ev.preventDefault();
+    if (state.ui.commandOpen) closeCommandPalette();
+    else openCommandPalette();
+    return;
+  }
+
+  if (state.ui.commandOpen) {
+    if (ev.key === "Escape") {
+      ev.preventDefault();
+      closeCommandPalette();
+      return;
+    }
+    if (ev.key === "ArrowDown") {
+      ev.preventDefault();
+      state.ui.commandIndex = Math.min(state.ui.commandIndex + 1, Math.max(0, state.ui.commandItems.length - 1));
+      renderCommandPalette();
+      return;
+    }
+    if (ev.key === "ArrowUp") {
+      ev.preventDefault();
+      state.ui.commandIndex = Math.max(0, state.ui.commandIndex - 1);
+      renderCommandPalette();
+      return;
+    }
+    if (ev.key === "Enter") {
+      ev.preventDefault();
+      executeCommandPalette();
+      return;
+    }
+  }
+
   if (!ev.altKey || ev.ctrlKey || ev.metaKey || ev.shiftKey) return;
   const target = ev.target;
   const isTyping = target?.matches?.("input, textarea, select") || target?.isContentEditable;
