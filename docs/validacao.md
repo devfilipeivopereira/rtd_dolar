@@ -34,9 +34,10 @@ Resultado esperado:
 14. Abrir `Book` e confirmar 50 niveis quando `BOOK0` estiver ligado.
 15. Abrir `T&T` e confirmar ate 100 linhas quando `T&T0` estiver ligado.
 16. Abrir `Boleta`, salvar um plano local e confirmar que ele nao envia ordem.
-17. Abrir `Alertas`, `Risco`, `Historico`, `Ajustes` e `Sistema` e confirmar que cada tela mostra apenas sua funcionalidade.
-18. Em `Ajustes`, mudar niveis do DOM e intervalo de renderizacao, salvar, recarregar a pagina e confirmar que os valores persistem.
-19. Confirmar que `Latencia WS` e `Msg/s` aparecem na faixa superior e no `Sistema` quando chegam mensagens do WebSocket.
+17. Abrir `Alertas`, `Risco`, `Historico`, `Ajustes`, `Conexoes` e `Sistema` e confirmar que cada tela mostra apenas sua funcionalidade.
+18. Em `Conexoes`, confirmar polling de `/health`, arquitetura, Profit RTD, WebSocket e fontes `Preco`, `Book` e `Times` por ativo.
+19. Em `Ajustes`, mudar niveis do DOM e intervalo de renderizacao, salvar, recarregar a pagina e confirmar que os valores persistem.
+20. Confirmar que `Latencia WS` e `Msg/s` aparecem na faixa superior e no `Sistema` quando chegam mensagens do WebSocket.
 
 ## Endpoints
 
@@ -117,6 +118,7 @@ Sem CSV, a aba DOM ainda pode mostrar ticks RTD, bid/ask e tape. Pontos como POC
 - `Cotacoes` deve separar monitoramento de cadastro: a tela mostra status e atalhos, mas a edicao continua em `Ativos`.
 - `Boleta` deve salvar planos em localStorage, calcular R/R e mudar status com preco RTD sem chamar endpoint de ordem.
 - `Ajustes` deve persistir em `wdo-ui-settings` e aplicar tamanho do tick, niveis do DOM, intervalo de renderizacao, limite de trades/sinais e valor por ponto padrao.
+- `Conexoes` deve consultar `/health` periodicamente e separar status do feed local do debug de fluxo.
 - `Book` e `T&T` devem atualizar sem travar a pagina mesmo com muitos campos RTD, respeitando coalescing do backend.
 - Campos intraday devem ser preenchidos a cada snapshot; DOM, `Painel`, `Monitor`, `Cotacoes` e `Historico` podem atualizar em lote curto configuravel para manter a UI responsiva.
 - `Latencia WS` deve ser tratada como diagnostico backend local -> navegador, nao como latencia de bolsa, Profit ou execucao.

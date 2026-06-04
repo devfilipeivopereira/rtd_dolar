@@ -395,6 +395,13 @@ tr:hover td{background:#ffffff05}
 .monitor-table tr.selected td{background:#0d261f;color:#dffcf3}
 .monitor-actions{display:flex;gap:5px;justify-content:flex-end;flex-wrap:wrap}
 .monitor-tape{max-height:246px}
+.connections-grid{display:grid;grid-template-columns:minmax(320px,.8fr) minmax(0,1.25fr);gap:14px}
+.connections-table td,.connections-table th{text-align:right;white-space:nowrap}
+.connections-table td:first-child,.connections-table th:first-child{text-align:left}
+.connection-state{display:inline-flex;align-items:center;justify-content:center;min-height:22px;padding:0 7px;border:1px solid var(--line);background:#0e1318;color:var(--muted);font-size:10px;font-weight:900}
+.connection-state.ok{border-color:#1f7a66;color:#9df2d5;background:#0d261f}
+.connection-state.warn{border-color:#7a5f1f;color:#ffd66b;background:#28210d}
+.connection-state.bad{border-color:#7a2b2b;color:#ff9b9b;background:#2b1111}
 .quick-action{
   min-height:58px;border:1px solid var(--line);background:#10141a;color:var(--txt);
   display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:5px;padding:9px 10px;
@@ -469,7 +476,7 @@ tr:hover td{background:#ffffff05}
   .brand-title,.brand-sub{white-space:normal}
   .top-meta{justify-content:flex-start}
   .field-grid{grid-template-columns:1fr}
-  .market-table-grid,.times-grid,.alert-grid,.risk-grid,.order-grid,.history-grid,.dashboard-grid,.monitor-grid,.monitor-bottom{grid-template-columns:1fr}
+  .market-table-grid,.times-grid,.alert-grid,.risk-grid,.order-grid,.history-grid,.dashboard-grid,.monitor-grid,.monitor-bottom,.connections-grid{grid-template-columns:1fr}
   .dashboard-actions{grid-template-columns:1fr 1fr}
   .risk-result{grid-template-columns:1fr 1fr}
   .cards{grid-template-columns:1fr 1fr}
@@ -524,6 +531,7 @@ tr:hover td{background:#ffffff05}
         <button class="main-tab" data-main-tab="risk" type="button">Risco</button>
         <button class="main-tab" data-main-tab="history" type="button">Historico</button>
         <button class="main-tab" data-main-tab="settings" type="button">Ajustes</button>
+        <button class="main-tab" data-main-tab="connections" type="button">Conexoes</button>
         <button class="main-tab" data-main-tab="diagnostics" type="button">Sistema</button>
       </div>
     </nav>
@@ -861,6 +869,7 @@ tr:hover td{background:#ffffff05}
                   <button class="quick-action" type="button" data-dashboard-open="times"><strong>T&amp;T</strong><span>Negocios do RTD</span></button>
                   <button class="quick-action" type="button" data-dashboard-open="orders"><strong>Boleta</strong><span>Plano local de risco</span></button>
                   <button class="quick-action" type="button" data-dashboard-open="settings"><strong>Ajustes</strong><span>DOM, render e memoria</span></button>
+                  <button class="quick-action" type="button" data-dashboard-open="connections"><strong>Conexoes</strong><span>Feed, fontes e health</span></button>
                   <button class="quick-action" type="button" data-dashboard-open="assets"><strong>Ativos</strong><span>Cadastro e fontes RTD</span></button>
                 </div>
               </div>
@@ -1327,6 +1336,47 @@ tr:hover td{background:#ffffff05}
           </div>
         </section>
 
+        <section class="tab-panel hidden" id="panel-connections">
+          <div class="dom-summary">
+            <div class="live-kv"><span>Coletor</span><strong id="conn-status">--</strong></div>
+            <div class="live-kv"><span>Profit RTD</span><strong id="conn-profit">--</strong></div>
+            <div class="live-kv"><span>Arquitetura</span><strong id="conn-arch">--</strong></div>
+            <div class="live-kv"><span>Ultimo update</span><strong id="conn-update">--</strong></div>
+          </div>
+          <div class="connections-grid">
+            <div class="panel">
+              <div class="panel-head">
+                <div class="panel-title">Feed local</div>
+                <span class="tag" id="conn-check">Aguardando</span>
+              </div>
+              <div class="panel-body">
+                <div class="small-list" id="conn-summary"></div>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="panel-head">
+                <div class="panel-title">Fontes por ativo</div>
+                <span class="tag" id="conn-asset-count">0</span>
+              </div>
+              <div class="table-wrap">
+                <table class="connections-table">
+                  <thead>
+                    <tr>
+                      <th>Ativo</th>
+                      <th>Preco</th>
+                      <th>Book</th>
+                      <th>Times</th>
+                      <th>Topicos</th>
+                      <th>CSV</th>
+                    </tr>
+                  </thead>
+                  <tbody id="conn-assets"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <section class="tab-panel hidden" id="panel-levels">
           <div class="panel-grid">
             <div class="panel">
@@ -1651,7 +1701,7 @@ function saveUiSettings(settings) {
   } catch (_) {}
 }
 
-const MAIN_TABS = ["dashboard", "monitor", "assets", "quotes", "panorama", "dom", "book", "times", "flow", "signals", "orders", "alerts", "risk", "history", "settings", "diagnostics"];
+const MAIN_TABS = ["dashboard", "monitor", "assets", "quotes", "panorama", "dom", "book", "times", "flow", "signals", "orders", "alerts", "risk", "history", "settings", "connections", "diagnostics"];
 
 const state = {
   ui: {
@@ -1712,6 +1762,11 @@ const state = {
     messageTimes: [],
     counts: {},
     reconnects: 0,
+  },
+  health: {
+    last: null,
+    checkedAt: null,
+    timer: null,
   },
   chartLayers: loadChartLayers(),
   chartView: {
@@ -1921,6 +1976,14 @@ const refs = {
   settingsReset: document.getElementById("settings-reset"),
   settingsSummary: document.getElementById("settings-summary"),
   settingsNotes: document.getElementById("settings-notes"),
+  connStatus: document.getElementById("conn-status"),
+  connProfit: document.getElementById("conn-profit"),
+  connArch: document.getElementById("conn-arch"),
+  connUpdate: document.getElementById("conn-update"),
+  connCheck: document.getElementById("conn-check"),
+  connSummary: document.getElementById("conn-summary"),
+  connAssetCount: document.getElementById("conn-asset-count"),
+  connAssets: document.getElementById("conn-assets"),
   historyKv: document.getElementById("history-kv"),
   historyTicks: document.getElementById("history-ticks"),
   btn: document.getElementById("btn-calc"),
@@ -2052,6 +2115,7 @@ function updateAssetsMessage(msg) {
   renderDashboard();
   renderMonitor();
   renderQuotesPanel();
+  renderConnections();
   const selected = selectedAssetConfig();
   populateAssetForm(selected);
   if (historyHasCsv(selected?.history) && state.assetEditor.loadedHistoryAsset !== selectedAsset()) {
@@ -2940,6 +3004,112 @@ function renderSettings() {
   refs.settingsNotes.innerHTML = notes.map(note => `<div class="warn-line">${escapeHtml(note)}</div>`).join("");
 }
 
+function connectionState(source) {
+  if (!source) return { cls: "warn", text: "--" };
+  if (source.status === "ok" || source.subscribed) return { cls: "ok", text: "OK" };
+  if (source.enabled) return { cls: "warn", text: "Ligando" };
+  return { cls: "bad", text: "OFF" };
+}
+
+function renderConnectionState(source) {
+  const stateInfo = connectionState(source);
+  return `<span class="connection-state ${stateInfo.cls}">${escapeHtml(stateInfo.text)}</span>`;
+}
+
+function sourceTopics(source) {
+  const n = liveNumber(source?.subscribedTopics);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function healthTime(value) {
+  if (!value) return "--";
+  const parsed = Date.parse(value);
+  if (!Number.isFinite(parsed)) return String(value);
+  return new Date(parsed).toLocaleTimeString("pt-BR");
+}
+
+function socketStateText() {
+  if (!state.rtd.enabled) return "manual";
+  if (!state.rtd.socket) return "sem socket";
+  return ["conectando", "aberto", "fechando", "fechado"][state.rtd.socket.readyState] || String(state.rtd.socket.readyState);
+}
+
+function renderConnections() {
+  if (!refs.connSummary) return;
+  const health = state.health.last || {};
+  const assets = Array.isArray(health.assets) ? health.assets : state.rtd.assets || [];
+  const profitOk = String(health.profitRtd || "").toLowerCase() === "connected";
+  const checkedAt = state.health.checkedAt ? new Date(state.health.checkedAt).toLocaleTimeString("pt-BR") : "--";
+
+  refs.connStatus.textContent = health.status || (state.health.checkedAt ? "ok" : "--");
+  refs.connProfit.textContent = health.profitRtd || "--";
+  refs.connArch.textContent = health.processArchitecture || "--";
+  refs.connUpdate.textContent = healthTime(health.lastUpdate);
+  refs.connCheck.textContent = `Check ${checkedAt}`;
+  refs.connCheck.className = profitOk ? "tag green" : health.lastError ? "tag red" : "tag amber";
+  refs.connAssetCount.textContent = fmt(assets.length, 0);
+
+  const flow = health.flow || {};
+  refs.connSummary.innerHTML = [
+    ["WebSocket", socketStateText()],
+    ["URL", rtdWebSocketUrl()],
+    ["ProgID", health.progId || "RTDTrading.RTDServer"],
+    ["Ativo padrao", health.asset || selectedAsset()],
+    ["Latencia WS", fmtMs(state.telemetry.lastLagMs)],
+    ["Mensagens/s", `${fmt(wsMessageRate(), 1)}/s`],
+    ["Reconexoes", fmt(state.telemetry.reconnects, 0)],
+    ["Flow", flow.enabled === false ? "desligado" : `${flow.dataQuality || "unknown"} | fila ${fmt(liveNumber(flow.queueSize), 0)}`],
+    ["Erro", health.lastError || "--"],
+  ].map(([k, v]) => `<div class="kv"><span>${escapeHtml(k)}</span><span>${escapeHtml(v)}</span></div>`).join("");
+
+  refs.connAssets.innerHTML = assets.length ? assets.map(item => {
+    const asset = normalizeAsset(item.asset || item.id);
+    const price = item.priceRtd || {};
+    const book = item.bookRtd || {};
+    const times = item.timesRtd || {};
+    const totalTopics = sourceTopics(price) + sourceTopics(book) + sourceTopics(times);
+    const csv = historyHasCsv(item.history) ? `${item.history?.Rows || item.history?.rows || "--"} linhas` : "--";
+    return `
+      <tr>
+        <td>
+          <div class="quote-asset-meta">
+            <strong>${escapeHtml(asset)}</strong>
+            <span>${item.enabled ? "ligado" : "desligado"}</span>
+          </div>
+        </td>
+        <td>${renderConnectionState(price)}</td>
+        <td>${renderConnectionState(book)}</td>
+        <td>${renderConnectionState(times)}</td>
+        <td>${fmt(totalTopics, 0)}</td>
+        <td>${escapeHtml(csv)}</td>
+      </tr>
+    `;
+  }).join("") : `<tr><td colspan="6">Nenhum ativo cadastrado.</td></tr>`;
+}
+
+async function loadHealth() {
+  try {
+    const res = await fetch("/health");
+    if (!res.ok) throw new Error(await res.text());
+    state.health.last = await res.json();
+    state.health.checkedAt = Date.now();
+  } catch (err) {
+    state.health.last = {
+      status: "falha",
+      profitRtd: "desconhecido",
+      lastError: err?.message || "Falha ao consultar /health",
+    };
+    state.health.checkedAt = Date.now();
+  }
+  renderConnections();
+}
+
+function startHealthPolling() {
+  window.clearInterval(state.health.timer);
+  loadHealth();
+  state.health.timer = window.setInterval(loadHealth, 3000);
+}
+
 function renderHistoryPanel() {
   if (!refs.historyKv) return;
   const ticks = state.rtd.ticks || [];
@@ -3008,6 +3178,7 @@ function showMainTab(tabName) {
   else if (safe === "risk") activateSubTab("risk");
   else if (safe === "history") activateSubTab("history");
   else if (safe === "settings") activateSubTab("settings");
+  else if (safe === "connections") activateSubTab("connections");
   else if (safe === "diagnostics") activateSubTab("flowdebug");
 
   if (safe === "dashboard") renderDashboard();
@@ -3023,6 +3194,7 @@ function showMainTab(tabName) {
   if (safe === "risk") renderRisk();
   if (safe === "history") renderHistoryPanel();
   if (safe === "settings") renderSettings();
+  if (safe === "connections") renderConnections();
   if (safe === "diagnostics") renderFlowDebug();
   renderMarketStrip();
 }
@@ -3050,6 +3222,7 @@ function renderSelectedAsset() {
   renderDashboard();
   renderMonitor();
   renderQuotesPanel();
+  renderConnections();
 }
 
 function selectAsset(asset) {
@@ -5753,6 +5926,7 @@ function connectRtdLive() {
     state.telemetry.socketOpenedAt = Date.now();
     setRtdStatus("ok", "Conectado");
     renderMarketStrip();
+    renderConnections();
     renderFlowDebug();
     loadInitialFlow();
   });
@@ -5784,10 +5958,12 @@ function connectRtdLive() {
       const ok = msg.status === "connected";
       setRtdStatus(ok ? "ok" : "warn", ok ? "Conectado" : "Reconectando");
       renderMarketStrip();
+      renderConnections();
       renderFlowDebug();
     } else if (msg.type === "error") {
       setRtdStatus("bad", "Sem Profit");
       renderMarketStrip();
+      renderConnections();
       renderFlowDebug();
     }
   });
@@ -5798,6 +5974,7 @@ function connectRtdLive() {
     state.telemetry.reconnects += 1;
     setRtdStatus("warn", "Reconectando");
     renderMarketStrip();
+    renderConnections();
     renderFlowDebug();
     window.clearTimeout(state.rtd.reconnectTimer);
     state.rtd.reconnectTimer = window.setTimeout(connectRtdLive, 2000);
@@ -5805,6 +5982,7 @@ function connectRtdLive() {
 
   socket.addEventListener("error", () => {
     setRtdStatus("bad", "Sem Profit");
+    renderConnections();
   });
 }
 
@@ -5814,6 +5992,7 @@ function disconnectRtdLive() {
   if (state.rtd.socket) state.rtd.socket.close();
   state.rtd.socket = null;
   setRtdStatus("warn", "Manual");
+  renderConnections();
 }
 
 function applyCsvContent(text, fileName, encoding, targets = {}) {
@@ -6304,6 +6483,7 @@ renderDom();
 renderFlow();
 renderSignals();
 renderFlowDebug();
+renderConnections();
 renderTopAssetSelect();
 renderMarketStrip();
 renderDashboard();
@@ -6317,6 +6497,7 @@ renderRisk();
 renderHistoryPanel();
 showMainTab(state.ui.mainTab);
 loadAssets();
+startHealthPolling();
 connectRtdLive();
 </script>
 </body>

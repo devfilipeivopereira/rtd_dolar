@@ -78,6 +78,7 @@ O menu superior separa:
 - `Risco`: calculadora local de stop, alvo e contratos;
 - `Historico`: resumo do CSV e ticks em memoria;
 - `Ajustes`: parametros locais de tick, DOM, renderizacao, memoria e valor por ponto;
+- `Conexoes`: estado do coletor, Profit RTD, WebSocket, `/health` e fontes por ativo;
 - `Sistema`: saude, telemetria WebSocket e debug.
 
 A faixa superior fica disponivel em todas as telas e mostra ativo selecionado, ultimo preco, bid/ask, status de Book, status de Times, delta 5s, latencia WebSocket local, mensagens por segundo e CSV carregado.
@@ -91,6 +92,8 @@ A tela `Ativos` configura fontes e CSV. A tela `Cotacoes` e a mesa de monitorame
 A `Boleta` persiste planos no navegador por ativo. Ela calcula risco e R/R, acompanha se entrada, alvo ou stop foram tocados pelo preco RTD e nao chama nenhum endpoint de envio de ordem.
 
 A tela `Ajustes` persiste preferencias no navegador em `wdo-ui-settings`. Ela controla tamanho do tick, quantidade de niveis do DOM, intervalo de renderizacao, limite de trades/sinais em memoria e valor por ponto padrao para `Boleta` e `Risco`.
+
+A tela `Conexoes` consulta `/health` a cada 3 segundos. Ela mostra status do coletor, Profit RTD, arquitetura, ultimo update, estado do WebSocket e status `Preco`, `Book` e `Times` por ativo.
 
 A selecao de ativo define o que aparece nos campos intraday, DOM, fluxo e setups. Snapshots, book e Times & Trades de ativos diferentes ficam em caches separados no navegador, e as fontes podem ser ajustadas por ativo sem reiniciar o app.
 

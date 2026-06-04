@@ -84,6 +84,7 @@ O dashboard usa o menu superior:
 - `Risco`: calculadora local de stop, alvo e contratos;
 - `Historico`: CSV carregado e ticks recentes em memoria;
 - `Ajustes`: limites locais de renderizacao, DOM, trades e sinais;
+- `Conexoes`: health do coletor, RTD e fontes por ativo;
 - `Sistema`: qualidade, eventos, bookDepth, Times & Trades, sinais e fila.
 
 A aba `DOM` tambem marca sinais ativos como pontos de flow.
