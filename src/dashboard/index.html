@@ -423,6 +423,17 @@ tr:hover td{background:#ffffff05}
 .dom-summary{display:grid;grid-template-columns:repeat(4,minmax(120px,1fr));gap:8px;margin-bottom:10px}
 .dom-summary .live-kv{padding:9px 10px}
 .flow-summary{grid-template-columns:repeat(6,minmax(110px,1fr))}
+.radar-grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(300px,.75fr);gap:14px}
+.radar-table td,.radar-table th{text-align:right;white-space:nowrap}
+.radar-table td:first-child,.radar-table th:first-child{text-align:left}
+.radar-table .radar-title{text-align:left;white-space:normal;min-width:220px}
+.radar-direction{display:inline-flex;align-items:center;justify-content:center;min-height:22px;padding:0 7px;border:1px solid var(--line);background:#10141a;color:var(--muted);font-size:10px;font-weight:900}
+.radar-direction.up{border-color:#1f7a66;color:#9df2d5;background:#0d261f}
+.radar-direction.down{border-color:#7a2b2b;color:#ff9b9b;background:#2b1111}
+.radar-direction.neutral{border-color:#7a5f1f;color:#ffd66b;background:#28210d}
+.radar-score{display:inline-flex;align-items:center;justify-content:flex-end;min-width:54px;font-weight:900;color:var(--txt)}
+.radar-reasons{display:flex;gap:4px;justify-content:flex-end;flex-wrap:wrap}
+.radar-reason{display:inline-flex;align-items:center;min-height:20px;padding:0 5px;border:1px solid var(--line);background:#0B0C0A;color:var(--muted);font-size:9px;font-weight:900}
 .quotes-board{border:1px solid var(--line);background:var(--panel);min-height:calc(100vh - 154px)}
 .quotes-table td,.quotes-table th{text-align:right;white-space:nowrap}
 .quotes-table td:first-child,.quotes-table th:first-child{text-align:left}
@@ -530,7 +541,7 @@ tr:hover td{background:#ffffff05}
   .brand-title,.brand-sub{white-space:normal}
   .top-meta{justify-content:flex-start}
   .field-grid{grid-template-columns:1fr}
-  .market-table-grid,.times-grid,.alert-grid,.risk-grid,.order-grid,.history-grid,.dashboard-grid,.monitor-grid,.monitor-bottom,.connections-grid{grid-template-columns:1fr}
+  .market-table-grid,.times-grid,.alert-grid,.risk-grid,.order-grid,.history-grid,.dashboard-grid,.monitor-grid,.monitor-bottom,.connections-grid,.radar-grid{grid-template-columns:1fr}
   .dashboard-actions{grid-template-columns:1fr 1fr}
   .risk-result{grid-template-columns:1fr 1fr}
   .cards{grid-template-columns:1fr 1fr}
@@ -898,6 +909,7 @@ tr:hover td{background:#ffffff05}
               <div class="panel-body">
                 <div class="dashboard-actions">
                   <button class="quick-action" type="button" data-dashboard-open="desk"><strong>Mesa</strong><span>DOM, fluxo, book e tape</span></button>
+                  <button class="quick-action" type="button" data-dashboard-open="radar"><strong>Radar</strong><span>Oportunidades por contexto</span></button>
                   <button class="quick-action" type="button" data-dashboard-open="monitor"><strong>Monitor</strong><span>Watchlist, setups e tape</span></button>
                   <button class="quick-action" type="button" data-dashboard-open="quotes"><strong>Cotacoes</strong><span>Monitorar ativos e abrir telas</span></button>
                   <button class="quick-action" type="button" data-dashboard-open="dom"><strong>DOM</strong><span>Escada de preco e pontos</span></button>
@@ -925,6 +937,39 @@ tr:hover td{background:#ffffff05}
               <div class="panel-head"><div class="panel-title">Oportunidades e alertas</div></div>
               <div class="panel-body">
                 <div class="small-list" id="dashboard-actions-list"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="tab-panel hidden" id="panel-radar">
+          <div class="dom-summary">
+            <div class="live-kv"><span>Ativo</span><strong id="radar-asset">--</strong></div>
+            <div class="live-kv"><span>Candidatos</span><strong id="radar-count">--</strong></div>
+            <div class="live-kv"><span>Melhor score</span><strong id="radar-best">--</strong></div>
+            <div class="live-kv"><span>Qualidade</span><strong id="radar-quality">--</strong></div>
+          </div>
+          <div class="radar-grid">
+            <div class="panel">
+              <div class="panel-head">
+                <div class="panel-title">Radar de oportunidades</div>
+                <span class="tag amber">observacional</span>
+              </div>
+              <div class="table-wrap">
+                <table class="radar-table">
+                  <thead>
+                    <tr>
+                      <th>Contexto</th><th>Vies</th><th>Preco</th><th>Nivel</th><th>Dist.</th><th>Score</th><th>Evidencias</th><th>Acoes</th>
+                    </tr>
+                  </thead>
+                  <tbody id="radar-body"></tbody>
+                </table>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="panel-head"><div class="panel-title">Leitura do radar</div></div>
+              <div class="panel-body">
+                <div class="small-list" id="radar-kv"></div>
               </div>
             </div>
           </div>
@@ -1817,6 +1862,7 @@ function saveUiSettings(settings) {
 
 const TAB_META = {
   dashboard: { label: "Painel", detail: "Checklist e atalhos" },
+  radar: { label: "Radar", detail: "Oportunidades por contexto" },
   monitor: { label: "Monitor", detail: "Watchlist, setups e tape" },
   desk: { label: "Mesa", detail: "DOM, fluxo, book e tape" },
   assets: { label: "Ativos", detail: "Cadastro RTD e CSV" },
@@ -1836,11 +1882,11 @@ const TAB_META = {
   diagnostics: { label: "Sistema", detail: "Diagnostico" },
 };
 const WORKSPACE_GROUPS = [
-  { id: "home", label: "Inicio", tabs: ["dashboard", "monitor", "desk"] },
+  { id: "home", label: "Inicio", tabs: ["dashboard", "radar", "monitor", "desk"] },
   { id: "setup", label: "Cadastro", tabs: ["assets"] },
   { id: "market", label: "Mercado", tabs: ["quotes", "panorama", "dom", "book", "times"] },
   { id: "flow", label: "Fluxo", tabs: ["flow", "signals"] },
-  { id: "control", label: "Controle", tabs: ["orders", "alerts", "risk", "history"] },
+  { id: "analysis", label: "Analise", tabs: ["orders", "alerts", "risk", "history"] },
   { id: "system", label: "Sistema", tabs: ["settings", "connections", "diagnostics"] },
 ];
 const MAIN_TABS = WORKSPACE_GROUPS.flatMap(group => group.tabs);
@@ -2052,6 +2098,12 @@ const refs = {
   dashboardReadiness: document.getElementById("dashboard-readiness"),
   dashboardSignals: document.getElementById("dashboard-signals"),
   dashboardActionsList: document.getElementById("dashboard-actions-list"),
+  radarAsset: document.getElementById("radar-asset"),
+  radarCount: document.getElementById("radar-count"),
+  radarBest: document.getElementById("radar-best"),
+  radarQuality: document.getElementById("radar-quality"),
+  radarBody: document.getElementById("radar-body"),
+  radarKv: document.getElementById("radar-kv"),
   monitorState: document.getElementById("monitor-state"),
   monitorLast: document.getElementById("monitor-last"),
   monitorLatency: document.getElementById("monitor-latency"),
@@ -2795,6 +2847,150 @@ function renderDashboard() {
   ].map(([k, v]) => `<div class="kv"><span>${escapeHtml(k)}</span><span>${escapeHtml(v)}</span></div>`).join("");
 }
 
+function opportunityDirectionLabel(direction) {
+  if (direction === "up") return "Alta";
+  if (direction === "down") return "Baixa";
+  return "Neutro";
+}
+
+function opportunityDirectionFromLevel(level) {
+  const text = `${level.type || ""} ${level.label || ""}`.toLowerCase();
+  if (text.includes("suporte") || text.includes("val")) return "up";
+  if (text.includes("resistencia") || text.includes("vah")) return "down";
+  return "neutral";
+}
+
+function flowAlignment(direction, metrics = {}) {
+  const delta = liveNumber(metrics.delta5s);
+  const imbalance = liveNumber(metrics.topBookImbalance);
+  const ofi = liveNumber(metrics.orderFlowImbalance);
+  let score = 0;
+  if (direction === "up") {
+    if (delta > 0) score += 8;
+    if (imbalance > 0) score += 6;
+    if (ofi > 0) score += 5;
+  } else if (direction === "down") {
+    if (delta < 0) score += 8;
+    if (imbalance < 0) score += 6;
+    if (ofi < 0) score += 5;
+  } else {
+    if (Math.abs(delta) < 20) score += 4;
+  }
+  return score;
+}
+
+function opportunityKey(item) {
+  return `${item.kind}|${item.direction}|${roundToTick(item.levelPrice, state.rtd.tickSize)}|${item.label}`;
+}
+
+function collectRadarOpportunities(msg = state.rtd.lastSnapshot) {
+  const price = currentDomPrice(msg);
+  if (!Number.isFinite(price)) return [];
+  const metrics = state.flow.metrics || {};
+  const step = state.rtd.tickSize || 0.5;
+  const items = [];
+  const seen = new Set();
+  const add = item => {
+    const key = opportunityKey(item);
+    if (seen.has(key)) return;
+    seen.add(key);
+    items.push(item);
+  };
+
+  (state.flow.signals || []).forEach(signal => {
+    const levelPrice = liveNumber(signal.levelPrice ?? signal.price);
+    if (!Number.isFinite(levelPrice)) return;
+    const direction = signal.direction === "buy" ? "up" : signal.direction === "sell" ? "down" : "neutral";
+    const distTicks = Math.abs(levelPrice - price) / step;
+    const baseScore = liveNumber(signal.score);
+    add({
+      kind: "setup",
+      label: signal.setup || "Setup de fluxo",
+      direction,
+      currentPrice: price,
+      levelPrice,
+      distTicks,
+      score: clamp((Number.isFinite(baseScore) ? baseScore : 55) + flowAlignment(direction, metrics) - Math.min(18, distTicks * 0.6), 0, 100),
+      reasons: [signal.dataQuality || "fluxo", signal.levelLabel || "", ...(signal.reasons || [])].filter(Boolean).slice(0, 3),
+      source: "Setups",
+    });
+  });
+
+  collectDomLevels(msg).slice(0, 80).forEach(level => {
+    if (!Number.isFinite(level.price)) return;
+    const distTicks = Math.abs(level.price - price) / step;
+    if (distTicks > 80) return;
+    const baseDirection = opportunityDirectionFromLevel(level);
+    const direction = baseDirection === "neutral" ? level.price >= price ? "up" : "down" : baseDirection;
+    const proximityScore = Math.max(0, 34 - distTicks * 0.75);
+    add({
+      kind: "level",
+      label: level.label || level.type || "Nivel relevante",
+      direction,
+      currentPrice: price,
+      levelPrice: level.price,
+      distTicks,
+      score: clamp((liveNumber(level.score) || 45) * 0.55 + proximityScore + flowAlignment(direction, metrics), 0, 100),
+      reasons: [level.source, level.type, distTicks <= 6 ? "perto do preco" : ""].filter(Boolean).slice(0, 3),
+      source: level.source || "Nivel",
+    });
+  });
+
+  return items
+    .filter(item => Number.isFinite(item.score))
+    .sort((a, b) => b.score - a.score || a.distTicks - b.distTicks)
+    .slice(0, 18);
+}
+
+function applyRadarOpportunity(index) {
+  const item = collectRadarOpportunities()[index];
+  if (!item) return;
+  const direction = item.direction === "down" ? "sell" : "buy";
+  const entry = roundToTick(item.levelPrice, state.rtd.tickSize);
+  const riskTicks = Math.max(8, Math.round(Math.max(8, item.distTicks + 8)));
+  const targetTicks = Math.round(riskTicks * 1.6);
+  refs.orderSide.value = direction;
+  refs.orderTrigger.value = item.levelPrice >= item.currentPrice ? "above" : "below";
+  refs.orderEntry.value = Number.isFinite(entry) ? entry.toFixed(1) : "";
+  refs.orderStop.value = Number.isFinite(entry) ? (direction === "buy" ? entry - riskTicks * state.rtd.tickSize : entry + riskTicks * state.rtd.tickSize).toFixed(1) : "";
+  refs.orderTarget.value = Number.isFinite(entry) ? (direction === "buy" ? entry + targetTicks * state.rtd.tickSize : entry - targetTicks * state.rtd.tickSize).toFixed(1) : "";
+  refs.orderNote.value = trimText(`Radar: ${item.label}`, 64);
+  renderOrderSummary();
+  showMainTab("orders");
+}
+
+function renderRadar(msg = state.rtd.lastSnapshot) {
+  if (!refs.radarBody) return;
+  const items = collectRadarOpportunities(msg);
+  const best = items[0];
+  refs.radarAsset.textContent = selectedAsset();
+  refs.radarCount.textContent = fmt(items.length, 0);
+  refs.radarBest.textContent = best ? fmt(best.score, 0) : "--";
+  refs.radarQuality.textContent = state.flow.lastMessage?.dataQuality || (state.result ? "CSV/RTD" : "aguardando");
+
+  refs.radarBody.innerHTML = items.length ? items.map((item, index) => `
+    <tr>
+      <td class="radar-title"><strong>${escapeHtml(item.label)}</strong><br><span>${escapeHtml(item.source || item.kind)}</span></td>
+      <td><span class="radar-direction ${escapeHtml(item.direction)}">${escapeHtml(opportunityDirectionLabel(item.direction))}</span></td>
+      <td>${fmt(item.currentPrice)}</td>
+      <td class="strong">${fmt(item.levelPrice)}</td>
+      <td>${fmt(item.distTicks, 1)} t</td>
+      <td><span class="radar-score">${fmt(item.score, 0)}</span></td>
+      <td><div class="radar-reasons">${item.reasons.map(reason => `<span class="radar-reason">${escapeHtml(trimText(reason, 18))}</span>`).join("")}</div></td>
+      <td><button class="asset-action view" type="button" data-radar-observe="${index}">Observar</button></td>
+    </tr>
+  `).join("") : `<tr><td colspan="8">Aguardando CSV, RTD ou setups para montar o radar.</td></tr>`;
+
+  refs.radarKv.innerHTML = [
+    ["Preco atual", fmt(currentDomPrice(msg))],
+    ["Candidatos por setup", fmt(items.filter(item => item.kind === "setup").length, 0)],
+    ["Candidatos por nivel", fmt(items.filter(item => item.kind === "level").length, 0)],
+    ["Delta 5s", signedFmt(state.flow.metrics?.delta5s, 0)],
+    ["Imbalance", Number.isFinite(liveNumber(state.flow.metrics?.topBookImbalance)) ? fmt(liveNumber(state.flow.metrics?.topBookImbalance), 2) : "--"],
+    ["Uso", "analise observacional"],
+  ].map(([k, v]) => `<div class="kv"><span>${escapeHtml(k)}</span><span>${escapeHtml(v)}</span></div>`).join("");
+}
+
 function renderBookPanel() {
   const depth = liveBookDepthForAsset();
   if (!refs.bookBidsBody) return;
@@ -3484,6 +3680,7 @@ function showMainTab(tabName) {
 
   if (safe === "panorama") activateSubTab("levels");
   else if (safe === "dashboard") activateSubTab("dashboard");
+  else if (safe === "radar") activateSubTab("radar");
   else if (safe === "monitor") activateSubTab("monitor");
   else if (safe === "desk") activateSubTab("desk");
   else if (safe === "quotes") activateSubTab("quotes");
@@ -3501,6 +3698,7 @@ function showMainTab(tabName) {
   else if (safe === "diagnostics") activateSubTab("flowdebug");
 
   if (safe === "dashboard") renderDashboard();
+  if (safe === "radar") renderRadar();
   if (safe === "monitor") renderMonitor();
   if (safe === "desk") renderDesk();
   if (safe === "quotes") renderQuotesPanel();
@@ -3529,6 +3727,7 @@ function renderSelectedAsset() {
   renderFlow();
   renderSignals();
   renderFlowDebug();
+  renderRadar(snapshot);
   renderDom(snapshot);
   renderDesk(snapshot);
   renderBookPanel();
@@ -5611,6 +5810,7 @@ function runLiveRenderBatch() {
   state.render.lastLiveRenderMs = nowMs();
   const snapshot = state.render.pendingSnapshot || state.rtd.lastSnapshot;
   state.render.pendingSnapshot = null;
+  renderRadar(snapshot);
   renderDom(snapshot);
   renderDesk(snapshot);
   renderRisk();
@@ -5672,6 +5872,7 @@ function applyFlowMessage(msg) {
   }
 
   syncSelectedFlow();
+  renderRadar(state.rtd.lastSnapshot);
   renderFlow();
   renderSignals();
   renderFlowDebug();
@@ -5693,6 +5894,7 @@ function applySignalMessage(msg) {
   }
 
   syncSelectedFlow();
+  renderRadar(state.rtd.lastSnapshot);
   renderSignals();
   renderFlowDebug();
   renderAlerts();
@@ -5708,6 +5910,7 @@ function applySignalsMessage(msg) {
     bucket.signals = mergeByKey([signal], bucket.signals, signalKey, state.flow.maxSignals);
   });
   syncSelectedFlow();
+  renderRadar(state.rtd.lastSnapshot);
   renderSignals();
   renderAlerts();
   renderMonitor();
@@ -6274,6 +6477,7 @@ function renderAll() {
   renderChart(r);
   renderDom();
   renderDesk();
+  renderRadar();
 
   setPill(refs.windowPill, "", `Janela ${r.window}d`);
   setPill(refs.anchorPill, Number.isFinite(r.intraday.vwap) ? "ok" : "warn", `Ancora: ${Number.isFinite(r.intraday.vwap) ? "VWAP" : "proxy"}`);
@@ -6569,6 +6773,7 @@ function applyCsvContent(text, fileName, encoding, targets = {}) {
   renderHistoryPanel();
   renderDashboard();
   renderDesk(state.rtd.lastSnapshot);
+  renderRadar(state.rtd.lastSnapshot);
   renderQuotesPanel();
   return { ok: true, parsed };
 }
@@ -6755,6 +6960,12 @@ document.getElementById("panel-dashboard").addEventListener("click", ev => {
   const action = ev.target.closest("[data-dashboard-open]");
   if (!action) return;
   showMainTab(action.dataset.dashboardOpen);
+});
+
+document.getElementById("panel-radar").addEventListener("click", ev => {
+  const action = ev.target.closest("[data-radar-observe]");
+  if (!action) return;
+  applyRadarOpportunity(Number(action.dataset.radarObserve));
 });
 
 refs.deskPanel.addEventListener("click", ev => {
@@ -7105,6 +7316,7 @@ renderConnections();
 renderTopAssetSelect();
 renderMarketStrip();
 renderDashboard();
+renderRadar();
 renderMonitor();
 renderDesk();
 renderQuotesPanel();

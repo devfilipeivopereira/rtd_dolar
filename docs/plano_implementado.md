@@ -14,8 +14,9 @@
 - Servidor local `HttpListener` com `/`, `/health`, `/snapshot`, `/flow`, `/signals`, `/assets`, `/assets/toggle`, `/assets/channels`, `/assets/delete`, `/assets/history` e `/ws`.
 - WebSocket com broadcast de snapshots, status, flow, signals, `bookDepth` e `timesTrades`.
 - SQLite auxiliar para snapshots de 1 segundo e consolidado por minuto.
-- HTML do `dolar-points` importado e adaptado com menu superior agrupado em `Inicio`, `Cadastro`, `Mercado`, `Fluxo`, `Controle` e `Sistema`.
+- HTML do `dolar-points` importado e adaptado com menu superior agrupado em `Inicio`, `Cadastro`, `Mercado`, `Fluxo`, `Analise` e `Sistema`.
 - Tela `Painel` como entrada operacional com checklist, atalhos, setups, oportunidades e alertas.
+- Tela `Radar` para oportunidades observacionais ranqueadas por setups, niveis, proximidade, delta e imbalance.
 - Tela `Monitor` como mesa ao vivo com watchlist compacta, estado do ativo, setups, tape, oportunidades e alertas.
 - Tela `Mesa` como cockpit de analise com DOM compacto, book resumido, tape, fluxo, setups e niveis proximos.
 - Tela `Cotacoes` como watchlist operacional entre o cadastro de ativos e as telas de analise.
@@ -40,16 +41,17 @@
 6. Confirmar que os campos intraday sao preenchidos por RTD.
 7. Adicionar outro ativo em `Ativos`, testar `Ver`, `Ligado`, `Desligado`, fontes e `Excluir`.
 8. Abrir `Painel` e confirmar checklist, atalhos, setups, oportunidades e alertas.
-9. Abrir `Mesa` e confirmar DOM compacto, book resumido, tape, fluxo, setups, niveis proximos e acoes de analise.
-10. Abrir `Monitor` e confirmar watchlist compacta, estado do ativo, setups, tape, oportunidades e alertas.
-11. Abrir `Cotacoes` e testar os atalhos para `Grafico`, `DOM`, `Book`, `T&T` e `Oportunidades`.
-12. Salvar uma oportunidade observacional e confirmar que ela permanece local, sem comandos operacionais ao Profit.
-13. Abrir `Book`, `T&T`, `Alertas`, `Risco`, `Historico`, `Ajustes`, `Conexoes` e `Sistema`.
-14. Confirmar `Conexoes` com `/health`, arquitetura, Profit RTD, WebSocket e fontes por ativo.
-15. Confirmar grupos superiores, hotbar contextual, memoria da ultima tela por grupo e atalhos `Alt+1` a `Alt+9`.
-16. Confirmar paleta `Ctrl+K` para telas e ativos.
-17. Confirmar `Latencia WS`, `Msg/s` e contadores no `Sistema`.
-18. Rodar `node tools/validate-dashboard-design.js`.
+9. Abrir `Radar` e confirmar candidatos por setup/nivel, score, evidencias e acao `Observar`.
+10. Abrir `Mesa` e confirmar DOM compacto, book resumido, tape, fluxo, setups, niveis proximos e acoes de analise.
+11. Abrir `Monitor` e confirmar watchlist compacta, estado do ativo, setups, tape, oportunidades e alertas.
+12. Abrir `Cotacoes` e testar os atalhos para `Grafico`, `DOM`, `Book`, `T&T` e `Oportunidades`.
+13. Salvar uma oportunidade observacional e confirmar que ela permanece local, sem comandos operacionais ao Profit.
+14. Abrir `Book`, `T&T`, `Alertas`, `Risco`, `Historico`, `Ajustes`, `Conexoes` e `Sistema`.
+15. Confirmar `Conexoes` com `/health`, arquitetura, Profit RTD, WebSocket e fontes por ativo.
+16. Confirmar grupos superiores, hotbar contextual, memoria da ultima tela por grupo e atalhos `Alt+1` a `Alt+9`.
+17. Confirmar paleta `Ctrl+K` para telas e ativos.
+18. Confirmar `Latencia WS`, `Msg/s` e contadores no `Sistema`.
+19. Rodar `node tools/validate-dashboard-design.js`.
 
 ## Build validado
 

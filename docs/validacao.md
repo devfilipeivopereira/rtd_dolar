@@ -25,23 +25,24 @@ Resultado esperado:
 5. Abrir `Ativos`, cadastrar o ativo e carregar o CSV historico.
 6. Confirmar status `RTD Conectado`.
 7. Abrir `Painel` e confirmar checklist, atalhos, setups, oportunidades e alertas.
-8. Abrir `Mesa` e confirmar DOM compacto, book resumido, tape, fluxo, setups, niveis proximos e acoes de analise.
-9. Abrir `Monitor` e confirmar watchlist compacta, estado do ativo, setups, tape, oportunidades e alertas.
-10. Confirmar que os botoes de `Monitor` abrem `DOM`, `Book` e `Oportunidades` do ativo correto.
-11. Abrir `Cotacoes` e confirmar que a linha do ativo mostra ultimo preco, bid/ask, delta, Book, Times e fontes `P/B/T`.
-12. Confirmar que os botoes de `Cotacoes` abrem `Grafico`, `DOM`, `Book`, `T&T` e `Oportunidades` do ativo correto.
-13. Confirmar que a aba `DOM` mostra preco, tape e pontos principais.
-14. Adicionar um ativo em `Ativos`, selecionar com `Ver` e ligar/desligar sem reiniciar o app.
-15. Abrir `Book` e confirmar 50 niveis quando `BOOK0` estiver ligado.
-16. Abrir `T&T` e confirmar ate 100 linhas quando `T&T0` estiver ligado.
-17. Abrir `Oportunidades`, salvar uma ideia observacional e confirmar que ela permanece local.
-18. Abrir `Alertas`, `Risco`, `Historico`, `Ajustes`, `Conexoes` e `Sistema` e confirmar que cada tela mostra apenas sua funcionalidade.
-19. Em `Conexoes`, confirmar polling de `/health`, arquitetura, Profit RTD, WebSocket e fontes `Preco`, `Book` e `Times` por ativo.
-20. Em `Ajustes`, mudar niveis do DOM e intervalo de renderizacao, salvar, recarregar a pagina e confirmar que os valores persistem.
-21. Confirmar hotbar por clique e atalhos `Alt+1` a `Alt+9`.
-22. Confirmar que os atalhos nao disparam quando o foco esta em campos de texto, select ou textarea.
-23. Confirmar `Ctrl+K`, busca de telas e ativos, navegacao por setas, `Enter` para executar e `Esc` para fechar.
-24. Confirmar que `Latencia WS` e `Msg/s` aparecem na faixa superior e no `Sistema` quando chegam mensagens do WebSocket.
+8. Abrir `Radar` e confirmar candidatos por setup/nivel, score, evidencias e acao `Observar`.
+9. Abrir `Mesa` e confirmar DOM compacto, book resumido, tape, fluxo, setups, niveis proximos e acoes de analise.
+10. Abrir `Monitor` e confirmar watchlist compacta, estado do ativo, setups, tape, oportunidades e alertas.
+11. Confirmar que os botoes de `Monitor` abrem `DOM`, `Book` e `Oportunidades` do ativo correto.
+12. Abrir `Cotacoes` e confirmar que a linha do ativo mostra ultimo preco, bid/ask, delta, Book, Times e fontes `P/B/T`.
+13. Confirmar que os botoes de `Cotacoes` abrem `Grafico`, `DOM`, `Book`, `T&T` e `Oportunidades` do ativo correto.
+14. Confirmar que a aba `DOM` mostra preco, tape e pontos principais.
+15. Adicionar um ativo em `Ativos`, selecionar com `Ver` e ligar/desligar sem reiniciar o app.
+16. Abrir `Book` e confirmar 50 niveis quando `BOOK0` estiver ligado.
+17. Abrir `T&T` e confirmar ate 100 linhas quando `T&T0` estiver ligado.
+18. Abrir `Oportunidades`, salvar uma ideia observacional e confirmar que ela permanece local.
+19. Abrir `Alertas`, `Risco`, `Historico`, `Ajustes`, `Conexoes` e `Sistema` e confirmar que cada tela mostra apenas sua funcionalidade.
+20. Em `Conexoes`, confirmar polling de `/health`, arquitetura, Profit RTD, WebSocket e fontes `Preco`, `Book` e `Times` por ativo.
+21. Em `Ajustes`, mudar niveis do DOM e intervalo de renderizacao, salvar, recarregar a pagina e confirmar que os valores persistem.
+22. Confirmar hotbar por clique e atalhos `Alt+1` a `Alt+9`.
+23. Confirmar que os atalhos nao disparam quando o foco esta em campos de texto, select ou textarea.
+24. Confirmar `Ctrl+K`, busca de telas e ativos, navegacao por setas, `Enter` para executar e `Esc` para fechar.
+25. Confirmar que `Latencia WS` e `Msg/s` aparecem na faixa superior e no `Sistema` quando chegam mensagens do WebSocket.
 
 ## Endpoints
 
@@ -118,6 +119,7 @@ Sem CSV, a aba DOM ainda pode mostrar ticks RTD, bid/ask e tape. Pontos como POC
 - CSV salvo deve voltar por `GET /assets/history?asset=...` depois de recarregar a pagina.
 - A faixa superior deve trocar junto com o ativo selecionado e mostrar ultimo preco, bid/ask, Book, Times, delta, latencia WebSocket local, mensagens por segundo e CSV.
 - `Painel` deve ser a entrada operacional e refletir o ativo selecionado sem misturar dados de outro ativo.
+- `Radar` deve listar oportunidades observacionais por setup/nivel, com score, distancia, evidencias e botao `Observar`.
 - `Monitor` deve ser a mesa de acompanhamento ao vivo: watchlist compacta, estado do ativo, setups, tape, oportunidades e alertas, sem campos de cadastro.
 - `Cotacoes` deve separar monitoramento de cadastro: a tela mostra status e atalhos, mas a edicao continua em `Ativos`.
 - `Mesa` deve concentrar DOM compacto, book resumido, tape, fluxo, setups, niveis proximos e acoes de analise.
@@ -158,7 +160,7 @@ Esse check falha se o dashboard reintroduzir sombras, gradientes, filtros decora
 
 No navegador, confirme:
 
-1. Os grupos superiores `Inicio`, `Cadastro`, `Mercado`, `Fluxo`, `Controle` e `Sistema` trocam a hotbar contextual.
+1. Os grupos superiores `Inicio`, `Cadastro`, `Mercado`, `Fluxo`, `Analise` e `Sistema` trocam a hotbar contextual.
 2. Ao voltar para um grupo, a hotbar reabre a ultima tela usada naquele grupo.
 3. `Buscar`, `Ctrl+K`, setas, `Enter` e `Esc` continuam funcionando.
 4. `Alt+1` a `Alt+9` continuam abrindo as telas frequentes quando o foco nao esta em campo de texto.
