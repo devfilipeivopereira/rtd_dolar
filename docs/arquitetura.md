@@ -61,6 +61,14 @@ O CSV diario continua sendo a fonte do historico 21/45/63. O RTD preenche o intr
 - volume acumulado;
 - book e volume projetado.
 
+## Motor Quant e Fluxo
+
+O motor quant usa duas familias de entrada. O CSV historico alimenta volatilidade Garman-Klass, Parkinson, Rogers-Satchell, Yang-Zhang, ATR, z-score, regime de mercado, profile proxy, POC, VAH/VAL, confluencias e backtest proxy. O RTD alimenta preco atual, abertura, maxima/minima parcial, VWAP/MED, book, Times & Trades, delta, imbalance, microprice, VWAP derivada e tape.
+
+O `Score Quant` no `Painel` consolida essas entradas em uma leitura observacional de reversao ou continuidade. Ele pondera nivel/proximidade, regime estatistico, backtest proxy, z-score e alinhamento de fluxo. Quando falta CSV, preco RTD ou fluxo/T&T, o score e penalizado e a `Base Quant` mostra a falta de fonte. A interface tambem exibe `Indicadores Quant` e `Evidencias Quant`, para que o usuario veja de onde saiu o numero.
+
+Esse motor e analitico: ele procura pontos de reversao e oportunidades por estatistica, indicador tecnico e leitura de fluxo, sem promessa de resultado financeiro e sem envio ao Profit.
+
 O menu superior separa:
 
 - `Painel`: leitura rapida de contexto, checklist de analise, atalhos e resumo do ativo selecionado;
@@ -85,7 +93,7 @@ O menu superior separa:
 
 A faixa superior fica disponivel em todas as telas e mostra ativo selecionado, ultimo preco, bid/ask, status de Book, status de Times, delta 5s, latencia WebSocket local, mensagens por segundo, render da UI e CSV carregado.
 
-A hotbar de analise fica abaixo da faixa superior e abre telas de uso frequente por clique ou `Alt+1` a `Alt+9`. Ela acelera a leitura sem substituir o menu superior, que continua agrupando todas as funcionalidades.
+A hotbar de analise fica abaixo da faixa superior e abre telas de uso frequente por clique ou `Alt+1` a `Alt+9`. Ela tambem mostra a trilha `Grupo / Tela` e o resumo curto da tela ativa, acelerando a leitura sem substituir o menu superior, que continua agrupando todas as funcionalidades.
 
 A paleta `Ctrl+K` busca telas e ativos cadastrados. Quando o item escolhido e um ativo, a UI seleciona o ativo e abre `Monitor`.
 

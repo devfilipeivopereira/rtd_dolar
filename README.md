@@ -40,6 +40,10 @@ O historico diario continua sendo carregado por CSV no navegador. O RTD preenche
 - VWAP/ancora opcional: `MED`
 - Volume acumulado: `VOL`
 
+O motor analitico combina estatistica historica, indicadores tecnicos e fluxo em tempo real. O CSV alimenta estimadores de volatilidade Garman-Klass, Parkinson, Rogers-Satchell, Yang-Zhang, ATR, z-score, regime, profile proxy, POC, VAH/VAL, confluencias e backtest proxy. O RTD alimenta preco intraday, book, Times & Trades, delta, imbalance, VWAP derivada, microprice e tape. O `Painel` mostra `Score Quant`, `Indicadores Quant`, `Base Quant` e `Evidencias Quant` para deixar claro quais dados sustentam cada oportunidade observacional.
+
+Esses sinais sao ferramentas de analise quantitativa e tape reading. Eles nao prometem resultado financeiro; a robustez vem de fonte de dados identificavel, penalizacao quando falta dado, evidencias visiveis e validacao manual/automatizada.
+
 O menu superior agora separa o terminal em grupos de analise: `Inicio`, `Cadastro`, `Mercado`, `Fluxo`, `Analise` e `Sistema`. A hotbar contextual abaixo mostra apenas as telas do grupo ativo, enquanto a faixa superior mantem ativo selecionado, ultimo preco, bid/ask, status de Book, status de Times, delta, latencia WebSocket local, mensagens por segundo, render da UI e CSV:
 
 - `Painel`: entrada de analise com leitura rapida de contexto, checklist, atalhos, setups, oportunidades e alertas;
@@ -63,6 +67,8 @@ O menu superior agora separa o terminal em grupos de analise: `Inicio`, `Cadastr
 - `Sistema`: RTD, WebSocket, telemetria de mensagens e debug de fluxo.
 
 A hotbar lembra a ultima tela usada dentro de cada grupo e ainda abre telas frequentes por teclado: `Alt+1` Monitor, `Alt+2` DOM, `Alt+3` Book, `Alt+4` T&T, `Alt+5` Fluxo, `Alt+6` Oportunidades, `Alt+7` Ativos, `Alt+8` Conexoes e `Alt+9` Sistema.
+
+A hotbar tambem mostra a trilha `Grupo / Tela` e um resumo curto da tela ativa, para reduzir perda de contexto durante a troca rapida de modulos.
 
 `Ctrl+K` abre a paleta de busca para localizar telas e ativos cadastrados.
 
@@ -198,10 +204,12 @@ logs/                   logs em runtime
 14. Abas de analise: confirmar `Book`, `T&T`, `Alertas`, `Risco`, `Historico`, `Ajustes`, `Conexoes` e `Sistema` sem erro no navegador.
 15. Conexoes: confirmar polling de `/health`, arquitetura x64/x86, Profit RTD, WebSocket e status `Preco`, `Book`, `Times` por ativo.
 16. Ajustes: alternar presets `Rapido`, `Equilibrado` e `Detalhado`; depois alterar niveis do DOM e intervalo de renderizacao, salvar, recarregar a pagina e confirmar persistencia local.
-17. Navegacao: confirmar grupos superiores, hotbar contextual, memoria da ultima tela por grupo e atalhos `Alt+1` a `Alt+9`, sem disparar quando o foco esta em campos de texto.
+17. Navegacao: confirmar grupos superiores, trilha `Grupo / Tela`, hotbar contextual, memoria da ultima tela por grupo e atalhos `Alt+1` a `Alt+9`, sem disparar quando o foco esta em campos de texto.
 18. Paleta: confirmar `Ctrl+K`, busca de telas, busca de ativos, setas, `Enter` e `Esc`.
 19. Performance: confirmar que a aba ativa segue responsiva com RTD ativo; campos intraday devem atualizar imediatamente e telas invisiveis nao devem causar travamento perceptivel.
 20. Telemetria: confirmar que `Latencia WS`, `Msg/s` e `Render UI` mudam quando chegam mensagens WebSocket. Essas leituras medem backend local -> navegador e custo de desenho da tela, nao latencia de bolsa ou Profit.
 21. Design QA: rodar `node tools/validate-dashboard-design.js` e confirmar `Dashboard design tokens OK`.
 22. Linguagem de produto: rodar `node tools/validate-product-language.js` e confirmar `Product language OK`.
-23. SQLite: confirmar criacao de `data/marketdata.sqlite` quando o provider for restaurado pelo NuGet.
+23. Quant QA: rodar `node tools/validate-quant-surface.js` e confirmar `Quant surface OK`.
+24. Score Quant: confirmar no `Painel` que `Score Quant`, `Indicadores Quant`, `Base Quant` e `Evidencias Quant` aparecem; sem CSV, RTD ou fluxo, o score deve ficar penalizado ou aguardando dados.
+25. SQLite: confirmar criacao de `data/marketdata.sqlite` quando o provider for restaurado pelo NuGet.

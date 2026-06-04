@@ -84,6 +84,12 @@ button{cursor:pointer}
 .module-hotbar .main-tab{height:30px;font-size:10px}
 .module-hotbar .main-tab.active{border-color:#1f8a70;background:#092217;color:#b9ffe9}
 .hotbar-group-label{height:30px;display:inline-flex;align-items:center;padding:0 8px;border:1px solid #202833;background:#0B0C0A;color:var(--soft);font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;white-space:nowrap}
+.hotbar-context{
+  height:30px;display:flex;align-items:center;gap:8px;min-width:190px;max-width:340px;
+  padding:0 9px;border:1px solid #202833;background:#0B0C0A;color:var(--muted);white-space:nowrap;
+}
+.hotbar-context strong{font-size:10px;color:var(--txt);text-transform:uppercase;letter-spacing:.04em;overflow:hidden;text-overflow:ellipsis}
+.hotbar-context span{font-size:9px;color:var(--soft);overflow:hidden;text-overflow:ellipsis}
 .hotbar-spacer{flex:1;min-width:12px}
 .hotbar-command,.top-command{
   height:30px;border:1px solid #285d80;background:#10202b;color:#9bd7ff;
@@ -571,6 +577,8 @@ tr:hover td{background:#ffffff05}
   .layout{min-height:calc(100vh - 96px)}
   .brand-title,.brand-sub{white-space:normal}
   .top-meta{justify-content:flex-start}
+  .module-hotbar{flex-wrap:wrap}
+  .hotbar-context{order:-1;flex:1 0 100%;max-width:none}
   .field-grid{grid-template-columns:1fr}
   .market-table-grid,.times-grid,.alert-grid,.risk-grid,.order-grid,.history-grid,.dashboard-grid,.monitor-grid,.monitor-bottom,.connections-grid,.radar-grid,.preset-row{grid-template-columns:1fr}
   .dashboard-actions{grid-template-columns:1fr 1fr}
@@ -1950,7 +1958,7 @@ function saveUiSettings(settings) {
 }
 
 const TAB_META = {
-  dashboard: { label: "Painel", detail: "Checklist e atalhos" },
+  dashboard: { label: "Painel", detail: "Contexto e checklist" },
   radar: { label: "Radar", detail: "Oportunidades por contexto" },
   monitor: { label: "Monitor", detail: "Watchlist, setups e tape" },
   desk: { label: "Mesa", detail: "DOM, fluxo, book e tape" },
@@ -2967,6 +2975,107 @@ function radarContext(snapshot) {
   };
 }
 
+function quantDirectionLabel(direction) {
+  if (direction === "up") return "Reversao alta";
+  if (direction === "down") return "Reversao baixa";
+  return "Observacao";
+}
+
+function quantConfidence(score) {
+  if (score >= 78) return { label: "Forte", tone: "green" };
+  if (score >= 62) return { label: "Moderado", tone: "blue" };
+  if (score >= 45) return { label: "Fraco", tone: "amber" };
+  return { label: "Aguardando", tone: "amber" };
+}
+
+function maxBacktestReversalRate(r) {
+  const rates = (r?.backtest || []).map(row => liveNumber(row.reversalRate)).filter(Number.isFinite);
+  return rates.length ? Math.max(...rates) : NaN;
+}
+
+function quantIndicatorSummary(r) {
+  if (!r) return "aguardando CSV";
+  const values = [
+    `GK ${fmt(liveNumber(r.gk?.points), 1)}`,
+    `YZ ${fmt(liveNumber(r.yz?.points), 1)}`,
+    `ATR ${fmt(liveNumber(r.atr?.value), 1)}`,
+    `POC ${fmt(liveNumber(r.profile?.poc?.price), 1)}`,
+    `VA ${fmt(liveNumber(r.profile?.val), 1)}-${fmt(liveNumber(r.profile?.vah), 1)}`,
+  ];
+  return values.join(" | ");
+}
+
+function quantReversalAssessment(snapshot, flow = {}) {
+  const r = state.result;
+  const metrics = flow.metrics || {};
+  const price = currentDomPrice(snapshot);
+  const step = state.rtd.tickSize || 0.5;
+  const radar = collectRadarOpportunities(snapshot)[0] || null;
+  const nearest = Number.isFinite(price)
+    ? collectDomLevels(snapshot)
+      .filter(level => Number.isFinite(level.price))
+      .sort((a, b) => Math.abs(a.price - price) - Math.abs(b.price - price) || domLevelScore(b) - domLevelScore(a))[0]
+    : null;
+  const zAbs = Math.abs(liveNumber(r?.z));
+  const regimeScore = liveNumber(r?.regime?.meanReversionScore);
+  const backtestRate = maxBacktestReversalRate(r);
+  const levelScore = liveNumber(radar?.score ?? nearest?.score);
+  const distTicks = liveNumber(radar?.distTicks ?? (nearest && Number.isFinite(price) ? Math.abs(nearest.price - price) / step : NaN));
+  const direction = radar?.direction && radar.direction !== "neutral"
+    ? radar.direction
+    : Number.isFinite(r?.z) && r.z > 0.55
+      ? "down"
+      : Number.isFinite(r?.z) && r.z < -0.55
+        ? "up"
+        : "neutral";
+  const flowScore = flowAlignment(direction, metrics);
+
+  let score = 0;
+  let weight = 0;
+  const add = (value, valueWeight) => {
+    if (!Number.isFinite(value)) return;
+    score += clamp(value, 0, 100) * valueWeight;
+    weight += valueWeight;
+  };
+
+  add(levelScore, 0.30);
+  add(regimeScore, 0.22);
+  add(backtestRate, 0.16);
+  add(Number.isFinite(zAbs) ? clamp(zAbs * 28, 0, 100) : NaN, 0.12);
+  add(Number.isFinite(distTicks) ? clamp(100 - distTicks * 2.2, 0, 100) : NaN, 0.10);
+  add(clamp(flowScore * 4.2, 0, 100), 0.10);
+
+  const rawScore = weight > 0 ? score / weight : NaN;
+  const hasStats = !!r && Number.isFinite(rawScore);
+  const hasFlow = !!flow.lastMessage || !!state.rtd.timesTradesByAsset[selectedAsset()];
+  const hasPrice = Number.isFinite(price);
+  const dataPenalty = (hasStats ? 1 : 0.55) * (hasFlow ? 1 : 0.88) * (hasPrice ? 1 : 0.60);
+  const finalScore = Number.isFinite(rawScore) ? clamp(rawScore * dataPenalty, 0, 100) : NaN;
+  const confidence = quantConfidence(finalScore);
+  const sources = [
+    hasStats ? `CSV ${state.selectedWindow}d` : "",
+    hasPrice ? "RTD preco" : "",
+    hasFlow ? (state.rtd.timesTradesByAsset[selectedAsset()] ? "T&T real" : "fluxo derivado") : "",
+    state.result ? "confluencia/backtest" : "",
+  ].filter(Boolean);
+  const reasons = [
+    Number.isFinite(levelScore) ? `nivel ${fmt(levelScore, 0)}` : "",
+    Number.isFinite(regimeScore) ? `MR ${fmt(regimeScore, 0)}` : "",
+    Number.isFinite(backtestRate) ? `backtest ${fmt(backtestRate, 0)}%` : "",
+    Number.isFinite(zAbs) ? `z ${fmt(zAbs, 2)}` : "",
+    Number.isFinite(flowScore) ? `fluxo ${fmt(flowScore, 0)}` : "",
+  ].filter(Boolean);
+  return {
+    score: finalScore,
+    direction,
+    confidence,
+    sources,
+    reasons,
+    indicatorSummary: quantIndicatorSummary(r),
+    dataQuality: sources.length >= 3 ? "completa" : sources.length >= 2 ? "parcial" : "insuficiente",
+  };
+}
+
 function feedContext() {
   const lag = liveNumber(state.telemetry.lastLagMs);
   const rate = wsMessageRate();
@@ -2982,9 +3091,11 @@ function renderDashboardContext(snapshot, flow) {
   const flowRead = flowContext(flow.metrics || {});
   const level = nearestLevelContext(snapshot);
   const radar = radarContext(snapshot);
+  const quant = quantReversalAssessment(snapshot, flow);
   const feed = feedContext();
   refs.dashboardContext.innerHTML = [
     contextCard("Contexto", price.value, price.detail, price.tone),
+    contextCard("Score Quant", Number.isFinite(quant.score) ? `${fmt(quant.score, 0)} ${quant.confidence.label}` : "Aguardando", `${quantDirectionLabel(quant.direction)} | ${quant.dataQuality}`, quant.confidence.tone),
     contextCard("Fluxo", flowRead.value, flowRead.detail, flowRead.tone),
     contextCard("Nivel proximo", level.value, level.detail, level.tone),
     contextCard("Radar", radar.value, radar.detail, radar.tone),
@@ -3015,6 +3126,7 @@ function renderDashboard() {
   refs.dashboardLast.textContent = fmt(intraday.price);
   refs.dashboardState.textContent = priceOk ? "preco ativo" : config?.enabled ? "aguardando preco" : "ativo desligado";
   renderDashboardContext(snapshot, flow);
+  const quant = quantReversalAssessment(snapshot, flow);
 
   refs.dashboardReadiness.innerHTML = [
     readinessRow("Ativo", config ? (config.enabled ? "ligado" : "desligado") : "nao cadastrado", !!config && !!config.enabled),
@@ -3044,6 +3156,10 @@ function renderDashboard() {
     ["Alertas acionados", fmt(alerts.filter(alert => alert.triggeredAt).length, 0)],
     ["Delta 5s", signedFmt(flow.metrics?.delta5s, 0)],
     ["Qualidade fluxo", flow.lastMessage?.dataQuality || "unknown"],
+    ["Score Quant", Number.isFinite(quant.score) ? `${fmt(quant.score, 0)} ${quant.confidence.label}` : "--"],
+    ["Indicadores Quant", quant.indicatorSummary],
+    ["Base Quant", quant.sources.join(" + ") || "aguardando dados"],
+    ["Evidencias Quant", quant.reasons.join(" | ") || "--"],
   ].map(([k, v]) => `<div class="kv"><span>${escapeHtml(k)}</span><span>${escapeHtml(v)}</span></div>`).join("");
 }
 
@@ -3927,6 +4043,10 @@ function renderModuleHotbar(activeTab = state.ui.mainTab) {
 
   refs.moduleHotbar.innerHTML = `
     <span class="hotbar-group-label">${escapeHtml(group.label)}</span>
+    <span class="hotbar-context">
+      <strong>${escapeHtml(group.label)} / ${escapeHtml((TAB_META[activeTab] || {}).label || activeTab)}</strong>
+      <span>${escapeHtml((TAB_META[activeTab] || {}).detail || "Tela ativa")}</span>
+    </span>
     ${buttons}
     <span class="hotbar-spacer"></span>
     <button class="hotbar-command" data-command-open="true" type="button">Buscar</button>

@@ -23,6 +23,8 @@ No gerenciador de ativos:
 
 Quando `timesTrades` chega, a UI usa esse tape real. Sem ele, permanece o tape derivado.
 
+O `Score Quant` do `Painel` consome esse mesmo fluxo: quando ha T&T real, a `Base Quant` indica `T&T real`; sem T&T, indica `fluxo derivado`. O score cruza delta, imbalance e VWAP derivada com o CSV estatistico, POC/VAH/VAL, regime, z-score, confluencia e backtest proxy. Assim, o RTD nao serve apenas para preencher tela: ele entra na pontuacao e nas evidencias da oportunidade observacional.
+
 Para manter agilidade sem repintar tabelas gigantes a cada campo RTD, o backend envia:
 
 - `bookDepth` no maximo a cada 100 ms por ativo;

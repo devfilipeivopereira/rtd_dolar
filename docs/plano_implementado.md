@@ -23,14 +23,16 @@
 - Tela `Oportunidades` para ideias observacionais com preco de interesse, stop, alvo, risco simulado e status por toque de preco.
 - Tela `Ajustes` com presets `Rapido`, `Equilibrado` e `Detalhado`, alem de parametros locais de tick, DOM, renderizacao, memoria de tape/sinais e valor por ponto.
 - Tela `Conexoes` para polling de `/health`, estado do coletor, Profit RTD, WebSocket e fontes por ativo.
-- Hotbar de analise contextual por grupo, com memoria da ultima tela usada e atalhos `Alt+1` a `Alt+9` para telas de uso frequente.
+- Hotbar de analise contextual por grupo, com trilha `Grupo / Tela`, memoria da ultima tela usada e atalhos `Alt+1` a `Alt+9` para telas de uso frequente.
 - Paleta `Ctrl+K` para buscar telas e ativos cadastrados.
 - Faixa superior de contexto com ativo selecionado, ultimo preco, bid/ask, Book, Times, delta e CSV.
+- `Score Quant` no `Painel`, com `Indicadores Quant`, `Base Quant` e `Evidencias Quant` combinando CSV estatistico, RTD de preco, fluxo derivado/T&T, confluencia e backtest proxy.
 - Telemetria no frontend com latencia WebSocket local, mensagens por segundo, render da UI, reconexoes e contadores por tipo de mensagem.
 - Coalescing auxiliar para `bookDepth` e `timesTrades`, reduzindo repintura sem bloquear snapshots de preco.
 - Scheduler de render no navegador orientado pela aba ativa, com padrao de 120 ms no preset `Equilibrado`, presets de desempenho pela UI e inputs de preco imediatos.
 - Validador `tools/validate-dashboard-design.js` para preservar tokens Industrial, mono, plano e sem sombras/gradientes.
 - Validador `tools/validate-product-language.js` para preservar o foco em analise/oportunidades e bloquear linguagem de envio de operacoes.
+- Validador `tools/validate-quant-surface.js` para preservar estimadores, indicadores, radar, score quant e evidencias visiveis.
 
 ## Fluxo de validacao
 
@@ -50,11 +52,13 @@
 14. Abrir `Book`, `T&T`, `Alertas`, `Risco`, `Historico`, `Ajustes`, `Conexoes` e `Sistema`.
 15. Em `Ajustes`, alternar `Rapido`, `Equilibrado` e `Detalhado` e confirmar DOM/render/memoria no resumo.
 16. Confirmar `Conexoes` com `/health`, arquitetura, Profit RTD, WebSocket e fontes por ativo.
-17. Confirmar grupos superiores, hotbar contextual, memoria da ultima tela por grupo e atalhos `Alt+1` a `Alt+9`.
+17. Confirmar grupos superiores, trilha `Grupo / Tela`, hotbar contextual, memoria da ultima tela por grupo e atalhos `Alt+1` a `Alt+9`.
 18. Confirmar paleta `Ctrl+K` para telas e ativos.
 19. Confirmar `Latencia WS`, `Msg/s`, `Render UI` e contadores no `Sistema`.
 20. Rodar `node tools/validate-dashboard-design.js`.
 21. Rodar `node tools/validate-product-language.js`.
+22. Rodar `node tools/validate-quant-surface.js`.
+23. Confirmar `Score Quant`, `Indicadores Quant`, `Base Quant` e `Evidencias Quant` no `Painel`.
 
 ## Build validado
 

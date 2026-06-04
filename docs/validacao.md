@@ -43,6 +43,8 @@ Resultado esperado:
 23. Confirmar que os atalhos nao disparam quando o foco esta em campos de texto, select ou textarea.
 24. Confirmar `Ctrl+K`, busca de telas e ativos, navegacao por setas, `Enter` para abrir e `Esc` para fechar.
 25. Confirmar que `Latencia WS`, `Msg/s` e `Render UI` aparecem na faixa superior e no `Sistema` quando chegam mensagens do WebSocket.
+26. Confirmar no `Painel` que `Score Quant`, `Indicadores Quant`, `Base Quant` e `Evidencias Quant` aparecem.
+27. Confirmar que o `Score Quant` fica aguardando ou penalizado quando faltar CSV, preco RTD ou fluxo/T&T.
 
 ## Endpoints
 
@@ -126,11 +128,13 @@ Sem CSV, a aba DOM ainda pode mostrar ticks RTD, bid/ask e tape. Pontos como POC
 - `Oportunidades` deve salvar ideias em localStorage, calcular R/R e mudar status com preco RTD sem envio ao Profit.
 - `Ajustes` deve persistir em `wdo-ui-settings` e aplicar presets de desempenho, tamanho do tick, niveis do DOM, intervalo de renderizacao, limite de trades/sinais e valor por ponto padrao.
 - `Conexoes` deve consultar `/health` periodicamente e separar status do feed local do debug de fluxo.
-- A hotbar deve espelhar a aba ativa e permitir troca rapida para Monitor, DOM, Book, T&T, Fluxo, Oportunidades, Ativos, Conexoes e Sistema.
+- A hotbar deve espelhar a aba ativa, mostrar a trilha `Grupo / Tela` e permitir troca rapida para Monitor, DOM, Book, T&T, Fluxo, Oportunidades, Ativos, Conexoes e Sistema.
 - A paleta `Ctrl+K` deve buscar telas e ativos cadastrados sem depender de recarregar a pagina.
 - `Book` e `T&T` devem atualizar sem travar a pagina mesmo com muitos campos RTD, respeitando coalescing do backend.
 - Campos intraday devem ser preenchidos a cada snapshot; o lote curto configuravel deve renderizar principalmente a aba ativa para manter a UI responsiva com RTD intenso.
 - `Latencia WS` deve ser tratada como diagnostico backend local -> navegador, e `Render UI` como custo de desenho da tela ativa; nenhuma delas mede latencia de bolsa ou Profit.
+- `Painel` deve mostrar `Score Quant`, `Indicadores Quant`, `Base Quant` e `Evidencias Quant`, combinando CSV estatistico, RTD de preco e fluxo/T&T quando disponiveis.
+- Sem uma das fontes principais, a `Base Quant` deve explicitar a falta e o score nao deve parecer uma confirmacao forte.
 
 ## SQLite
 
@@ -172,11 +176,27 @@ Product language OK
 
 Esse check falha se a documentacao ou o dashboard reintroduzirem linguagem de envio de operacoes.
 
+## Quant QA
+
+Para validar que a interface continua expondo o motor quantitativo, rode:
+
+```text
+node tools/validate-quant-surface.js
+```
+
+Resultado esperado:
+
+```text
+Quant surface OK
+```
+
+Esse check falha se o dashboard perder estimadores de volatilidade, ATR, profile proxy, backtest proxy, radar, alinhamento de fluxo ou os rótulos visiveis `Score Quant`, `Indicadores Quant`, `Base Quant` e `Evidencias Quant`.
+
 ## Navegacao
 
 No navegador, confirme:
 
-1. Os grupos superiores `Inicio`, `Cadastro`, `Mercado`, `Fluxo`, `Analise` e `Sistema` trocam a hotbar contextual.
+1. Os grupos superiores `Inicio`, `Cadastro`, `Mercado`, `Fluxo`, `Analise` e `Sistema` trocam a hotbar contextual e a trilha `Grupo / Tela`.
 2. Ao voltar para um grupo, a hotbar reabre a ultima tela usada naquele grupo.
 3. `Buscar`, `Ctrl+K`, setas, `Enter` e `Esc` continuam funcionando.
 4. `Alt+1` a `Alt+9` continuam abrindo as telas frequentes quando o foco nao esta em campo de texto.
