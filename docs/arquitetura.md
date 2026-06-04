@@ -93,6 +93,8 @@ O menu superior separa:
 
 A faixa superior fica disponivel em todas as telas e mostra ativo selecionado, ultimo preco, bid/ask, status de Book, status de Times, delta 5s, latencia WebSocket local, mensagens por segundo, render da UI e CSV carregado.
 
+Cada grupo do menu superior tem um selo operacional calculado no navegador a partir do estado real: freshness do feed, fontes do ativo, fluxo, ideias/alertas e health. Assim o usuario sabe se precisa ir para `Cadastro`, `Fluxo` ou `Sistema` antes de abrir a tela.
+
 A hotbar de analise fica abaixo da faixa superior e abre telas de uso frequente por clique ou `Alt+1` a `Alt+9`. Ela tambem mostra a trilha `Grupo / Tela` e o resumo curto da tela ativa, acelerando a leitura sem substituir o menu superior, que continua agrupando todas as funcionalidades.
 
 A paleta `Ctrl+K` busca telas e ativos cadastrados. Quando o item escolhido e um ativo, a UI seleciona o ativo e abre `Monitor`.

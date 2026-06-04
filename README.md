@@ -46,7 +46,7 @@ O RTD tambem entra como controle de qualidade. Quando o snapshot do ativo fica `
 
 Esses sinais sao ferramentas de analise quantitativa e tape reading. Eles nao prometem resultado financeiro; a robustez vem de fonte de dados identificavel, penalizacao quando falta dado, evidencias visiveis e validacao manual/automatizada.
 
-O menu superior agora separa o terminal em grupos de analise: `Inicio`, `Cadastro`, `Mercado`, `Fluxo`, `Analise` e `Sistema`. A hotbar contextual abaixo mostra apenas as telas do grupo ativo, enquanto a faixa superior mantem ativo selecionado, ultimo preco, bid/ask, status de Book, status de Times, delta, latencia WebSocket local, mensagens por segundo, render da UI e CSV:
+O menu superior agora separa o terminal em grupos de analise: `Inicio`, `Cadastro`, `Mercado`, `Fluxo`, `Analise` e `Sistema`. Cada grupo mostra um selo operacional curto calculado com dados reais, como `AO VIVO`, `ATRASADO`, `COMPLETO`, `FLOW`, `IDEIA`, `WS` ou `RTD`. A hotbar contextual abaixo mostra apenas as telas do grupo ativo, enquanto a faixa superior mantem ativo selecionado, ultimo preco, bid/ask, status de Book, status de Times, delta, latencia WebSocket local, mensagens por segundo, render da UI e CSV:
 
 - `Painel`: entrada de analise com leitura rapida de contexto, checklist, atalhos, setups, oportunidades e alertas;
 - `Radar`: oportunidades observacionais ranqueadas por setup, nivel, proximidade, delta e imbalance, com ranking multiativo;
@@ -216,7 +216,7 @@ logs/                   logs em runtime
 18. Paleta: confirmar `Ctrl+K`, busca de telas, busca de ativos, setas, `Enter` e `Esc`.
 19. Performance: confirmar que a aba ativa segue responsiva com RTD ativo; campos intraday devem atualizar imediatamente e telas invisiveis nao devem causar travamento perceptivel.
 20. Telemetria: confirmar que `Latencia WS`, `Msg/s` e `Render UI` mudam quando chegam mensagens WebSocket. Essas leituras medem backend local -> navegador e custo de desenho da tela, nao latencia de bolsa ou Profit.
-21. Design QA: rodar `node tools/validate-dashboard-design.js` e confirmar `Dashboard design tokens OK`.
+21. Design QA: rodar `node tools/validate-dashboard-design.js` e confirmar `Dashboard design tokens OK`, incluindo os selos operacionais do menu superior.
 22. Linguagem de produto: rodar `node tools/validate-product-language.js` e confirmar `Product language OK`.
 23. Quant QA: rodar `node tools/validate-quant-surface.js` e confirmar `Quant surface OK`.
 24. Render QA: rodar `node tools/validate-live-render-scheduler.js` e confirmar `Live render scheduler OK`.

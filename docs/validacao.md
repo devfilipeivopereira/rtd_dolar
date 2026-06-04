@@ -40,16 +40,17 @@ Resultado esperado:
 20. Em `Conexoes`, confirmar polling de `/health`, arquitetura, Profit RTD, WebSocket e fontes `Preco`, `Book` e `Times` por ativo.
 21. Em `Ajustes`, alternar presets `Rapido`, `Equilibrado` e `Detalhado`; depois mudar niveis do DOM e intervalo de renderizacao, salvar, recarregar a pagina e confirmar que os valores persistem.
 22. Confirmar hotbar por clique e atalhos `Alt+1` a `Alt+9`.
-23. Confirmar que os atalhos nao disparam quando o foco esta em campos de texto, select ou textarea.
-24. Confirmar `Ctrl+K`, busca de telas e ativos, navegacao por setas, `Enter` para abrir e `Esc` para fechar.
-25. Confirmar que `Latencia WS`, `Msg/s` e `Render UI` aparecem na faixa superior e no `Sistema` quando chegam mensagens do WebSocket.
-26. Confirmar no `Painel` que `Score Quant`, `Indicadores Quant`, `Base Quant` e `Evidencias Quant` aparecem.
-27. Confirmar que o `Score Quant` fica aguardando ou penalizado quando faltar CSV, preco RTD, fluxo/T&T ou quando o feed estiver atrasado/parado.
-28. Confirmar no `Painel` que o roteiro mostra `Proximo passo` e etapas `Ativo`, `RTD preco`, `CSV`, `Book/T&T`, `Fluxo` e `Score`.
-29. Abrir `Sistema` e confirmar `Render motivos` e `Render ativos` mudando conforme chegam snapshots, book, Times, flow e sinais.
-30. Confirmar na faixa superior que `Feed` mostra `Ao vivo` com RTD atualizando e muda para `Atrasado`/`Parado` quando o snapshot do ativo selecionado fica antigo.
-31. Confirmar que `Cotacoes` e `Conexoes` mostram `Feed` por ativo, usando `Ao vivo`, `Atrasado`, `Parado`, `Sem preco` ou `Desligado`.
-32. Confirmar que `Radar` e ranking multiativo rebaixam candidatos com feed atrasado/parado e mostram essa evidencia.
+23. Confirmar que os grupos superiores exibem selos operacionais reais, como feed, cadastro completo/parcial, fluxo, ideias/alertas e health.
+24. Confirmar que os atalhos nao disparam quando o foco esta em campos de texto, select ou textarea.
+25. Confirmar `Ctrl+K`, busca de telas e ativos, navegacao por setas, `Enter` para abrir e `Esc` para fechar.
+26. Confirmar que `Latencia WS`, `Msg/s` e `Render UI` aparecem na faixa superior e no `Sistema` quando chegam mensagens do WebSocket.
+27. Confirmar no `Painel` que `Score Quant`, `Indicadores Quant`, `Base Quant` e `Evidencias Quant` aparecem.
+28. Confirmar que o `Score Quant` fica aguardando ou penalizado quando faltar CSV, preco RTD, fluxo/T&T ou quando o feed estiver atrasado/parado.
+29. Confirmar no `Painel` que o roteiro mostra `Proximo passo` e etapas `Ativo`, `RTD preco`, `CSV`, `Book/T&T`, `Fluxo` e `Score`.
+30. Abrir `Sistema` e confirmar `Render motivos` e `Render ativos` mudando conforme chegam snapshots, book, Times, flow e sinais.
+31. Confirmar na faixa superior que `Feed` mostra `Ao vivo` com RTD atualizando e muda para `Atrasado`/`Parado` quando o snapshot do ativo selecionado fica antigo.
+32. Confirmar que `Cotacoes` e `Conexoes` mostram `Feed` por ativo, usando `Ao vivo`, `Atrasado`, `Parado`, `Sem preco` ou `Desligado`.
+33. Confirmar que `Radar` e ranking multiativo rebaixam candidatos com feed atrasado/parado e mostram essa evidencia.
 
 ## Endpoints
 
@@ -133,6 +134,7 @@ Sem CSV, a aba DOM ainda pode mostrar ticks RTD, bid/ask e tape. Pontos como POC
 - `Oportunidades` deve salvar ideias em localStorage, calcular R/R e mudar status com preco RTD sem envio ao Profit.
 - `Ajustes` deve persistir em `wdo-ui-settings` e aplicar presets de desempenho, tamanho do tick, niveis do DOM, intervalo de renderizacao, limite de trades/sinais e valor por ponto padrao.
 - `Conexoes` deve consultar `/health` periodicamente e separar status do feed local do debug de fluxo.
+- O menu superior deve mostrar selos operacionais por grupo, usando estado real de feed, cadastro, fluxo, ideias/alertas e sistema.
 - A hotbar deve espelhar a aba ativa, mostrar a trilha `Grupo / Tela` e permitir troca rapida para Monitor, DOM, Book, T&T, Fluxo, Oportunidades, Ativos, Conexoes e Sistema.
 - A paleta `Ctrl+K` deve buscar telas e ativos cadastrados sem depender de recarregar a pagina.
 - `Book` e `T&T` devem atualizar sem travar a pagina mesmo com muitos campos RTD, respeitando coalescing do backend.
@@ -167,7 +169,7 @@ Resultado esperado:
 Dashboard design tokens OK
 ```
 
-Esse check falha se o dashboard reintroduzir sombras, gradientes, filtros decorativos ou fontes fora da familia mono.
+Esse check falha se o dashboard reintroduzir sombras, gradientes, filtros decorativos, fontes fora da familia mono ou remover os selos operacionais do menu superior.
 
 ## Linguagem de Produto
 

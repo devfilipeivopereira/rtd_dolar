@@ -51,10 +51,20 @@ button{cursor:pointer}
 .brand-sub{font-size:11px;color:var(--muted);margin-top:2px;white-space:nowrap}
 .main-tabs{display:flex;align-items:center;gap:6px;min-width:0;margin:0 14px;flex:1;justify-content:center;overflow:auto}
 .workspace-tab{
-  height:36px;padding:0 14px;border:1px solid var(--line);background:#0B0C0A;color:var(--muted);
+  height:36px;padding:0 9px 0 12px;border:1px solid var(--line);background:#0B0C0A;color:var(--muted);
   font-family:var(--mono);font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;
+  display:inline-flex;align-items:center;gap:8px;
 }
 .workspace-tab.active{border-color:#1f8a70;background:#092217;color:#b9ffe9}
+.workspace-label{display:inline-flex;align-items:center}
+.workspace-status{
+  min-width:34px;height:18px;display:inline-flex;align-items:center;justify-content:center;
+  border:1px solid #39424f;background:#10141a;color:#9aa7b5;padding:0 5px;
+  font-size:8px;font-weight:900;letter-spacing:.04em;
+}
+.workspace-status.ok{border-color:#1f7a66;background:#0d261f;color:#9df2d5}
+.workspace-status.warn{border-color:#7a5f1f;background:#28210d;color:#ffd66b}
+.workspace-status.bad{border-color:#7a2b2b;background:#2b1111;color:#ff9b9b}
 .main-tab{
   height:34px;padding:0 12px;border:1px solid var(--line);background:#0B0C0A;color:var(--muted);
   font-family:var(--mono);font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.04em;
@@ -2725,6 +2735,7 @@ function renderMarketStrip() {
   refs.topRender.textContent = fmtMs(state.render.lastDurationMs);
   setMetricTone(refs.topRenderTile, state.render.lastDurationMs > 120 ? "red" : state.render.lastDurationMs > 60 ? "amber" : state.render.lastDurationMs > 0 ? "green" : "");
   refs.topCsv.textContent = state.uploadedCount ? `${state.uploadedCount} pregoes` : "sem CSV";
+  renderWorkspaceStatus();
 }
 
 function sourceStateClass(source) {
@@ -4164,6 +4175,73 @@ function workspaceGroupById(groupId) {
   return WORKSPACE_GROUPS.find(group => group.id === groupId) || WORKSPACE_GROUPS[0];
 }
 
+function workspaceGroupStatus(groupId) {
+  const asset = selectedAsset();
+  const config = selectedAssetConfig();
+  const feed = assetFeedFreshness(asset, config || {});
+  const flow = flowBucket(asset);
+  const signalsCount = (flow.signals || []).length;
+  const hasCsv = historyHasCsv(config?.history);
+  const priceOk = sourceIsOk(config?.priceRtd);
+  const bookOk = sourceIsOk(config?.bookRtd);
+  const timesOk = sourceIsOk(config?.timesRtd);
+
+  if (groupId === "home") {
+    if (!config) return { label: "SEM ATIVO", tone: "bad" };
+    if (signalsCount) return { label: `${Math.min(signalsCount, 99)} SETUP`, tone: feed.tone === "green" ? "ok" : "warn" };
+    return { label: feed.label.toUpperCase(), tone: feedToneClass(feed.tone) };
+  }
+
+  if (groupId === "setup") {
+    if (!config) return { label: "CADASTRAR", tone: "bad" };
+    const ready = [priceOk, bookOk, timesOk, hasCsv].filter(Boolean).length;
+    return ready === 4 ? { label: "COMPLETO", tone: "ok" } : { label: `${ready}/4`, tone: ready >= 2 ? "warn" : "bad" };
+  }
+
+  if (groupId === "market") {
+    if (!config) return { label: "SEM ATIVO", tone: "bad" };
+    return { label: feed.label.toUpperCase(), tone: feedToneClass(feed.tone) };
+  }
+
+  if (groupId === "flow") {
+    if ((flow.trades || []).length || flow.metrics) return { label: "FLOW", tone: feed.tone === "green" ? "ok" : "warn" };
+    if (bookOk || timesOk) return { label: "AGUARD.", tone: "warn" };
+    return { label: "SEM FLOW", tone: "bad" };
+  }
+
+  if (groupId === "analysis") {
+    const ideas = (state.orderPlans || []).filter(plan => normalizeAsset(plan.asset) === asset).length;
+    const alerts = (state.alerts || []).filter(alert => normalizeAsset(alert.asset) === asset).length;
+    if (ideas) return { label: `${Math.min(ideas, 99)} IDEIA`, tone: "ok" };
+    if (alerts) return { label: `${Math.min(alerts, 99)} ALERTA`, tone: "warn" };
+    return { label: "VAZIO", tone: "warn" };
+  }
+
+  if (groupId === "system") {
+    const wsOk = state.rtd.socket && state.rtd.socket.readyState === WebSocket.OPEN;
+    const profitRtd = String(state.health.last?.profitRtd || "").toLowerCase();
+    const healthOk = String(state.health.last?.status || "").toLowerCase() === "ok";
+    if (wsOk && healthOk && profitRtd.includes("connected")) return { label: "OK", tone: "ok" };
+    if (!wsOk) return { label: "WS", tone: "bad" };
+    if (!profitRtd.includes("connected")) return { label: "RTD", tone: "warn" };
+    return { label: "VER", tone: "warn" };
+  }
+
+  return { label: "VER", tone: "warn" };
+}
+
+function renderWorkspaceStatus() {
+  if (!refs.mainTabs) return;
+  WORKSPACE_GROUPS.forEach(group => {
+    const status = workspaceGroupStatus(group.id);
+    const el = refs.mainTabs.querySelector(`[data-workspace-status="${group.id}"]`);
+    if (!el) return;
+    el.textContent = status.label;
+    el.classList.remove("ok", "warn", "bad");
+    el.classList.add(status.tone);
+  });
+}
+
 function hotkeyForTab(tabName) {
   const pair = Object.entries(HOTKEY_TABS).find(([, tab]) => tab === tabName);
   return pair ? `Alt+${pair[0]}` : "";
@@ -4174,9 +4252,11 @@ function renderWorkspaceGroups(activeTab = state.ui.mainTab) {
   const activeGroup = workspaceGroupForTab(activeTab).id;
   refs.mainTabs.innerHTML = WORKSPACE_GROUPS.map(group => `
     <button class="workspace-tab ${group.id === activeGroup ? "active" : ""}" data-main-tab-group="${escapeHtml(group.id)}" type="button">
-      ${escapeHtml(group.label)}
+      <span class="workspace-label">${escapeHtml(group.label)}</span>
+      <span class="workspace-status" data-workspace-status="${escapeHtml(group.id)}">--</span>
     </button>
   `).join("");
+  renderWorkspaceStatus();
 }
 
 function renderModuleHotbar(activeTab = state.ui.mainTab) {

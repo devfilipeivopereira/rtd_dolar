@@ -46,6 +46,10 @@ if (!/\.app \*\{border-radius:0!important\}/i.test(css)) {
   failures.push("Dashboard must enforce square Industrial UI with .app * border-radius:0!important.");
 }
 
+if (!/\.workspace-status\{[\s\S]*?border:1px solid/i.test(css) || !/\bfunction\s+workspaceGroupStatus\b/.test(html)) {
+  failures.push("Workspace menu must expose compact operational status badges.");
+}
+
 if (failures.length) {
   console.error(failures.join("\n"));
   process.exit(1);
