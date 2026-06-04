@@ -40,7 +40,7 @@ O historico diario continua sendo carregado por CSV no navegador. O RTD preenche
 - VWAP/ancora opcional: `MED`
 - Volume acumulado: `VOL`
 
-O menu superior separa as telas por funcionalidade e a faixa superior mostra ativo selecionado, ultimo preco, bid/ask, status de Book, status de Times, delta e CSV:
+O menu superior separa as telas por funcionalidade e a faixa superior mostra ativo selecionado, ultimo preco, bid/ask, status de Book, status de Times, delta, latencia WebSocket local, mensagens por segundo e CSV:
 
 - `Painel`: entrada operacional com checklist, atalhos, setups, planos e alertas;
 - `Ativos`: cadastro, CSV historico, ligar/desligar e excluir;
@@ -56,7 +56,7 @@ O menu superior separa as telas por funcionalidade e a faixa superior mostra ati
 - `Risco`: calculadora local de stop, alvo e contratos;
 - `Historico`: resumo do CSV e ticks em memoria;
 - `Ajustes`: parametros locais de tick, DOM, renderizacao, memoria de tape/sinais e valor por ponto;
-- `Sistema`: RTD, WebSocket e debug de fluxo.
+- `Sistema`: RTD, WebSocket, telemetria de mensagens e debug de fluxo.
 
 A aba `DOM` mostra:
 
@@ -94,6 +94,7 @@ Use o MSBuild do Visual Studio 2022/Build Tools. O MSBuild antigo de `C:\Windows
 10. Abra `Cotacoes` para monitorar os ativos cadastrados e entrar em `Grafico`, `DOM`, `Book`, `T&T` ou `Boleta`.
 11. Abra `Ajustes` se quiser mudar niveis do DOM, cadencia de renderizacao ou valor por ponto padrao.
 12. Deixe o modo `RTD Live` ativo para preencher o intraday automaticamente.
+13. Confira `Latencia WS` e `Msg/s` na faixa superior ou em `Sistema` para diagnosticar atraso entre backend local e navegador.
 
 A `Boleta` e apenas um plano local/simulado. O aplicativo nao envia ordens para o Profit.
 
@@ -181,4 +182,5 @@ logs/                   logs em runtime
 11. Abas operacionais: confirmar `Book`, `T&T`, `Alertas`, `Risco`, `Historico`, `Ajustes` e `Sistema` sem erro no navegador.
 12. Ajustes: alterar niveis do DOM e intervalo de renderizacao, salvar, recarregar a pagina e confirmar persistencia local.
 13. Performance: confirmar que DOM, Painel e Cotacoes seguem responsivos com RTD ativo; campos intraday devem atualizar imediatamente.
-14. SQLite: confirmar criacao de `data/marketdata.sqlite` quando o provider for restaurado pelo NuGet.
+14. Telemetria: confirmar que `Latencia WS` e `Msg/s` mudam quando chegam mensagens WebSocket. Essa leitura mede o trecho backend local -> navegador, nao latencia de bolsa ou execucao.
+15. SQLite: confirmar criacao de `data/marketdata.sqlite` quando o provider for restaurado pelo NuGet.

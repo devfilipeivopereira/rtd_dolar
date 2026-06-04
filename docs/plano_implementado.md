@@ -20,6 +20,7 @@
 - Tela `Boleta` para planos locais de entrada, stop, alvo, risco e status por toque de preco, sem envio de ordens.
 - Tela `Ajustes` para parametros locais de tick, DOM, renderizacao, memoria de tape/sinais e valor por ponto.
 - Faixa superior operacional com ativo selecionado, ultimo preco, bid/ask, Book, Times, delta e CSV.
+- Telemetria WebSocket no frontend com latencia local, mensagens por segundo, reconexoes e contadores por tipo de mensagem.
 - Coalescing auxiliar para `bookDepth` e `timesTrades`, reduzindo repintura sem bloquear snapshots de preco.
 - Scheduler de render no navegador para agrupar DOM, Painel, Cotacoes e Historico, com padrao de 120 ms e ajuste pela UI, mantendo inputs de preco imediatos.
 
@@ -36,6 +37,7 @@
 9. Abrir `Cotacoes` e testar os atalhos para `Grafico`, `DOM`, `Book`, `T&T` e `Boleta`.
 10. Salvar um plano local na `Boleta` e confirmar que nenhum endpoint de ordem e chamado.
 11. Abrir `Book`, `T&T`, `Alertas`, `Risco`, `Historico`, `Ajustes` e `Sistema`.
+12. Confirmar `Latencia WS`, `Msg/s` e contadores no `Sistema`.
 
 ## Build validado
 

@@ -77,9 +77,9 @@ O menu superior separa:
 - `Risco`: calculadora local de stop, alvo e contratos;
 - `Historico`: resumo do CSV e ticks em memoria;
 - `Ajustes`: parametros locais de tick, DOM, renderizacao, memoria e valor por ponto;
-- `Sistema`: saude e debug.
+- `Sistema`: saude, telemetria WebSocket e debug.
 
-A faixa superior fica disponivel em todas as telas e mostra ativo selecionado, ultimo preco, bid/ask, status de Book, status de Times, delta 5s e CSV carregado.
+A faixa superior fica disponivel em todas as telas e mostra ativo selecionado, ultimo preco, bid/ask, status de Book, status de Times, delta 5s, latencia WebSocket local, mensagens por segundo e CSV carregado.
 
 A tela `Painel` e a entrada operacional. Ela resume RTD, ativo selecionado, ultimo preco, checklist de prontidao, atalhos para as telas principais, setups recentes, planos da boleta e alertas.
 
@@ -107,6 +107,8 @@ Os pontos marcados incluem abertura, maxima, minima, VWAP/MED, POC, VAH, VAL, de
 As mensagens auxiliares de profundidade sao coalescidas no cliente RTD para reduzir repintura da UI: `bookDepth` tem broadcast minimo de 100 ms e `timesTrades` de 150 ms. Snapshots de preco continuam no fluxo existente.
 
 No navegador, campos criticos de preco e inputs intraday sao preenchidos a cada snapshot. Renderizacoes densas como DOM completo, `Painel`, `Cotacoes` e `Historico` usam scheduler curto, com padrao de 120 ms e ajuste pela aba `Ajustes`, para reduzir travamentos quando o RTD envia muitos updates.
+
+A telemetria `Latencia WS` e calculada no navegador comparando o recebimento da mensagem com `localTimestamp` enviado pelo backend local. Ela serve para diagnosticar atraso entre coletor e interface; nao mede latencia de bolsa, Profit ou execucao de ordem.
 
 ## Persistencia
 

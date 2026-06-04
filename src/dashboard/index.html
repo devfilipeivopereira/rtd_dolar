@@ -539,6 +539,8 @@ tr:hover td{background:#ffffff05}
     <div class="terminal-metric"><span>Book</span><strong id="top-book-status">--</strong></div>
     <div class="terminal-metric"><span>Times</span><strong id="top-times-status">--</strong></div>
     <div class="terminal-metric"><span>Delta 5s</span><strong id="top-delta">--</strong></div>
+    <div class="terminal-metric"><span>Latencia WS</span><strong id="top-latency">--</strong></div>
+    <div class="terminal-metric"><span>Msg/s</span><strong id="top-rate">--</strong></div>
     <div class="terminal-metric"><span>CSV</span><strong id="top-csv">--</strong></div>
   </section>
 
@@ -1629,6 +1631,15 @@ const state = {
     maxSignals: 80,
     maxTrades: 120,
   },
+  telemetry: {
+    socketOpenedAt: null,
+    lastMessageAt: null,
+    lastServerTimestamp: null,
+    lastLagMs: null,
+    messageTimes: [],
+    counts: {},
+    reconnects: 0,
+  },
   chartLayers: loadChartLayers(),
   chartView: {
     start: 0,
@@ -1691,6 +1702,8 @@ const refs = {
   topBookStatus: document.getElementById("top-book-status"),
   topTimesStatus: document.getElementById("top-times-status"),
   topDelta: document.getElementById("top-delta"),
+  topLatency: document.getElementById("top-latency"),
+  topRate: document.getElementById("top-rate"),
   topCsv: document.getElementById("top-csv"),
   file: document.getElementById("csv-file"),
   dropzone: document.getElementById("dropzone"),
@@ -2177,6 +2190,8 @@ function renderMarketStrip() {
     ? `${(times.trades || []).length} linhas`
     : selectedAssetConfig()?.timesRtd?.enabled ? "ligando" : "off";
   refs.topDelta.textContent = signedFmt(flow.delta5s, 0);
+  refs.topLatency.textContent = fmtMs(state.telemetry.lastLagMs);
+  refs.topRate.textContent = `${fmt(wsMessageRate(), 1)}/s`;
   refs.topCsv.textContent = state.uploadedCount ? `${state.uploadedCount} pregoes` : "sem CSV";
 }
 
@@ -2969,6 +2984,41 @@ function setPill(el, type, text) {
 function fmt(n, dec = 1) {
   if (!Number.isFinite(n)) return "--";
   return n.toLocaleString("pt-BR", { minimumFractionDigits: dec, maximumFractionDigits: dec });
+}
+
+function fmtMs(value) {
+  const n = liveNumber(value);
+  if (!Number.isFinite(n)) return "--";
+  if (n < 1000) return `${fmt(n, 0)} ms`;
+  return `${fmt(n / 1000, 2)} s`;
+}
+
+function messageServerTimestamp(msg) {
+  return msg?.localTimestamp || msg?.timestamp || msg?.signal?.timestamp || null;
+}
+
+function wsMessageRate() {
+  const now = Date.now();
+  state.telemetry.messageTimes = state.telemetry.messageTimes.filter(ts => now - ts <= 5000);
+  return state.telemetry.messageTimes.length / 5;
+}
+
+function recordWsMessage(msg) {
+  const now = Date.now();
+  const type = msg?.type || "unknown";
+  const serverTimestamp = messageServerTimestamp(msg);
+  state.telemetry.lastMessageAt = now;
+  state.telemetry.messageTimes.push(now);
+  state.telemetry.messageTimes = state.telemetry.messageTimes.filter(ts => now - ts <= 5000);
+  state.telemetry.counts[type] = (state.telemetry.counts[type] || 0) + 1;
+
+  if (serverTimestamp) {
+    const parsed = Date.parse(serverTimestamp);
+    if (Number.isFinite(parsed)) {
+      state.telemetry.lastServerTimestamp = serverTimestamp;
+      state.telemetry.lastLagMs = Math.max(0, now - parsed);
+    }
+  }
 }
 
 function signedFmt(value, dec = 0) {
@@ -4845,7 +4895,21 @@ function renderFlowDebug() {
   const msg = state.flow.lastMessage || {};
   const depth = liveBookDepthForAsset();
   const times = state.rtd.timesTradesByAsset[selectedAsset()];
+  const counts = state.telemetry.counts || {};
+  const socketState = state.rtd.socket
+    ? ["conectando", "aberto", "fechando", "fechado"][state.rtd.socket.readyState] || String(state.rtd.socket.readyState)
+    : "sem socket";
+  const lastMessage = state.telemetry.lastMessageAt
+    ? new Date(state.telemetry.lastMessageAt).toLocaleTimeString("pt-BR")
+    : "--";
   const rows = [
+    ["Socket", socketState],
+    ["Latencia WS", fmtMs(state.telemetry.lastLagMs)],
+    ["Mensagens/s", `${fmt(wsMessageRate(), 1)}/s`],
+    ["Ultima mensagem", lastMessage],
+    ["Reconexoes", fmt(state.telemetry.reconnects, 0)],
+    ["WS snapshot/flow", `${fmt(counts.snapshot || 0, 0)} / ${fmt(counts.flow || 0, 0)}`],
+    ["WS book/times", `${fmt(counts.bookDepth || 0, 0)} / ${fmt(counts.timesTrades || 0, 0)}`],
     ["Qualidade", msg.dataQuality || "unknown"],
     ["Eventos", fmt(liveNumber(m.eventsProcessed), 0)],
     ["Trades derivados", fmt(liveNumber(m.tradesDerived), 0)],
@@ -5481,7 +5545,10 @@ function connectRtdLive() {
   state.rtd.socket = socket;
 
   socket.addEventListener("open", () => {
+    state.telemetry.socketOpenedAt = Date.now();
     setRtdStatus("ok", "Conectado");
+    renderMarketStrip();
+    renderFlowDebug();
     loadInitialFlow();
   });
 
@@ -5492,6 +5559,8 @@ function connectRtdLive() {
     } catch {
       return;
     }
+
+    recordWsMessage(msg);
 
     if (msg.type === "snapshot") {
       applyLiveSnapshot(msg);
@@ -5509,15 +5578,22 @@ function connectRtdLive() {
       updateAssetsMessage(msg);
       const ok = msg.status === "connected";
       setRtdStatus(ok ? "ok" : "warn", ok ? "Conectado" : "Reconectando");
+      renderMarketStrip();
+      renderFlowDebug();
     } else if (msg.type === "error") {
       setRtdStatus("bad", "Sem Profit");
+      renderMarketStrip();
+      renderFlowDebug();
     }
   });
 
   socket.addEventListener("close", () => {
     state.rtd.socket = null;
     if (!state.rtd.enabled) return;
+    state.telemetry.reconnects += 1;
     setRtdStatus("warn", "Reconectando");
+    renderMarketStrip();
+    renderFlowDebug();
     window.clearTimeout(state.rtd.reconnectTimer);
     state.rtd.reconnectTimer = window.setTimeout(connectRtdLive, 2000);
   });
