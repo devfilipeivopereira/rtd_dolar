@@ -30,10 +30,11 @@
 - Telemetria no frontend com latencia WebSocket local, mensagens por segundo, render da UI, reconexoes e contadores por tipo de mensagem.
 - Roteiro de analise no `Painel`, com `Proximo passo` dinamico e etapas clicaveis para Ativo, RTD preco, CSV, Book/T&T, Fluxo e Score.
 - Coalescing auxiliar para `bookDepth` e `timesTrades`, reduzindo repintura sem bloquear snapshots de preco.
-- Scheduler de render no navegador orientado pela aba ativa, com padrao de 120 ms no preset `Equilibrado`, presets de desempenho pela UI e inputs de preco imediatos.
+- Scheduler de render no navegador orientado pela aba ativa, com fila por motivo/ativo, filtro de relevancia por tela, padrao de 120 ms no preset `Equilibrado`, presets de desempenho pela UI e inputs de preco imediatos.
 - Validador `tools/validate-dashboard-design.js` para preservar tokens Industrial, mono, plano e sem sombras/gradientes.
 - Validador `tools/validate-product-language.js` para preservar o foco em analise/oportunidades e bloquear linguagem de envio de operacoes.
 - Validador `tools/validate-quant-surface.js` para preservar estimadores, indicadores, radar, score quant e evidencias visiveis.
+- Validador `tools/validate-live-render-scheduler.js` para preservar coalescing de render, motivos, ativos e filtro por aba ativa.
 
 ## Fluxo de validacao
 
@@ -59,8 +60,10 @@
 20. Rodar `node tools/validate-dashboard-design.js`.
 21. Rodar `node tools/validate-product-language.js`.
 22. Rodar `node tools/validate-quant-surface.js`.
-23. Confirmar `Score Quant`, `Indicadores Quant`, `Base Quant` e `Evidencias Quant` no `Painel`.
-24. Confirmar o roteiro de analise com `Proximo passo` e atalhos para Ativos, Conexoes, Fluxo, Radar e Mesa.
+23. Rodar `node tools/validate-live-render-scheduler.js`.
+24. Confirmar `Score Quant`, `Indicadores Quant`, `Base Quant` e `Evidencias Quant` no `Painel`.
+25. Confirmar o roteiro de analise com `Proximo passo` e atalhos para Ativos, Conexoes, Fluxo, Radar e Mesa.
+26. Confirmar `Render motivos` e `Render ativos` no `Sistema`.
 
 ## Build validado
 

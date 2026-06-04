@@ -2062,6 +2062,10 @@ const state = {
     lastBatchAt: null,
     liveIntervalMs: 120,
     pendingSnapshot: null,
+    pendingReasons: {},
+    pendingAssets: {},
+    lastReasons: [],
+    lastAssets: [],
   },
   assetEditor: {
     draftCsvText: null,
@@ -6330,8 +6334,29 @@ function renderDesk(msg = state.rtd.lastSnapshot) {
   renderDeskLevels(msg);
 }
 
+function activeTabNeedsRender(tab, reasons = []) {
+  if (!reasons.length || reasons.includes("ui")) return true;
+  const has = (...items) => items.some(item => reasons.includes(item));
+  if (["dashboard", "radar", "monitor", "desk", "quotes", "connections", "diagnostics"].includes(tab)) return true;
+  if (tab === "dom") return has("snapshot", "book", "times", "signal", "status", "csv");
+  if (tab === "book") return has("snapshot", "book", "status");
+  if (tab === "times") return has("times", "status");
+  if (tab === "flow") return has("snapshot", "flow", "times", "signal", "status");
+  if (tab === "signals") return has("flow", "signal", "status");
+  if (tab === "orders" || tab === "alerts" || tab === "risk") return has("snapshot", "signal", "status");
+  if (tab === "history") return has("snapshot", "times", "csv");
+  if (tab === "assets" || tab === "settings") return has("status", "asset", "csv");
+  return true;
+}
+
 function renderActiveLivePanels(snapshot = state.rtd.lastSnapshot, options = {}) {
   const tab = state.ui.mainTab;
+  const reasons = options.reasons || [];
+
+  if (!activeTabNeedsRender(tab, reasons)) {
+    if (options.marketStrip !== false) renderMarketStrip();
+    return;
+  }
 
   if (tab === "dashboard") renderDashboard();
   else if (tab === "radar") renderRadar(snapshot);
@@ -6358,11 +6383,11 @@ function renderActiveLivePanels(snapshot = state.rtd.lastSnapshot, options = {})
   if (options.marketStrip !== false) renderMarketStrip();
 }
 
-function renderLiveAssetChange(asset, snapshot = state.rtd.lastSnapshot) {
+function renderLiveAssetChange(asset, snapshot = state.rtd.lastSnapshot, reason = "ui") {
   const tab = state.ui.mainTab;
   const multiAssetTabs = ["assets", "radar", "monitor", "quotes", "connections"];
   if (sameAsset(asset) || multiAssetTabs.includes(tab)) {
-    renderActiveLivePanels(snapshot);
+    scheduleLiveRender(snapshot, false, reason, asset);
   }
 }
 
@@ -6392,15 +6417,25 @@ function runLiveRenderBatch() {
   state.render.lastLiveRenderMs = nowMs();
   const started = nowMs();
   const snapshot = state.render.pendingSnapshot || state.rtd.lastSnapshot;
+  const reasons = Object.keys(state.render.pendingReasons || {});
+  const assets = Object.keys(state.render.pendingAssets || {});
   state.render.pendingSnapshot = null;
-  renderActiveLivePanels(snapshot, { marketStrip: false, deferDiagnostics: true });
+  state.render.pendingReasons = {};
+  state.render.pendingAssets = {};
+  state.render.lastReasons = reasons;
+  state.render.lastAssets = assets;
+  renderActiveLivePanels(snapshot, { marketStrip: false, deferDiagnostics: true, reasons, assets });
   recordRenderDuration(nowMs() - started);
   renderMarketStrip();
   if (state.ui.mainTab === "diagnostics") renderFlowDebug();
 }
 
-function scheduleLiveRender(snapshot = null, immediate = false) {
+function scheduleLiveRender(snapshot = null, immediate = false, reason = "ui", asset = null) {
   if (snapshot) state.render.pendingSnapshot = snapshot;
+  const normalizedReason = String(reason || "ui");
+  state.render.pendingReasons[normalizedReason] = true;
+  const normalizedAsset = normalizeAsset(asset || snapshot?.asset || selectedAsset());
+  if (normalizedAsset) state.render.pendingAssets[normalizedAsset] = true;
   const elapsed = nowMs() - state.render.lastLiveRenderMs;
   const delay = immediate || elapsed >= state.render.liveIntervalMs
     ? 0
@@ -6445,12 +6480,12 @@ function applyFlowMessage(msg) {
   }
   bucket.signals = mergeByKey(msg.activeSignals, bucket.signals, signalKey, state.flow.maxSignals);
   if (!sameAsset(asset)) {
-    renderLiveAssetChange(asset);
+    renderLiveAssetChange(asset, state.rtd.snapshotsByAsset[asset] || state.rtd.lastSnapshot, "flow");
     return;
   }
 
   syncSelectedFlow();
-  renderLiveAssetChange(asset);
+  renderLiveAssetChange(asset, state.rtd.snapshotsByAsset[asset] || state.rtd.lastSnapshot, "flow");
 }
 
 function applySignalMessage(msg) {
@@ -6460,12 +6495,12 @@ function applySignalMessage(msg) {
   const bucket = flowBucket(asset);
   bucket.signals = mergeByKey([signal], bucket.signals, signalKey, state.flow.maxSignals);
   if (!sameAsset(asset)) {
-    renderLiveAssetChange(asset);
+    renderLiveAssetChange(asset, state.rtd.snapshotsByAsset[asset] || state.rtd.lastSnapshot, "signal");
     return;
   }
 
   syncSelectedFlow();
-  renderLiveAssetChange(asset);
+  renderLiveAssetChange(asset, state.rtd.snapshotsByAsset[asset] || state.rtd.lastSnapshot, "signal");
 }
 
 function applySignalsMessage(msg) {
@@ -6475,7 +6510,7 @@ function applySignalsMessage(msg) {
     bucket.signals = mergeByKey([signal], bucket.signals, signalKey, state.flow.maxSignals);
   });
   syncSelectedFlow();
-  renderLiveAssetChange(selectedAsset());
+  renderLiveAssetChange(selectedAsset(), state.rtd.lastSnapshot, "signal");
 }
 
 async function loadInitialFlow() {
@@ -6584,6 +6619,8 @@ function renderFlowDebug() {
     ["Render UI", fmtMs(state.render.lastDurationMs)],
     ["Render medio", fmtMs(averageRenderDuration())],
     ["Render pico", fmtMs(state.render.maxDurationMs)],
+    ["Render motivos", (state.render.lastReasons || []).join(" / ") || "--"],
+    ["Render ativos", (state.render.lastAssets || []).slice(0, 4).join(" / ") || "--"],
     ["Ultima mensagem", lastMessage],
     ["Reconexoes", fmt(state.telemetry.reconnects, 0)],
     ["WS snapshot/flow", `${fmt(counts.snapshot || 0, 0)} / ${fmt(counts.flow || 0, 0)}`],
@@ -7125,7 +7162,7 @@ function applyLiveSnapshot(msg) {
   registerDomTick(msg);
 
   if (!sameAsset(asset)) {
-    renderLiveAssetChange(asset);
+    renderLiveAssetChange(asset, msg, "snapshot");
     return;
   }
 
@@ -7148,7 +7185,7 @@ function applyLiveSnapshot(msg) {
   updateOrderPlans(currentPrice);
   renderOrderSummary();
   renderMarketStrip();
-  scheduleLiveRender(msg);
+  scheduleLiveRender(msg, false, "snapshot", asset);
   scheduleLiveRecalc();
 }
 
@@ -7156,7 +7193,7 @@ function applyBookDepthMessage(msg) {
   if (!msg || msg.type !== "bookDepth") return;
   const asset = normalizeAsset(msg.asset);
   state.rtd.bookDepthByAsset[asset] = msg;
-  renderLiveAssetChange(asset);
+  renderLiveAssetChange(asset, state.rtd.snapshotsByAsset[asset] || state.rtd.lastSnapshot, "book");
 }
 
 function normalizeTimesTrade(row) {
@@ -7187,7 +7224,7 @@ function applyTimesTradesMessage(msg) {
   if (sameAsset(asset)) {
     syncSelectedFlow();
   }
-  renderLiveAssetChange(asset);
+  renderLiveAssetChange(asset, state.rtd.snapshotsByAsset[asset] || state.rtd.lastSnapshot, "times");
 }
 
 function rtdWebSocketUrl() {

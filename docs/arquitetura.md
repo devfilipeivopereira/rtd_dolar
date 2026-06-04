@@ -134,6 +134,8 @@ As mensagens auxiliares de profundidade sao coalescidas no cliente RTD para redu
 
 No navegador, campos criticos de preco e inputs intraday sao preenchidos a cada snapshot. Renderizacoes densas usam scheduler curto, com padrao de 120 ms no preset `Equilibrado` e ajuste pela aba `Ajustes`. O batch ao vivo renderiza a aba ativa e evita repintar telas invisiveis como DOM, Mesa, Painel, Monitor, Cotacoes e Historico no mesmo pulso.
 
+O scheduler do navegador agora acumula motivos de render (`snapshot`, `book`, `times`, `flow`, `signal`, `status`, `ui`) e ativos impactados. Antes de redesenhar, ele verifica se o evento afeta a tela ativa. Por exemplo, uma mensagem `flow` nao repinta a tela `Book`, e uma mensagem `book` nao repinta a tela `T&T`. Telas de contexto amplo como `Painel`, `Mesa`, `Monitor`, `Radar`, `Cotacoes`, `Conexoes` e `Sistema` continuam recebendo todos os motivos relevantes.
+
 A telemetria `Latencia WS` e calculada no navegador comparando o recebimento da mensagem com `localTimestamp` enviado pelo backend local. A metrica `Render UI` mede a duracao do ultimo batch de desenho da aba ativa, com media e pico no `Sistema`. Essas leituras servem para diagnosticar atraso entre coletor, navegador e interface; nao medem latencia de bolsa ou Profit.
 
 ## Persistencia
