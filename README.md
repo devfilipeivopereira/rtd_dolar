@@ -43,6 +43,7 @@ O historico diario continua sendo carregado por CSV no navegador. O RTD preenche
 O menu superior separa as telas por funcionalidade e a faixa superior mostra ativo selecionado, ultimo preco, bid/ask, status de Book, status de Times, delta, latencia WebSocket local, mensagens por segundo e CSV:
 
 - `Painel`: entrada operacional com checklist, atalhos, setups, planos e alertas;
+- `Monitor`: mesa ao vivo com watchlist compacta, estado do ativo, setups, tape, planos e alertas;
 - `Ativos`: cadastro, CSV historico, ligar/desligar e excluir;
 - `Cotacoes`: watchlist operacional com todos os ativos cadastrados, ultimo preco, bid/ask, delta, Book, Times e atalhos;
 - `Grafico`: grafico, niveis, abertura, POC, variacao, profile e backtest;
@@ -91,10 +92,11 @@ Use o MSBuild do Visual Studio 2022/Build Tools. O MSBuild antigo de `C:\Windows
 7. Carregue o CSV historico do ativo.
 8. Clique em `Salvar`.
 9. Abra `Painel` para ver checklist operacional, atalhos, setups, planos e alertas.
-10. Abra `Cotacoes` para monitorar os ativos cadastrados e entrar em `Grafico`, `DOM`, `Book`, `T&T` ou `Boleta`.
-11. Abra `Ajustes` se quiser mudar niveis do DOM, cadencia de renderizacao ou valor por ponto padrao.
-12. Deixe o modo `RTD Live` ativo para preencher o intraday automaticamente.
-13. Confira `Latencia WS` e `Msg/s` na faixa superior ou em `Sistema` para diagnosticar atraso entre backend local e navegador.
+10. Abra `Monitor` para acompanhar watchlist, setups, tape, planos e alertas do ativo selecionado.
+11. Abra `Cotacoes` para ver todos os ativos cadastrados e entrar em `Grafico`, `DOM`, `Book`, `T&T` ou `Boleta`.
+12. Abra `Ajustes` se quiser mudar niveis do DOM, cadencia de renderizacao ou valor por ponto padrao.
+13. Deixe o modo `RTD Live` ativo para preencher o intraday automaticamente.
+14. Confira `Latencia WS` e `Msg/s` na faixa superior ou em `Sistema` para diagnosticar atraso entre backend local e navegador.
 
 A `Boleta` e apenas um plano local/simulado. O aplicativo nao envia ordens para o Profit.
 
@@ -177,10 +179,11 @@ logs/                   logs em runtime
 6. Multiativo: adicionar um novo ativo em `Ativos`, ligar/desligar, trocar fontes, excluir e confirmar `/assets`.
 7. Book/T&T: confirmar mensagens `bookDepth` e `timesTrades` no WebSocket quando `BOOK0` e `T&T0` estiverem ligados.
 8. Painel: confirmar checklist, atalhos, setups, planos e alertas do ativo selecionado.
-9. Cotacoes: confirmar que a watchlist mostra todos os ativos e que os botoes abrem `Grafico`, `DOM`, `Book`, `T&T` e `Boleta`.
-10. Boleta: salvar um plano local e confirmar status `aguardando`, `aberto`, `alvo` ou `stop` conforme o preco.
-11. Abas operacionais: confirmar `Book`, `T&T`, `Alertas`, `Risco`, `Historico`, `Ajustes` e `Sistema` sem erro no navegador.
-12. Ajustes: alterar niveis do DOM e intervalo de renderizacao, salvar, recarregar a pagina e confirmar persistencia local.
-13. Performance: confirmar que DOM, Painel e Cotacoes seguem responsivos com RTD ativo; campos intraday devem atualizar imediatamente.
-14. Telemetria: confirmar que `Latencia WS` e `Msg/s` mudam quando chegam mensagens WebSocket. Essa leitura mede o trecho backend local -> navegador, nao latencia de bolsa ou execucao.
-15. SQLite: confirmar criacao de `data/marketdata.sqlite` quando o provider for restaurado pelo NuGet.
+9. Monitor: confirmar watchlist compacta, estado do ativo, setups, tape, planos e alertas.
+10. Cotacoes: confirmar que a watchlist mostra todos os ativos e que os botoes abrem `Grafico`, `DOM`, `Book`, `T&T` e `Boleta`.
+11. Boleta: salvar um plano local e confirmar status `aguardando`, `aberto`, `alvo` ou `stop` conforme o preco.
+12. Abas operacionais: confirmar `Book`, `T&T`, `Alertas`, `Risco`, `Historico`, `Ajustes` e `Sistema` sem erro no navegador.
+13. Ajustes: alterar niveis do DOM e intervalo de renderizacao, salvar, recarregar a pagina e confirmar persistencia local.
+14. Performance: confirmar que DOM, Painel, Monitor e Cotacoes seguem responsivos com RTD ativo; campos intraday devem atualizar imediatamente.
+15. Telemetria: confirmar que `Latencia WS` e `Msg/s` mudam quando chegam mensagens WebSocket. Essa leitura mede o trecho backend local -> navegador, nao latencia de bolsa ou execucao.
+16. SQLite: confirmar criacao de `data/marketdata.sqlite` quando o provider for restaurado pelo NuGet.

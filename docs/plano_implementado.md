@@ -16,6 +16,7 @@
 - SQLite auxiliar para snapshots de 1 segundo e consolidado por minuto.
 - HTML do `dolar-points` importado e adaptado com menu superior agrupado em `Cadastro`, `Mercado`, `Fluxo` e `Controle`.
 - Tela `Painel` como entrada operacional com checklist, atalhos, setups, planos e alertas.
+- Tela `Monitor` como mesa ao vivo com watchlist compacta, estado do ativo, setups, tape, planos e alertas.
 - Tela `Cotacoes` como watchlist operacional entre o cadastro de ativos e as telas de analise.
 - Tela `Boleta` para planos locais de entrada, stop, alvo, risco e status por toque de preco, sem envio de ordens.
 - Tela `Ajustes` para parametros locais de tick, DOM, renderizacao, memoria de tape/sinais e valor por ponto.
@@ -34,10 +35,11 @@
 6. Confirmar que os campos intraday sao preenchidos por RTD.
 7. Adicionar outro ativo em `Ativos`, testar `Ver`, `Ligado`, `Desligado`, fontes e `Excluir`.
 8. Abrir `Painel` e confirmar checklist, atalhos, setups, planos e alertas.
-9. Abrir `Cotacoes` e testar os atalhos para `Grafico`, `DOM`, `Book`, `T&T` e `Boleta`.
-10. Salvar um plano local na `Boleta` e confirmar que nenhum endpoint de ordem e chamado.
-11. Abrir `Book`, `T&T`, `Alertas`, `Risco`, `Historico`, `Ajustes` e `Sistema`.
-12. Confirmar `Latencia WS`, `Msg/s` e contadores no `Sistema`.
+9. Abrir `Monitor` e confirmar watchlist compacta, estado do ativo, setups, tape, planos e alertas.
+10. Abrir `Cotacoes` e testar os atalhos para `Grafico`, `DOM`, `Book`, `T&T` e `Boleta`.
+11. Salvar um plano local na `Boleta` e confirmar que nenhum endpoint de ordem e chamado.
+12. Abrir `Book`, `T&T`, `Alertas`, `Risco`, `Historico`, `Ajustes` e `Sistema`.
+13. Confirmar `Latencia WS`, `Msg/s` e contadores no `Sistema`.
 
 ## Build validado
 

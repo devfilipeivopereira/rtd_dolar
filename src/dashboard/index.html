@@ -388,6 +388,13 @@ tr:hover td{background:#ffffff05}
 .source-dot.off{border-color:#555d69;color:#738091;background:#0e1318}
 .dashboard-grid{display:grid;grid-template-columns:minmax(360px,.9fr) minmax(0,1.4fr);gap:14px}
 .dashboard-actions{display:grid;grid-template-columns:repeat(3,minmax(150px,1fr));gap:8px}
+.monitor-grid{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(300px,.8fr);gap:14px}
+.monitor-bottom{display:grid;grid-template-columns:minmax(260px,.9fr) minmax(0,1.1fr) minmax(260px,.9fr);gap:14px;margin-top:14px}
+.monitor-table td,.monitor-table th{text-align:right;white-space:nowrap}
+.monitor-table td:first-child,.monitor-table th:first-child{text-align:left}
+.monitor-table tr.selected td{background:#0d261f;color:#dffcf3}
+.monitor-actions{display:flex;gap:5px;justify-content:flex-end;flex-wrap:wrap}
+.monitor-tape{max-height:246px}
 .quick-action{
   min-height:58px;border:1px solid var(--line);background:#10141a;color:var(--txt);
   display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:5px;padding:9px 10px;
@@ -462,7 +469,7 @@ tr:hover td{background:#ffffff05}
   .brand-title,.brand-sub{white-space:normal}
   .top-meta{justify-content:flex-start}
   .field-grid{grid-template-columns:1fr}
-  .market-table-grid,.times-grid,.alert-grid,.risk-grid,.order-grid,.history-grid,.dashboard-grid{grid-template-columns:1fr}
+  .market-table-grid,.times-grid,.alert-grid,.risk-grid,.order-grid,.history-grid,.dashboard-grid,.monitor-grid,.monitor-bottom{grid-template-columns:1fr}
   .dashboard-actions{grid-template-columns:1fr 1fr}
   .risk-result{grid-template-columns:1fr 1fr}
   .cards{grid-template-columns:1fr 1fr}
@@ -491,6 +498,7 @@ tr:hover td{background:#ffffff05}
       <div class="tab-group">
         <span class="tab-group-label">Inicio</span>
         <button class="main-tab active" data-main-tab="dashboard" type="button">Painel</button>
+        <button class="main-tab" data-main-tab="monitor" type="button">Monitor</button>
       </div>
       <div class="tab-group">
         <span class="tab-group-label">Cadastro</span>
@@ -846,6 +854,7 @@ tr:hover td{background:#ffffff05}
               <div class="panel-head"><div class="panel-title">Acessos rapidos</div></div>
               <div class="panel-body">
                 <div class="dashboard-actions">
+                  <button class="quick-action" type="button" data-dashboard-open="monitor"><strong>Monitor</strong><span>Watchlist, setups e tape</span></button>
                   <button class="quick-action" type="button" data-dashboard-open="quotes"><strong>Cotacoes</strong><span>Monitorar ativos e abrir telas</span></button>
                   <button class="quick-action" type="button" data-dashboard-open="dom"><strong>DOM</strong><span>Escada de preco e pontos</span></button>
                   <button class="quick-action" type="button" data-dashboard-open="book"><strong>Book</strong><span>Ofertas multi-nivel</span></button>
@@ -871,6 +880,70 @@ tr:hover td{background:#ffffff05}
               <div class="panel-head"><div class="panel-title">Planos e alertas</div></div>
               <div class="panel-body">
                 <div class="small-list" id="dashboard-actions-list"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="tab-panel hidden" id="panel-monitor">
+          <div class="dom-summary">
+            <div class="live-kv"><span>Estado</span><strong id="monitor-state">--</strong></div>
+            <div class="live-kv"><span>Ultimo</span><strong id="monitor-last">--</strong></div>
+            <div class="live-kv"><span>Latencia WS</span><strong id="monitor-latency">--</strong></div>
+            <div class="live-kv"><span>Msg/s</span><strong id="monitor-rate">--</strong></div>
+          </div>
+          <div class="monitor-grid">
+            <div class="panel">
+              <div class="panel-head">
+                <div class="panel-title">Watchlist operacional</div>
+                <span class="tag" id="monitor-watchlist-count">0</span>
+              </div>
+              <div class="table-wrap">
+                <table class="monitor-table">
+                  <thead>
+                    <tr>
+                      <th>Ativo</th>
+                      <th>Ultimo</th>
+                      <th>Bid / Ask</th>
+                      <th>Delta 5s</th>
+                      <th>Fontes</th>
+                      <th>Acoes</th>
+                    </tr>
+                  </thead>
+                  <tbody id="monitor-watchlist"></tbody>
+                </table>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="panel-head">
+                <div class="panel-title">Estado do ativo</div>
+                <span class="tag" id="monitor-update">Aguardando</span>
+              </div>
+              <div class="panel-body">
+                <div class="small-list" id="monitor-events"></div>
+              </div>
+            </div>
+          </div>
+          <div class="monitor-bottom">
+            <div class="panel">
+              <div class="panel-head"><div class="panel-title">Setups ativos</div></div>
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th>Hora</th><th>Setup</th><th>Direcao</th><th>Preco</th><th>Score</th></tr></thead>
+                  <tbody id="monitor-signals"></tbody>
+                </table>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="panel-head"><div class="panel-title">Tape do ativo</div></div>
+              <div class="panel-body">
+                <div class="dom-tape monitor-tape" id="monitor-tape"></div>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="panel-head"><div class="panel-title">Planos e alertas</div></div>
+              <div class="panel-body">
+                <div class="small-list" id="monitor-controls"></div>
               </div>
             </div>
           </div>
@@ -1578,7 +1651,7 @@ function saveUiSettings(settings) {
   } catch (_) {}
 }
 
-const MAIN_TABS = ["dashboard", "assets", "quotes", "panorama", "dom", "book", "times", "flow", "signals", "orders", "alerts", "risk", "history", "settings", "diagnostics"];
+const MAIN_TABS = ["dashboard", "monitor", "assets", "quotes", "panorama", "dom", "book", "times", "flow", "signals", "orders", "alerts", "risk", "history", "settings", "diagnostics"];
 
 const state = {
   ui: {
@@ -1758,6 +1831,17 @@ const refs = {
   dashboardReadiness: document.getElementById("dashboard-readiness"),
   dashboardSignals: document.getElementById("dashboard-signals"),
   dashboardActionsList: document.getElementById("dashboard-actions-list"),
+  monitorState: document.getElementById("monitor-state"),
+  monitorLast: document.getElementById("monitor-last"),
+  monitorLatency: document.getElementById("monitor-latency"),
+  monitorRate: document.getElementById("monitor-rate"),
+  monitorWatchlistCount: document.getElementById("monitor-watchlist-count"),
+  monitorWatchlist: document.getElementById("monitor-watchlist"),
+  monitorUpdate: document.getElementById("monitor-update"),
+  monitorEvents: document.getElementById("monitor-events"),
+  monitorSignals: document.getElementById("monitor-signals"),
+  monitorTape: document.getElementById("monitor-tape"),
+  monitorControls: document.getElementById("monitor-controls"),
   quotesTotal: document.getElementById("quotes-total"),
   quotesEnabled: document.getElementById("quotes-enabled"),
   quotesConnected: document.getElementById("quotes-connected"),
@@ -1966,6 +2050,7 @@ function updateAssetsMessage(msg) {
   renderTopAssetSelect();
   renderMarketStrip();
   renderDashboard();
+  renderMonitor();
   renderQuotesPanel();
   const selected = selectedAssetConfig();
   populateAssetForm(selected);
@@ -2277,6 +2362,117 @@ function renderQuotesPanel() {
       </tr>
     `;
   }).join("");
+}
+
+function renderMonitor() {
+  if (!refs.monitorWatchlist) return;
+  const asset = selectedAsset();
+  const config = selectedAssetConfig();
+  const snapshot = state.rtd.snapshotsByAsset[asset] || null;
+  const intraday = liveIntradayFromSnapshot(snapshot);
+  const book = liveBookFromSnapshot(snapshot);
+  const depth = liveBookDepthForAsset(asset);
+  const times = state.rtd.timesTradesByAsset[asset];
+  const flow = flowBucket(asset);
+  const alerts = state.alerts.filter(alert => normalizeAsset(alert.asset) === asset);
+  const openAlerts = alerts.filter(alert => !alert.triggeredAt);
+  const orders = state.orderPlans.filter(plan => normalizeAsset(plan.asset) === asset);
+  const openOrders = orders.filter(plan => !plan.closedAt);
+  const priceOk = !!snapshot && Number.isFinite(intraday.price);
+  const csvOk = historyHasCsv(config?.history) || state.uploadedCount > 0;
+  const assets = state.rtd.assets || [];
+
+  refs.monitorState.textContent = priceOk ? "RTD ativo" : config?.enabled ? "aguardando" : state.rtd.enabled ? "sem ativo" : "manual";
+  refs.monitorLast.textContent = fmt(intraday.price);
+  refs.monitorLatency.textContent = fmtMs(state.telemetry.lastLagMs);
+  refs.monitorRate.textContent = `${fmt(wsMessageRate(), 1)}/s`;
+  refs.monitorWatchlistCount.textContent = fmt(assets.length, 0);
+  refs.monitorUpdate.textContent = snapshot?.localTimestamp ? snapshot.localTimestamp.slice(11, 19) : "Aguardando";
+
+  if (!assets.length) {
+    refs.monitorWatchlist.innerHTML = `<tr><td colspan="6">Nenhum ativo cadastrado.</td></tr>`;
+  } else {
+    refs.monitorWatchlist.innerHTML = assets.map(item => {
+      const rowAsset = normalizeAsset(item.asset);
+      const rowSnapshot = state.rtd.snapshotsByAsset[rowAsset] || null;
+      const rowIntraday = liveIntradayFromSnapshot(rowSnapshot);
+      const rowBook = liveBookFromSnapshot(rowSnapshot);
+      const rowFlow = flowBucket(rowAsset).metrics || {};
+      const bidAsk = Number.isFinite(rowBook.bid) && Number.isFinite(rowBook.ask)
+        ? `${fmt(rowBook.bid)} / ${fmt(rowBook.ask)}`
+        : "--";
+      return `
+        <tr class="${sameAsset(rowAsset) ? "selected" : ""}">
+          <td>
+            <div class="quote-asset-meta">
+              <strong>${escapeHtml(rowAsset)}</strong>
+              <span>${escapeHtml(item.label || rowAsset)}</span>
+            </div>
+          </td>
+          <td class="strong">${fmt(rowIntraday.price)}</td>
+          <td>${escapeHtml(bidAsk)}</td>
+          <td>${signedFmt(rowFlow.delta5s, 0)}</td>
+          <td>
+            <div class="source-stack">
+              ${renderSourceDot("P", item.priceRtd)}
+              ${renderSourceDot("B", item.bookRtd)}
+              ${renderSourceDot("T", item.timesRtd)}
+            </div>
+          </td>
+          <td>
+            <div class="monitor-actions">
+              <button class="asset-action view" type="button" data-monitor-open="dom" data-asset="${escapeHtml(rowAsset)}">DOM</button>
+              <button class="asset-action view" type="button" data-monitor-open="book" data-asset="${escapeHtml(rowAsset)}">Book</button>
+              <button class="asset-action view" type="button" data-monitor-open="orders" data-asset="${escapeHtml(rowAsset)}">Boleta</button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join("");
+  }
+
+  refs.monitorEvents.innerHTML = [
+    ["Ativo", asset],
+    ["Preco", priceOk ? "snapshot recebido" : config?.enabled ? "aguardando RTD" : "desligado"],
+    ["Bid / Ask", Number.isFinite(book.bid) && Number.isFinite(book.ask) ? `${fmt(book.bid)} / ${fmt(book.ask)}` : "--"],
+    ["Book", depth ? `${(depth.bids || []).length} compra / ${(depth.asks || []).length} venda` : config?.bookRtd?.enabled ? "ligando" : "off"],
+    ["Times", times ? `${(times.trades || []).length} linhas` : config?.timesRtd?.enabled ? "ligando" : "off"],
+    ["CSV", csvOk ? `${state.uploadedCount || config?.history?.Rows || config?.history?.rows || "--"} pregoes` : "sem CSV"],
+    ["Fluxo", flow.lastMessage?.dataQuality || "unknown"],
+    ["Delta 5s", signedFmt(flow.metrics?.delta5s, 0)],
+  ].map(([k, v]) => `<div class="kv"><span>${escapeHtml(k)}</span><span>${escapeHtml(v)}</span></div>`).join("");
+
+  refs.monitorSignals.innerHTML = (flow.signals || []).slice(0, 6).map(signal => `
+    <tr>
+      <td>${escapeHtml((signal.timestamp || "").slice(11, 19) || "--")}</td>
+      <td class="strong">${escapeHtml(signal.setup || "--")}</td>
+      <td>${escapeHtml(signal.direction || "--")}</td>
+      <td class="strong">${fmt(liveNumber(signal.price))}</td>
+      <td>${fmt(liveNumber(signal.score), 0)}</td>
+    </tr>
+  `).join("") || `<tr><td colspan="5">Nenhum setup ativo.</td></tr>`;
+
+  refs.monitorTape.innerHTML = (state.flow.trades || []).slice(0, 18).map(trade => {
+    const side = trade.side || trade.aggressorSide || "unknown";
+    const dir = side === "buy" ? "up" : side === "sell" ? "down" : "flat";
+    return `
+      <div class="dom-tick ${dir}">
+        <span>${escapeHtml(trade.time || "--")}</span>
+        <strong>${fmt(liveNumber(trade.price))}</strong>
+        <span>${fmt(liveNumber(trade.qty), 0)}</span>
+        <span>${escapeHtml(side)} ${trade.derived ? "der" : "real"}</span>
+      </div>
+    `;
+  }).join("") || `<div class="warn-line">Aguardando tape do ativo.</div>`;
+
+  refs.monitorControls.innerHTML = [
+    ["Planos ativos", fmt(openOrders.length, 0)],
+    ["Planos salvos", fmt(orders.length, 0)],
+    ["Alertas ativos", fmt(openAlerts.length, 0)],
+    ["Alertas acionados", fmt(alerts.filter(alert => alert.triggeredAt).length, 0)],
+    ["Proximo plano", openOrders[0] ? `${openOrders[0].side === "buy" ? "Compra" : "Venda"} ${fmt(liveNumber(openOrders[0].entry))}` : "--"],
+    ["Proximo alerta", openAlerts[0] ? `${openAlerts[0].side === "above" ? "Acima" : "Abaixo"} ${fmt(liveNumber(openAlerts[0].price))}` : "--"],
+  ].map(([k, v]) => `<div class="kv"><span>${escapeHtml(k)}</span><span>${escapeHtml(v)}</span></div>`).join("");
 }
 
 function readinessRow(label, detail, ok, warn = false) {
@@ -2800,6 +2996,7 @@ function showMainTab(tabName) {
 
   if (safe === "panorama") activateSubTab("levels");
   else if (safe === "dashboard") activateSubTab("dashboard");
+  else if (safe === "monitor") activateSubTab("monitor");
   else if (safe === "quotes") activateSubTab("quotes");
   else if (safe === "dom") activateSubTab("dom");
   else if (safe === "book") activateSubTab("book");
@@ -2814,6 +3011,7 @@ function showMainTab(tabName) {
   else if (safe === "diagnostics") activateSubTab("flowdebug");
 
   if (safe === "dashboard") renderDashboard();
+  if (safe === "monitor") renderMonitor();
   if (safe === "quotes") renderQuotesPanel();
   if (safe === "dom") renderDom();
   if (safe === "book") renderBookPanel();
@@ -2850,6 +3048,7 @@ function renderSelectedAsset() {
   renderTopAssetSelect();
   renderAssetList();
   renderDashboard();
+  renderMonitor();
   renderQuotesPanel();
 }
 
@@ -4708,6 +4907,7 @@ function runLiveRenderBatch() {
   renderRisk();
   renderHistoryPanel();
   renderDashboard();
+  renderMonitor();
   renderQuotesPanel();
 }
 
@@ -4766,6 +4966,7 @@ function applyFlowMessage(msg) {
   renderFlow();
   renderSignals();
   renderFlowDebug();
+  renderMonitor();
   renderMarketStrip();
   scheduleLiveRender();
 }
@@ -4786,6 +4987,7 @@ function applySignalMessage(msg) {
   renderSignals();
   renderFlowDebug();
   renderAlerts();
+  renderMonitor();
   renderMarketStrip();
   scheduleLiveRender();
 }
@@ -4799,6 +5001,7 @@ function applySignalsMessage(msg) {
   syncSelectedFlow();
   renderSignals();
   renderAlerts();
+  renderMonitor();
   renderMarketStrip();
   scheduleLiveRender();
 }
@@ -5478,6 +5681,7 @@ function applyBookDepthMessage(msg) {
   const asset = normalizeAsset(msg.asset);
   state.rtd.bookDepthByAsset[asset] = msg;
   renderDashboard();
+  renderMonitor();
   renderQuotesPanel();
   if (sameAsset(asset)) {
     renderDom(state.rtd.lastSnapshot);
@@ -5513,6 +5717,7 @@ function applyTimesTradesMessage(msg) {
     ? msg.trades.map(normalizeTimesTrade).filter(trade => Number.isFinite(trade.price)).slice(0, state.flow.maxTrades)
     : [];
   renderDashboard();
+  renderMonitor();
   renderQuotesPanel();
   if (sameAsset(asset)) {
     syncSelectedFlow();
@@ -5746,6 +5951,13 @@ refs.quotesBody.addEventListener("click", ev => {
   if (!action) return;
   selectAsset(action.dataset.asset);
   showMainTab(action.dataset.quotesOpen);
+});
+
+refs.monitorWatchlist.addEventListener("click", ev => {
+  const action = ev.target.closest("[data-monitor-open]");
+  if (!action) return;
+  selectAsset(action.dataset.asset);
+  showMainTab(action.dataset.monitorOpen);
 });
 
 document.getElementById("panel-dashboard").addEventListener("click", ev => {
@@ -6095,6 +6307,7 @@ renderFlowDebug();
 renderTopAssetSelect();
 renderMarketStrip();
 renderDashboard();
+renderMonitor();
 renderQuotesPanel();
 renderBookPanel();
 renderTimesPanel();

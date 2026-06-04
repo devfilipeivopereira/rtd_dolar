@@ -72,6 +72,7 @@ Scores sao limitados por qualidade:
 O dashboard usa o menu superior:
 
 - `Painel`: checklist operacional, atalhos, setups recentes, planos e alertas;
+- `Monitor`: mesa ao vivo com watchlist compacta, setups, tape, planos e alertas;
 - `Cotacoes`: watchlist de ativos com ultimo preco, bid/ask, delta e status das fontes;
 - `DOM`: escada de preco com pontos, book no nivel e sinais ativos;
 - `Book`: tabelas dedicadas de compra e venda por nivel;

@@ -64,6 +64,7 @@ O CSV diario continua sendo a fonte do historico 21/45/63. O RTD preenche o intr
 O menu superior separa:
 
 - `Painel`: checklist operacional, atalhos e resumo do ativo selecionado;
+- `Monitor`: mesa ao vivo com watchlist compacta, estado do ativo, setups, tape, planos e alertas;
 - `Ativos`: cadastro de codigo, tres fontes RTD e CSV historico;
 - `Cotacoes`: watchlist operacional com todos os ativos cadastrados;
 - `Grafico`: grafico e subabas analiticas;
@@ -82,6 +83,8 @@ O menu superior separa:
 A faixa superior fica disponivel em todas as telas e mostra ativo selecionado, ultimo preco, bid/ask, status de Book, status de Times, delta 5s, latencia WebSocket local, mensagens por segundo e CSV carregado.
 
 A tela `Painel` e a entrada operacional. Ela resume RTD, ativo selecionado, ultimo preco, checklist de prontidao, atalhos para as telas principais, setups recentes, planos da boleta e alertas.
+
+A tela `Monitor` e a mesa de acompanhamento ao vivo. Ela junta watchlist compacta, estado do ativo selecionado, setups ativos, tape, planos e alertas sem editar cadastro nem parametros.
 
 A tela `Ativos` configura fontes e CSV. A tela `Cotacoes` e a mesa de monitoramento: cada linha mostra ultimo preco, bid/ask, delta, status de Book, status de Times, status das fontes `P/B/T` e botoes para abrir `Grafico`, `DOM`, `Book`, `T&T` ou `Boleta` daquele ativo.
 
@@ -106,7 +109,7 @@ Os pontos marcados incluem abertura, maxima, minima, VWAP/MED, POC, VAH, VAL, de
 
 As mensagens auxiliares de profundidade sao coalescidas no cliente RTD para reduzir repintura da UI: `bookDepth` tem broadcast minimo de 100 ms e `timesTrades` de 150 ms. Snapshots de preco continuam no fluxo existente.
 
-No navegador, campos criticos de preco e inputs intraday sao preenchidos a cada snapshot. Renderizacoes densas como DOM completo, `Painel`, `Cotacoes` e `Historico` usam scheduler curto, com padrao de 120 ms e ajuste pela aba `Ajustes`, para reduzir travamentos quando o RTD envia muitos updates.
+No navegador, campos criticos de preco e inputs intraday sao preenchidos a cada snapshot. Renderizacoes densas como DOM completo, `Painel`, `Monitor`, `Cotacoes` e `Historico` usam scheduler curto, com padrao de 120 ms e ajuste pela aba `Ajustes`, para reduzir travamentos quando o RTD envia muitos updates.
 
 A telemetria `Latencia WS` e calculada no navegador comparando o recebimento da mensagem com `localTimestamp` enviado pelo backend local. Ela serve para diagnosticar atraso entre coletor e interface; nao mede latencia de bolsa, Profit ou execucao de ordem.
 
