@@ -164,14 +164,20 @@ namespace ColetorProfitRTD.Rtd
             }
 
             return knownAssets
-                .Select(asset => new Dictionary<string, object>
+                .Select(asset =>
                 {
-                    ["asset"] = asset,
-                    ["enabled"] = activeAssets.Contains(asset, StringComparer.OrdinalIgnoreCase),
-                    ["subscribed"] = subscribedAssets.Contains(asset, StringComparer.OrdinalIgnoreCase),
-                    ["isDefault"] = string.Equals(asset, _config.Asset, StringComparison.OrdinalIgnoreCase),
-                    ["channels"] = channelsByAsset.TryGetValue(asset, out List<string> channels) ? channels : RtdFieldCatalog.DefaultChannels.ToList(),
-                    ["fields"] = ResolveFieldsForAsset(asset).ToList()
+                    var state = new Dictionary<string, object>
+                    {
+                        ["asset"] = asset,
+                        ["enabled"] = activeAssets.Contains(asset, StringComparer.OrdinalIgnoreCase),
+                        ["subscribed"] = subscribedAssets.Contains(asset, StringComparer.OrdinalIgnoreCase),
+                        ["isDefault"] = string.Equals(asset, _config.Asset, StringComparison.OrdinalIgnoreCase),
+                        ["channels"] = channelsByAsset.TryGetValue(asset, out List<string> channels) ? channels : RtdFieldCatalog.DefaultChannels.ToList(),
+                        ["fields"] = ResolveFieldsForAsset(asset).ToList()
+                    };
+
+                    AddSnapshotState(state, asset);
+                    return state;
                 })
                 .ToList();
         }
@@ -1152,7 +1158,7 @@ namespace ColetorProfitRTD.Rtd
                     channels.Add(RtdChannel.TimesTrades);
                 }
 
-                return new Dictionary<string, object>
+                var state = new Dictionary<string, object>
                 {
                     ["id"] = asset.Id,
                     ["asset"] = asset.Asset,
@@ -1167,7 +1173,52 @@ namespace ColetorProfitRTD.Rtd
                     ["timesRtd"] = SourceState(asset.TimesRtd, topics),
                     ["history"] = asset.History ?? new AssetHistoryInfo()
                 };
+
+                AddSnapshotState(state, asset.Asset);
+                return state;
             }).ToList();
+        }
+
+        private void AddSnapshotState(Dictionary<string, object> state, string asset)
+        {
+            MarketSnapshot snapshot = _state.Find(asset);
+            if (snapshot == null)
+            {
+                state["hasPrice"] = false;
+                state["lastUpdate"] = null;
+                state["lastUpdateAgeMs"] = null;
+                state["lastPrice"] = null;
+                state["feedStatus"] = "sem_preco";
+                return;
+            }
+
+            double ageMs = Math.Max(0, (DateTimeOffset.Now - snapshot.LocalTimestamp).TotalMilliseconds);
+            bool hasPrice = snapshot.Ultimo.HasValue;
+            state["hasPrice"] = hasPrice;
+            state["lastUpdate"] = snapshot.LocalTimestamp.ToString("o");
+            state["lastUpdateAgeMs"] = Math.Round(ageMs);
+            state["lastPrice"] = snapshot.Ultimo;
+            state["feedStatus"] = FeedStatus(hasPrice, ageMs);
+        }
+
+        private static string FeedStatus(bool hasPrice, double ageMs)
+        {
+            if (!hasPrice)
+            {
+                return "sem_preco";
+            }
+
+            if (ageMs <= 2500)
+            {
+                return "ao_vivo";
+            }
+
+            if (ageMs <= 10000)
+            {
+                return "atrasado";
+            }
+
+            return "parado";
         }
 
         private Dictionary<string, object> SourceState(RtdSourceConfig source, List<RtdTopic> topics)

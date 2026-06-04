@@ -520,6 +520,7 @@ tr:hover td{background:#ffffff05}
 .connection-state.ok{border-color:#1f7a66;color:#9df2d5;background:#0d261f}
 .connection-state.warn{border-color:#7a5f1f;color:#ffd66b;background:#28210d}
 .connection-state.bad{border-color:#7a2b2b;color:#ff9b9b;background:#2b1111}
+.muted-cell{display:block;color:var(--muted);font-size:9px;margin-top:3px}
 .quick-action{
   min-height:58px;border:1px solid var(--line);background:#10141a;color:var(--txt);
   display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:5px;padding:9px 10px;
@@ -1174,7 +1175,7 @@ tr:hover td{background:#ffffff05}
           <div class="dom-summary">
             <div class="live-kv"><span>Ativos</span><strong id="quotes-total">--</strong></div>
             <div class="live-kv"><span>Ligados</span><strong id="quotes-enabled">--</strong></div>
-            <div class="live-kv"><span>RTD OK</span><strong id="quotes-connected">--</strong></div>
+            <div class="live-kv"><span>Feed OK</span><strong id="quotes-connected">--</strong></div>
             <div class="live-kv"><span>CSV</span><strong id="quotes-csv">--</strong></div>
           </div>
           <div class="quotes-board">
@@ -1188,6 +1189,7 @@ tr:hover td{background:#ffffff05}
                   <tr>
                     <th>Ativo</th>
                     <th>Ultimo</th>
+                    <th>Feed</th>
                     <th>Bid / Ask</th>
                     <th>Delta 5s</th>
                     <th>Book</th>
@@ -1583,6 +1585,7 @@ tr:hover td{background:#ffffff05}
                       <th>Preco</th>
                       <th>Book</th>
                       <th>Times</th>
+                      <th>Feed</th>
                       <th>Topicos</th>
                       <th>CSV</th>
                     </tr>
@@ -2738,7 +2741,7 @@ function renderQuotesPanel() {
   if (!refs.quotesBody) return;
   const assets = state.rtd.assets || [];
   const enabledCount = assets.filter(item => item.enabled).length;
-  const connectedCount = assets.filter(item => item.subscribed || sourceIsOk(item.priceRtd)).length;
+  const connectedCount = assets.filter(item => assetFeedFreshness(item.asset, item).tone === "green").length;
   const csvCount = assets.filter(item => historyHasCsv(item.history)).length;
 
   refs.quotesTotal.textContent = fmt(assets.length, 0);
@@ -2750,7 +2753,7 @@ function renderQuotesPanel() {
     : "Aguardando";
 
   if (!assets.length) {
-    refs.quotesBody.innerHTML = `<tr><td colspan="8">Nenhum ativo cadastrado.</td></tr>`;
+    refs.quotesBody.innerHTML = `<tr><td colspan="9">Nenhum ativo cadastrado.</td></tr>`;
     return;
   }
 
@@ -2762,6 +2765,7 @@ function renderQuotesPanel() {
     const flow = flowBucket(asset).metrics || {};
     const depth = state.rtd.bookDepthByAsset[asset];
     const times = state.rtd.timesTradesByAsset[asset];
+    const feed = assetFeedFreshness(asset, item);
     const label = item.label && normalizeAsset(item.label) !== asset ? item.label : item.asset;
     const bidAsk = Number.isFinite(book.bid) && Number.isFinite(book.ask)
       ? `${fmt(book.bid)} / ${fmt(book.ask)}`
@@ -2784,6 +2788,7 @@ function renderQuotesPanel() {
           </div>
         </td>
         <td class="strong">${fmt(intraday.price)}</td>
+        <td>${renderFeedBadge(feed)}<span class="muted-cell">${escapeHtml(feed.detail)}</span></td>
         <td>${escapeHtml(bidAsk)}</td>
         <td>${signedFmt(flow.delta5s, 0)}</td>
         <td>${escapeHtml(bookText)}</td>
@@ -4001,6 +4006,7 @@ function renderConnections() {
     const times = item.timesRtd || {};
     const totalTopics = sourceTopics(price) + sourceTopics(book) + sourceTopics(times);
     const csv = historyHasCsv(item.history) ? `${item.history?.Rows || item.history?.rows || "--"} linhas` : "--";
+    const feed = assetFeedFreshness(asset, item);
     return `
       <tr>
         <td>
@@ -4012,11 +4018,12 @@ function renderConnections() {
         <td>${renderConnectionState(price)}</td>
         <td>${renderConnectionState(book)}</td>
         <td>${renderConnectionState(times)}</td>
+        <td>${renderFeedBadge(feed)}<span class="muted-cell">${escapeHtml(feed.detail)}</span></td>
         <td>${fmt(totalTopics, 0)}</td>
         <td>${escapeHtml(csv)}</td>
       </tr>
     `;
-  }).join("") : `<tr><td colspan="6">Nenhum ativo cadastrado.</td></tr>`;
+  }).join("") : `<tr><td colspan="7">Nenhum ativo cadastrado.</td></tr>`;
 }
 
 function commandSearchText(item) {
@@ -4447,14 +4454,40 @@ function snapshotAgeMs(snapshot) {
 
 function feedFreshness(snapshot) {
   if (!state.rtd.enabled) return { label: "Manual", detail: "RTD desligado", tone: "amber", ageMs: NaN };
-  if (!Number.isFinite(liveIntradayFromSnapshot(snapshot).price)) {
-    return { label: "Sem preco", detail: "sem ultimo", tone: "red", ageMs: NaN };
-  }
-  const ageMs = snapshotAgeMs(snapshot);
+  const hasPrice = Number.isFinite(liveIntradayFromSnapshot(snapshot).price);
+  return feedFreshnessFromAge(hasPrice, snapshotAgeMs(snapshot));
+}
+
+function feedFreshnessFromAge(hasPrice, ageMs) {
+  if (!hasPrice) return { label: "Sem preco", detail: "sem ultimo", tone: "red", ageMs: NaN };
   if (!Number.isFinite(ageMs)) return { label: "Sem preco", detail: "sem snapshot", tone: "red", ageMs };
   if (ageMs <= 2500) return { label: "Ao vivo", detail: fmtMs(ageMs), tone: "green", ageMs };
   if (ageMs <= 10000) return { label: "Atrasado", detail: fmtMs(ageMs), tone: "amber", ageMs };
   return { label: "Parado", detail: fmtMs(ageMs), tone: "red", ageMs };
+}
+
+function assetFeedFreshness(asset, item = {}) {
+  if (!state.rtd.enabled) {
+    return { label: "Manual", detail: "RTD desligado", tone: "amber", ageMs: NaN };
+  }
+
+  if (item && item.enabled === false) {
+    return { label: "Desligado", detail: "ativo off", tone: "amber", ageMs: NaN };
+  }
+
+  const snapshot = state.rtd.snapshotsByAsset[normalizeAsset(asset)] || null;
+  if (snapshot) return feedFreshness(snapshot);
+  return feedFreshnessFromAge(item?.hasPrice === true || Number.isFinite(liveNumber(item?.lastPrice)), liveNumber(item?.lastUpdateAgeMs));
+}
+
+function feedToneClass(tone) {
+  if (tone === "green") return "ok";
+  if (tone === "amber") return "warn";
+  return "bad";
+}
+
+function renderFeedBadge(feed) {
+  return `<span class="connection-state ${feedToneClass(feed.tone)}">${escapeHtml(feed.label)}</span>`;
 }
 
 function messageServerTimestamp(msg) {

@@ -29,7 +29,7 @@ Resultado esperado:
 9. Abrir `Mesa` e confirmar DOM compacto, book resumido, tape, fluxo, setups, niveis proximos e acoes de analise.
 10. Abrir `Monitor` e confirmar watchlist compacta, estado do ativo, setups, tape, oportunidades e alertas.
 11. Confirmar que os botoes de `Monitor` abrem `DOM`, `Book` e `Oportunidades` do ativo correto.
-12. Abrir `Cotacoes` e confirmar que a linha do ativo mostra ultimo preco, bid/ask, delta, Book, Times e fontes `P/B/T`.
+12. Abrir `Cotacoes` e confirmar que a linha do ativo mostra ultimo preco, Feed, bid/ask, delta, Book, Times e fontes `P/B/T`.
 13. Confirmar que os botoes de `Cotacoes` abrem `Grafico`, `DOM`, `Book`, `T&T` e `Oportunidades` do ativo correto.
 14. Confirmar que a aba `DOM` mostra preco, tape e pontos principais.
 15. Adicionar um ativo em `Ativos`, selecionar com `Ver` e ligar/desligar sem reiniciar o app.
@@ -48,6 +48,7 @@ Resultado esperado:
 28. Confirmar no `Painel` que o roteiro mostra `Proximo passo` e etapas `Ativo`, `RTD preco`, `CSV`, `Book/T&T`, `Fluxo` e `Score`.
 29. Abrir `Sistema` e confirmar `Render motivos` e `Render ativos` mudando conforme chegam snapshots, book, Times, flow e sinais.
 30. Confirmar na faixa superior que `Feed` mostra `Ao vivo` com RTD atualizando e muda para `Atrasado`/`Parado` quando o snapshot do ativo selecionado fica antigo.
+31. Confirmar que `Cotacoes` e `Conexoes` mostram `Feed` por ativo, usando `Ao vivo`, `Atrasado`, `Parado`, `Sem preco` ou `Desligado`.
 
 ## Endpoints
 
@@ -126,7 +127,7 @@ Sem CSV, a aba DOM ainda pode mostrar ticks RTD, bid/ask e tape. Pontos como POC
 - `Painel` deve ser a entrada de analise e refletir contexto, fluxo, nivel proximo, radar, feed e ativo selecionado sem misturar dados de outro ativo.
 - `Radar` deve listar oportunidades observacionais por setup/nivel, com score, distancia, evidencias e botao `Observar`, alem de ranking multiativo com `Ver` e `Mesa`.
 - `Monitor` deve ser a mesa de acompanhamento ao vivo: watchlist compacta, estado do ativo, setups, tape, oportunidades e alertas, sem campos de cadastro.
-- `Cotacoes` deve separar monitoramento de cadastro: a tela mostra status e atalhos, mas a edicao continua em `Ativos`.
+- `Cotacoes` deve separar monitoramento de cadastro: a tela mostra status, Feed por ativo e atalhos, mas a edicao continua em `Ativos`.
 - `Mesa` deve concentrar DOM compacto, book resumido, tape, fluxo, setups, niveis proximos e acoes de analise.
 - `Oportunidades` deve salvar ideias em localStorage, calcular R/R e mudar status com preco RTD sem envio ao Profit.
 - `Ajustes` deve persistir em `wdo-ui-settings` e aplicar presets de desempenho, tamanho do tick, niveis do DOM, intervalo de renderizacao, limite de trades/sinais e valor por ponto padrao.
@@ -140,7 +141,7 @@ Sem CSV, a aba DOM ainda pode mostrar ticks RTD, bid/ask e tape. Pontos como POC
 - Sem uma das fontes principais, a `Base Quant` deve explicitar a falta e o score nao deve parecer uma confirmacao forte.
 - O roteiro do `Painel` deve indicar o proximo passo real e abrir a tela correta: `Ativos`, `Conexoes`, `Fluxo`, `Radar` ou `Mesa`.
 - O scheduler de render deve agrupar motivos por lote e evitar repintar a tela ativa quando o evento nao e relevante para ela.
-- O feed deve diferenciar RTD conectado de snapshot fresco; `Conexoes` deve mostrar `Idade backend` e `Feed selecionado`.
+- O feed deve diferenciar RTD conectado de snapshot fresco; `Cotacoes` deve mostrar Feed por ativo e `Conexoes` deve mostrar `Idade backend`, `Feed selecionado` e Feed por ativo.
 
 ## SQLite
 

@@ -42,7 +42,6 @@ namespace ColetorProfitRTD.MarketData
 
                 foreach (MarketSnapshot snapshot in _snapshots.Values)
                 {
-                    snapshot.LocalTimestamp = DateTimeOffset.Now;
                     snapshot.Status = status;
                 }
 
@@ -55,6 +54,17 @@ namespace ColetorProfitRTD.MarketData
             lock (_lock)
             {
                 return CurrentUnlocked(asset);
+            }
+        }
+
+        public MarketSnapshot Find(string asset)
+        {
+            lock (_lock)
+            {
+                string key = NormalizeAsset(asset);
+                return _snapshots.TryGetValue(key, out MarketSnapshot snapshot)
+                    ? snapshot.Clone()
+                    : null;
             }
         }
 

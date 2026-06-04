@@ -107,7 +107,7 @@ A tela `Monitor` e a mesa de acompanhamento ao vivo. Ela junta watchlist compact
 
 A tela `Mesa` concentra DOM compacto, book resumido, tape, fluxo, setups, niveis proximos e acoes de analise.
 
-A tela `Ativos` configura fontes e CSV. A tela `Cotacoes` e a mesa de monitoramento: cada linha mostra ultimo preco, bid/ask, delta, status de Book, status de Times, status das fontes `P/B/T` e botoes para abrir `Grafico`, `DOM`, `Book`, `T&T` ou `Oportunidades` daquele ativo.
+A tela `Ativos` configura fontes e CSV. A tela `Cotacoes` e a mesa de monitoramento: cada linha mostra ultimo preco, feed/freshness por ativo, bid/ask, delta, status de Book, status de Times, status das fontes `P/B/T` e botoes para abrir `Grafico`, `DOM`, `Book`, `T&T` ou `Oportunidades` daquele ativo.
 
 A tela `Oportunidades` persiste ideias observacionais no navegador por ativo. Ela calcula risco simulado e R/R, acompanha se preco de interesse, alvo ou stop foram tocados pelo RTD e permanece local.
 
@@ -136,7 +136,7 @@ No navegador, campos criticos de preco e inputs intraday sao preenchidos a cada 
 
 O scheduler do navegador agora acumula motivos de render (`snapshot`, `book`, `times`, `flow`, `signal`, `status`, `ui`) e ativos impactados. Antes de redesenhar, ele verifica se o evento afeta a tela ativa. Por exemplo, uma mensagem `flow` nao repinta a tela `Book`, e uma mensagem `book` nao repinta a tela `T&T`. Telas de contexto amplo como `Painel`, `Mesa`, `Monitor`, `Radar`, `Cotacoes`, `Conexoes` e `Sistema` continuam recebendo todos os motivos relevantes.
 
-O backend inclui `lastUpdateAgeMs` em `/health`. No navegador, a faixa superior calcula a idade do snapshot do ativo selecionado e classifica o feed como `Ao vivo`, `Atrasado`, `Parado`, `Sem preco` ou `Manual`. O polling de `/health` tambem aciona um render `status`, para que a UI indique feed parado mesmo quando nenhuma nova mensagem chega pelo WebSocket.
+O backend inclui `lastUpdateAgeMs` em `/health` e tambem envia `lastUpdate`, `lastUpdateAgeMs`, `lastPrice`, `hasPrice` e `feedStatus` em cada ativo de `/assets`. No navegador, a faixa superior calcula a idade do snapshot do ativo selecionado e classifica o feed como `Ao vivo`, `Atrasado`, `Parado`, `Sem preco` ou `Manual`. `Cotacoes` e `Conexoes` repetem essa leitura por ativo. O polling de `/health` tambem aciona um render `status`, para que a UI indique feed parado mesmo quando nenhuma nova mensagem chega pelo WebSocket.
 
 A telemetria `Latencia WS` e calculada no navegador comparando o recebimento da mensagem com `localTimestamp` enviado pelo backend local. A metrica `Render UI` mede a duracao do ultimo batch de desenho da aba ativa, com media e pico no `Sistema`. Essas leituras servem para diagnosticar atraso entre coletor, navegador e interface; nao medem latencia de bolsa ou Profit.
 

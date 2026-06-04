@@ -32,6 +32,7 @@
 - Coalescing auxiliar para `bookDepth` e `timesTrades`, reduzindo repintura sem bloquear snapshots de preco.
 - Scheduler de render no navegador orientado pela aba ativa, com fila por motivo/ativo, filtro de relevancia por tela, padrao de 120 ms no preset `Equilibrado`, presets de desempenho pela UI e inputs de preco imediatos.
 - Deteccao de feed parado com `lastUpdateAgeMs` no `/health`, metrica `Feed` na faixa superior e diagnostico `Idade backend` / `Feed selecionado` em `Conexoes`.
+- Freshness por ativo em `/assets`, `Cotacoes` e `Conexoes`, com `feedStatus`, `lastUpdateAgeMs`, `lastPrice` e `hasPrice`.
 - Validador `tools/validate-dashboard-design.js` para preservar tokens Industrial, mono, plano e sem sombras/gradientes.
 - Validador `tools/validate-product-language.js` para preservar o foco em analise/oportunidades e bloquear linguagem de envio de operacoes.
 - Validador `tools/validate-quant-surface.js` para preservar estimadores, indicadores, radar, score quant e evidencias visiveis.
@@ -67,7 +68,7 @@
 25. Confirmar `Score Quant`, `Indicadores Quant`, `Base Quant` e `Evidencias Quant` no `Painel`.
 26. Confirmar o roteiro de analise com `Proximo passo` e atalhos para Ativos, Conexoes, Fluxo, Radar e Mesa.
 27. Confirmar `Render motivos` e `Render ativos` no `Sistema`.
-28. Confirmar `Feed`, `Idade backend` e `Feed selecionado` em tempo real.
+28. Confirmar `Feed`, `Idade backend`, `Feed selecionado` e Feed por ativo em tempo real.
 
 ## Build validado
 
