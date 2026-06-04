@@ -103,6 +103,8 @@ Os pontos marcados incluem abertura, maxima, minima, VWAP/MED, POC, VAH, VAL, de
 
 As mensagens auxiliares de profundidade sao coalescidas no cliente RTD para reduzir repintura da UI: `bookDepth` tem broadcast minimo de 100 ms e `timesTrades` de 150 ms. Snapshots de preco continuam no fluxo existente.
 
+No navegador, campos criticos de preco e inputs intraday sao preenchidos a cada snapshot. Renderizacoes densas como DOM completo, `Painel`, `Cotacoes` e `Historico` usam scheduler curto de 120 ms para reduzir travamentos quando o RTD envia muitos updates.
+
 ## Persistencia
 
 SQLite e auxiliar. Se o provider SQLite falhar, o RTD e o WebSocket continuam rodando.

@@ -20,6 +20,7 @@
 - Tela `Boleta` para planos locais de entrada, stop, alvo, risco e status por toque de preco, sem envio de ordens.
 - Faixa superior operacional com ativo selecionado, ultimo preco, bid/ask, Book, Times, delta e CSV.
 - Coalescing auxiliar para `bookDepth` e `timesTrades`, reduzindo repintura sem bloquear snapshots de preco.
+- Scheduler de render no navegador para agrupar DOM, Painel, Cotacoes e Historico em 120 ms, mantendo inputs de preco imediatos.
 
 ## Fluxo de validacao
 

@@ -112,6 +112,7 @@ Sem CSV, a aba DOM ainda pode mostrar ticks RTD, bid/ask e tape. Pontos como POC
 - `Cotacoes` deve separar monitoramento de cadastro: a tela mostra status e atalhos, mas a edicao continua em `Ativos`.
 - `Boleta` deve salvar planos em localStorage, calcular R/R e mudar status com preco RTD sem chamar endpoint de ordem.
 - `Book` e `T&T` devem atualizar sem travar a pagina mesmo com muitos campos RTD, respeitando coalescing do backend.
+- Campos intraday devem ser preenchidos a cada snapshot; DOM, `Painel`, `Cotacoes` e `Historico` podem atualizar em lote curto para manter a UI responsiva.
 
 ## SQLite
 

@@ -1513,6 +1513,12 @@ const state = {
     tickSize: 0.5,
     domVisibleTicks: 200,
   },
+  render: {
+    liveTimer: null,
+    lastLiveRenderMs: 0,
+    liveIntervalMs: 120,
+    pendingSnapshot: null,
+  },
   assetEditor: {
     draftCsvText: null,
     draftCsvName: null,
@@ -4448,6 +4454,37 @@ function renderDom(msg = state.rtd.lastSnapshot) {
   renderDomKeyLevels(msg);
 }
 
+function nowMs() {
+  return globalThis.performance?.now ? globalThis.performance.now() : Date.now();
+}
+
+function runLiveRenderBatch() {
+  state.render.liveTimer = null;
+  state.render.lastLiveRenderMs = nowMs();
+  const snapshot = state.render.pendingSnapshot || state.rtd.lastSnapshot;
+  state.render.pendingSnapshot = null;
+  renderDom(snapshot);
+  renderRisk();
+  renderHistoryPanel();
+  renderDashboard();
+  renderQuotesPanel();
+}
+
+function scheduleLiveRender(snapshot = null, immediate = false) {
+  if (snapshot) state.render.pendingSnapshot = snapshot;
+  const elapsed = nowMs() - state.render.lastLiveRenderMs;
+  const delay = immediate || elapsed >= state.render.liveIntervalMs
+    ? 0
+    : state.render.liveIntervalMs - elapsed;
+
+  if (state.render.liveTimer && delay > 0) return;
+  if (state.render.liveTimer) {
+    window.clearTimeout(state.render.liveTimer);
+  }
+
+  state.render.liveTimer = window.setTimeout(runLiveRenderBatch, delay);
+}
+
 function signalKey(signal) {
   return signal?.id || `${signal?.timestamp || ""}-${signal?.setup || ""}-${signal?.direction || ""}-${signal?.price || ""}`;
 }
@@ -4480,7 +4517,7 @@ function applyFlowMessage(msg) {
   bucket.signals = mergeByKey(msg.activeSignals, bucket.signals, signalKey, state.flow.maxSignals);
   if (!sameAsset(asset)) {
     renderAssetList();
-    renderQuotesPanel();
+    scheduleLiveRender();
     return;
   }
 
@@ -4488,11 +4525,8 @@ function applyFlowMessage(msg) {
   renderFlow();
   renderSignals();
   renderFlowDebug();
-  renderDom();
   renderMarketStrip();
-  renderHistoryPanel();
-  renderDashboard();
-  renderQuotesPanel();
+  scheduleLiveRender();
 }
 
 function applySignalMessage(msg) {
@@ -4503,18 +4537,16 @@ function applySignalMessage(msg) {
   bucket.signals = mergeByKey([signal], bucket.signals, signalKey, state.flow.maxSignals);
   if (!sameAsset(asset)) {
     renderAssetList();
-    renderQuotesPanel();
+    scheduleLiveRender();
     return;
   }
 
   syncSelectedFlow();
   renderSignals();
   renderFlowDebug();
-  renderDom();
   renderAlerts();
   renderMarketStrip();
-  renderDashboard();
-  renderQuotesPanel();
+  scheduleLiveRender();
 }
 
 function applySignalsMessage(msg) {
@@ -4525,11 +4557,9 @@ function applySignalsMessage(msg) {
   });
   syncSelectedFlow();
   renderSignals();
-  renderDom();
   renderAlerts();
   renderMarketStrip();
-  renderDashboard();
-  renderQuotesPanel();
+  scheduleLiveRender();
 }
 
 async function loadInitialFlow() {
@@ -5161,7 +5191,7 @@ function applyLiveSnapshot(msg) {
 
   if (!sameAsset(asset)) {
     renderAssetList();
-    renderQuotesPanel();
+    scheduleLiveRender();
     return;
   }
 
@@ -5183,12 +5213,8 @@ function applyLiveSnapshot(msg) {
   checkAlerts(currentPrice);
   updateOrderPlans(currentPrice);
   renderOrderSummary();
-  renderDom(msg);
   renderMarketStrip();
-  renderRisk();
-  renderHistoryPanel();
-  renderDashboard();
-  renderQuotesPanel();
+  scheduleLiveRender(msg);
   scheduleLiveRecalc();
 }
 

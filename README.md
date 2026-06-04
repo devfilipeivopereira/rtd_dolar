@@ -177,4 +177,5 @@ logs/                   logs em runtime
 9. Cotacoes: confirmar que a watchlist mostra todos os ativos e que os botoes abrem `Grafico`, `DOM`, `Book`, `T&T` e `Boleta`.
 10. Boleta: salvar um plano local e confirmar status `aguardando`, `aberto`, `alvo` ou `stop` conforme o preco.
 11. Abas operacionais: confirmar `Book`, `T&T`, `Alertas`, `Risco`, `Historico` e `Sistema` sem erro no navegador.
-12. SQLite: confirmar criacao de `data/marketdata.sqlite` quando o provider for restaurado pelo NuGet.
+12. Performance: confirmar que DOM, Painel e Cotacoes seguem responsivos com RTD ativo; campos intraday devem atualizar imediatamente.
+13. SQLite: confirmar criacao de `data/marketdata.sqlite` quando o provider for restaurado pelo NuGet.
