@@ -25,6 +25,9 @@ Resultado esperado:
 5. Confirmar status `RTD Conectado`.
 6. Confirmar que a aba `DOM` mostra preco, tape e pontos principais.
 7. Adicionar um ativo em `Ativos`, selecionar com `Ver` e ligar/desligar sem reiniciar o app.
+8. Abrir `Book` e confirmar 50 niveis quando `BOOK0` estiver ligado.
+9. Abrir `T&T` e confirmar ate 100 linhas quando `T&T0` estiver ligado.
+10. Abrir `Alertas`, `Risco`, `Historico` e `Sistema` e confirmar que cada tela mostra apenas sua funcionalidade.
 
 ## Endpoints
 
@@ -99,6 +102,8 @@ Sem CSV, a aba DOM ainda pode mostrar ticks RTD, bid/ask e tape. Pontos como POC
 - Ao desligar `book`, mensagens `bookDepth` deixam de atualizar depois da reassinatura.
 - Ao desligar `timesTrades`, o tape real deixa de atualizar e a UI pode manter fallback derivado.
 - CSV salvo deve voltar por `GET /assets/history?asset=...` depois de recarregar a pagina.
+- A faixa superior deve trocar junto com o ativo selecionado e mostrar ultimo preco, bid/ask, Book, Times, delta e CSV.
+- `Book` e `T&T` devem atualizar sem travar a pagina mesmo com muitos campos RTD, respeitando coalescing do backend.
 
 ## SQLite
 

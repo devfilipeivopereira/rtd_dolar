@@ -9,6 +9,8 @@ namespace ColetorProfitRTD.Rtd
 {
     public sealed class RtdClient : IDisposable
     {
+        private const int BookDepthBroadcastIntervalMs = 100;
+        private const int TimesTradesBroadcastIntervalMs = 150;
         private readonly RtdConfig _config;
         private readonly AssetRegistry _assetRegistry;
         private readonly Logger _log;
@@ -26,6 +28,8 @@ namespace ColetorProfitRTD.Rtd
         private readonly Dictionary<string, Dictionary<string, object>> _bookInfo = new Dictionary<string, Dictionary<string, object>>(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, Dictionary<int, Dictionary<string, object>>> _timesRows = new Dictionary<string, Dictionary<int, Dictionary<string, object>>>(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, Dictionary<string, object>> _timesInfo = new Dictionary<string, Dictionary<string, object>>(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, DateTime> _lastBookBroadcastUtc = new Dictionary<string, DateTime>(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, DateTime> _lastTimesBroadcastUtc = new Dictionary<string, DateTime>(StringComparer.OrdinalIgnoreCase);
         private readonly Queue<Action<IRtdServer>> _controlCommands = new Queue<Action<IRtdServer>>();
         private Thread _thread;
         private RtdUpdateEvent _callback;
@@ -548,6 +552,7 @@ namespace ColetorProfitRTD.Rtd
                     SubscribePreparedTopic(server, topic);
                 }
 
+                PublishCurrentDepthMessages(config);
                 return;
             }
 
@@ -864,13 +869,23 @@ namespace ColetorProfitRTD.Rtd
         {
             if (topic.Channel == RtdChannel.Book)
             {
-                BookDepthReceived?.Invoke(UpdateBookDepth(topic, value));
+                Dictionary<string, object> message = UpdateBookDepth(topic, value);
+                if (message != null)
+                {
+                    BookDepthReceived?.Invoke(message);
+                }
+
                 return;
             }
 
             if (topic.Channel == RtdChannel.TimesTrades)
             {
-                TimesTradesReceived?.Invoke(UpdateTimesTrades(topic, value));
+                Dictionary<string, object> message = UpdateTimesTrades(topic, value);
+                if (message != null)
+                {
+                    TimesTradesReceived?.Invoke(message);
+                }
+
                 return;
             }
 
@@ -910,7 +925,12 @@ namespace ColetorProfitRTD.Rtd
                     row[topic.Field] = ValueParser.ToJsonValue(value);
                 }
 
-                return BuildBookDepthMessage(asset, topic.Topic, info, levels);
+                if (!ShouldBroadcastAuxMessage(asset, _lastBookBroadcastUtc, BookDepthBroadcastIntervalMs))
+                {
+                    return null;
+                }
+
+                return BuildBookDepthMessage(asset, topic.Topic, info, levels, BookDepthBroadcastIntervalMs);
             }
         }
 
@@ -946,11 +966,66 @@ namespace ColetorProfitRTD.Rtd
                     row[topic.Field] = ValueParser.ToJsonValue(value);
                 }
 
-                return BuildTimesTradesMessage(asset, topic.Topic, info, rows);
+                if (!ShouldBroadcastAuxMessage(asset, _lastTimesBroadcastUtc, TimesTradesBroadcastIntervalMs))
+                {
+                    return null;
+                }
+
+                return BuildTimesTradesMessage(asset, topic.Topic, info, rows, TimesTradesBroadcastIntervalMs);
             }
         }
 
-        private Dictionary<string, object> BuildBookDepthMessage(string asset, string topic, Dictionary<string, object> info, Dictionary<int, Dictionary<string, object>> levels)
+        private void PublishCurrentDepthMessages(AssetConfig config)
+        {
+            Dictionary<string, object> bookMessage = null;
+            Dictionary<string, object> timesMessage = null;
+            string asset = NormalizeAsset(config.Asset);
+
+            lock (_assetLock)
+            {
+                if (config.BookRtd != null && config.BookRtd.Enabled &&
+                    _bookInfo.TryGetValue(asset, out Dictionary<string, object> bookInfo) &&
+                    _bookLevels.TryGetValue(asset, out Dictionary<int, Dictionary<string, object>> bookLevels))
+                {
+                    _lastBookBroadcastUtc[asset] = DateTime.UtcNow;
+                    bookMessage = BuildBookDepthMessage(asset, config.BookRtd.Topic, bookInfo, bookLevels, BookDepthBroadcastIntervalMs);
+                }
+
+                if (config.TimesRtd != null && config.TimesRtd.Enabled &&
+                    _timesInfo.TryGetValue(asset, out Dictionary<string, object> timesInfo) &&
+                    _timesRows.TryGetValue(asset, out Dictionary<int, Dictionary<string, object>> timesRows))
+                {
+                    _lastTimesBroadcastUtc[asset] = DateTime.UtcNow;
+                    timesMessage = BuildTimesTradesMessage(asset, config.TimesRtd.Topic, timesInfo, timesRows, TimesTradesBroadcastIntervalMs);
+                }
+            }
+
+            if (bookMessage != null)
+            {
+                BookDepthReceived?.Invoke(bookMessage);
+            }
+
+            if (timesMessage != null)
+            {
+                TimesTradesReceived?.Invoke(timesMessage);
+            }
+        }
+
+        private bool ShouldBroadcastAuxMessage(string asset, Dictionary<string, DateTime> lastBroadcastUtc, int intervalMs)
+        {
+            DateTime now = DateTime.UtcNow;
+
+            if (lastBroadcastUtc.TryGetValue(asset, out DateTime last) &&
+                (now - last).TotalMilliseconds < intervalMs)
+            {
+                return false;
+            }
+
+            lastBroadcastUtc[asset] = now;
+            return true;
+        }
+
+        private Dictionary<string, object> BuildBookDepthMessage(string asset, string topic, Dictionary<string, object> info, Dictionary<int, Dictionary<string, object>> levels, int coalescingMs)
         {
             var bids = new List<Dictionary<string, object>>();
             var asks = new List<Dictionary<string, object>>();
@@ -990,13 +1065,14 @@ namespace ColetorProfitRTD.Rtd
                 ["asset"] = asset,
                 ["topic"] = topic,
                 ["localTimestamp"] = DateTimeOffset.Now.ToString("o"),
+                ["coalescingMs"] = coalescingMs,
                 ["info"] = new Dictionary<string, object>(info, StringComparer.OrdinalIgnoreCase),
                 ["bids"] = bids,
                 ["asks"] = asks
             };
         }
 
-        private Dictionary<string, object> BuildTimesTradesMessage(string asset, string topic, Dictionary<string, object> info, Dictionary<int, Dictionary<string, object>> rows)
+        private Dictionary<string, object> BuildTimesTradesMessage(string asset, string topic, Dictionary<string, object> info, Dictionary<int, Dictionary<string, object>> rows, int coalescingMs)
         {
             var trades = new List<Dictionary<string, object>>();
 
@@ -1026,6 +1102,7 @@ namespace ColetorProfitRTD.Rtd
                 ["asset"] = asset,
                 ["topic"] = topic,
                 ["localTimestamp"] = DateTimeOffset.Now.ToString("o"),
+                ["coalescingMs"] = coalescingMs,
                 ["info"] = new Dictionary<string, object>(info, StringComparer.OrdinalIgnoreCase),
                 ["trades"] = trades
             };
@@ -1130,6 +1207,8 @@ namespace ColetorProfitRTD.Rtd
                 _bookInfo.Remove(normalized);
                 _timesRows.Remove(normalized);
                 _timesInfo.Remove(normalized);
+                _lastBookBroadcastUtc.Remove(normalized);
+                _lastTimesBroadcastUtc.Remove(normalized);
             }
         }
 

@@ -23,6 +23,12 @@ No gerenciador de ativos:
 
 Quando `timesTrades` chega, a UI usa esse tape real. Sem ele, permanece o tape derivado.
 
+Para manter agilidade sem repintar tabelas gigantes a cada campo RTD, o backend envia:
+
+- `bookDepth` no maximo a cada 100 ms por ativo;
+- `timesTrades` no maximo a cada 150 ms por ativo;
+- `snapshot` e `flow` continuam nos throttles proprios.
+
 ## Fluxo
 
 ```text
@@ -65,8 +71,14 @@ Scores sao limitados por qualidade:
 
 O dashboard usa o menu superior:
 
+- `DOM`: escada de preco com pontos, book no nivel e sinais ativos;
+- `Book`: tabelas dedicadas de compra e venda por nivel;
+- `T&T`: Times & Trades real do RTD quando disponivel;
 - `Fluxo`: delta, cumulative delta, imbalance, OFI, microbias, VWAP e tape real/derivado;
 - `Setups`: sinais confirmados com score, direcao, preco e motivos;
-- `Diagnostico`: qualidade, eventos, bookDepth, Times & Trades, sinais e fila.
+- `Alertas`: alertas locais de preco por ativo;
+- `Risco`: calculadora local de stop, alvo e contratos;
+- `Historico`: CSV carregado e ticks recentes em memoria;
+- `Sistema`: qualidade, eventos, bookDepth, Times & Trades, sinais e fila.
 
 A aba `DOM` tambem marca sinais ativos como pontos de flow.

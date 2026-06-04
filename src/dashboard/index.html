@@ -56,6 +56,27 @@ button{cursor:pointer}
 }
 .main-tab.active{border-color:#1f8a70;background:#092217;color:#b9ffe9}
 .top-meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+.market-strip{
+  min-height:48px;display:grid;grid-template-columns:minmax(210px,.9fr) repeat(6,minmax(120px,1fr));
+  gap:0;border-bottom:1px solid var(--line);background:#080908;position:sticky;top:64px;z-index:19;
+}
+.terminal-metric{
+  display:flex;flex-direction:column;justify-content:center;gap:3px;min-width:0;
+  padding:7px 10px;border-right:1px solid var(--line);background:#0B0C0A;
+}
+.terminal-metric:last-child{border-right:0}
+.terminal-metric span{font-size:9px;color:var(--soft);font-weight:900;text-transform:uppercase;letter-spacing:.08em}
+.terminal-metric strong{font-size:14px;color:var(--txt);font-family:var(--mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.terminal-metric.green strong{color:#9df2d5}
+.terminal-metric.red strong{color:#ff9b9b}
+.terminal-metric.amber strong{color:#ffd66b}
+.active-asset-line{display:flex;align-items:center;gap:8px;min-width:0}
+.asset-select{
+  width:100%;height:28px;border:1px solid var(--line);background:#10141a;color:var(--txt);
+  font-family:var(--mono);font-size:12px;font-weight:900;outline:none;
+}
+.module-hotbar{display:none;align-items:center;gap:4px;border-bottom:1px solid var(--line);background:#11161c;padding:6px 10px;overflow:auto}
+.module-hotbar .main-tab{height:30px;font-size:10px}
 .pill{
   display:inline-flex;align-items:center;justify-content:center;gap:7px;
   height:30px;padding:0 10px;border:1px solid var(--line);border-radius:6px;
@@ -111,12 +132,12 @@ input.live-fed{border-color:#1f8a70;box-shadow:0 0 0 2px #12b88618}
 .asset-chip:has(input:checked){border-color:#1f8a70;color:#9df2d5;background:#0d261f}
 .layout{
   display:grid;grid-template-columns:360px minmax(0,1fr);gap:0;
-  min-height:calc(100vh - 64px);
+  min-height:calc(100vh - 112px);
 }
 .layout.full-view{grid-template-columns:1fr}
 .layout.full-view .sidebar,.layout.full-view .chart-head,.layout.full-view .chart-shell,.layout.full-view .cards,.layout.full-view .tabs{display:none}
-.layout.full-view .content{min-height:calc(100vh - 64px);padding:16px 18px 22px}
-.asset-screen{display:none;min-height:calc(100vh - 64px);padding:16px 18px 22px;background:var(--bg)}
+.layout.full-view .content{min-height:calc(100vh - 112px);padding:16px 18px 22px}
+.asset-screen{display:none;min-height:calc(100vh - 112px);padding:16px 18px 22px;background:var(--bg)}
 .asset-screen.active{display:block}
 .asset-workbench{display:grid;grid-template-columns:340px minmax(0,1fr);gap:14px}
 .asset-table{max-height:calc(100vh - 160px);overflow:auto;border:1px solid var(--line);background:var(--panel)}
@@ -141,7 +162,7 @@ input.live-fed{border-color:#1f8a70;box-shadow:0 0 0 2px #12b88618}
 .legacy-config-section{display:none}
 .sidebar{
   border-right:1px solid var(--line);background:var(--panel);
-  padding:18px;overflow:auto;max-height:calc(100vh - 64px);
+  padding:18px;overflow:auto;max-height:calc(100vh - 112px);
 }
 .workspace{min-width:0;display:flex;flex-direction:column;overflow:hidden}
 .section{margin-bottom:16px}
@@ -176,12 +197,12 @@ input.live-fed{border-color:#1f8a70;box-shadow:0 0 0 2px #12b88618}
 .field-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
 .field{display:flex;flex-direction:column;gap:5px;min-width:0}
 label{font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.05em}
-input[type=number],input[type=text]{
+input[type=number],input[type=text],select{
   width:100%;height:36px;background:#10141a;border:1px solid var(--line);
   color:var(--txt);border-radius:6px;padding:0 10px;font-family:var(--mono);font-size:12px;
   outline:none;transition:.15s border,.15s box-shadow;
 }
-input[type=number]:focus,input[type=text]:focus{border-color:#407ea6;box-shadow:0 0 0 3px #4dabf724}
+input[type=number]:focus,input[type=text]:focus,select:focus{border-color:#407ea6;box-shadow:0 0 0 3px #4dabf724}
 .window-group{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
 .seg{
   height:38px;border:1px solid var(--line);background:#10141a;color:var(--muted);
@@ -343,6 +364,19 @@ tr:hover td{background:#ffffff05}
 .dom-summary{display:grid;grid-template-columns:repeat(4,minmax(120px,1fr));gap:8px;margin-bottom:10px}
 .dom-summary .live-kv{padding:9px 10px}
 .flow-summary{grid-template-columns:repeat(6,minmax(110px,1fr))}
+.market-table-grid{display:grid;grid-template-columns:minmax(320px,1fr) minmax(320px,1fr);gap:14px}
+.book-table td,.book-table th{text-align:right}
+.book-table td:first-child,.book-table th:first-child{text-align:left}
+.book-table .bid td{color:#9df2d5}
+.book-table .ask td{color:#ffb1b1}
+.times-grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(280px,.75fr);gap:14px}
+.times-table td,.times-table th{text-align:right}
+.times-table td:first-child,.times-table th:first-child{text-align:left}
+.alert-grid,.risk-grid,.history-grid{display:grid;grid-template-columns:minmax(320px,.85fr) minmax(0,1.2fr);gap:14px}
+.alert-row{display:grid;grid-template-columns:88px 1fr 74px 76px;gap:8px;align-items:center;border:1px solid var(--line);background:#10141a;padding:7px 8px;font-family:var(--mono);font-size:11px}
+.alert-row.triggered{border-color:#1f7a66;background:#0d261f}
+.risk-result{display:grid;grid-template-columns:repeat(4,minmax(120px,1fr));gap:8px}
+.history-tape{max-height:540px;overflow:auto}
 .flow-debug-grid{display:grid;grid-template-columns:repeat(3,minmax(160px,1fr));gap:10px}
 .flow-signal{border-left:3px solid var(--line)}
 .flow-signal.buy{border-left-color:var(--green)}
@@ -363,6 +397,8 @@ tr:hover td{background:#ffffff05}
 .hidden{display:none!important}
 @media(max-width:1180px){
   .layout{grid-template-columns:1fr}
+  .market-strip{top:0;position:relative;grid-template-columns:repeat(2,minmax(0,1fr))}
+  .module-hotbar{display:flex}
   .sidebar{max-height:none;border-right:0;border-bottom:1px solid var(--line)}
   .asset-workbench{grid-template-columns:1fr}
   .asset-form-grid{grid-template-columns:1fr}
@@ -378,6 +414,8 @@ tr:hover td{background:#ffffff05}
   .brand-title,.brand-sub{white-space:normal}
   .top-meta{justify-content:flex-start}
   .field-grid{grid-template-columns:1fr}
+  .market-table-grid,.times-grid,.alert-grid,.risk-grid,.history-grid{grid-template-columns:1fr}
+  .risk-result{grid-template-columns:1fr 1fr}
   .cards{grid-template-columns:1fr 1fr}
   .chart-shell{height:340px;padding:10px}
   .tabs{overflow:auto;padding:9px 10px}
@@ -402,11 +440,16 @@ tr:hover td{background:#ffffff05}
     </div>
     <nav class="main-tabs" id="main-tabs">
       <button class="main-tab active" data-main-tab="assets" type="button">Ativos</button>
-      <button class="main-tab" data-main-tab="panorama" type="button">Panorama</button>
+      <button class="main-tab" data-main-tab="panorama" type="button">Grafico</button>
       <button class="main-tab" data-main-tab="dom" type="button">DOM</button>
+      <button class="main-tab" data-main-tab="book" type="button">Book</button>
+      <button class="main-tab" data-main-tab="times" type="button">T&amp;T</button>
       <button class="main-tab" data-main-tab="flow" type="button">Fluxo</button>
       <button class="main-tab" data-main-tab="signals" type="button">Setups</button>
-      <button class="main-tab" data-main-tab="diagnostics" type="button">Diagnostico</button>
+      <button class="main-tab" data-main-tab="alerts" type="button">Alertas</button>
+      <button class="main-tab" data-main-tab="risk" type="button">Risco</button>
+      <button class="main-tab" data-main-tab="history" type="button">Historico</button>
+      <button class="main-tab" data-main-tab="diagnostics" type="button">Sistema</button>
     </nav>
     <div class="top-meta">
       <span class="pill" id="file-pill">Sem CSV</span>
@@ -415,6 +458,21 @@ tr:hover td{background:#ffffff05}
       <span class="pill" id="regime-pill">Sem regime</span>
     </div>
   </header>
+
+  <section class="market-strip" id="market-strip">
+    <div class="terminal-metric">
+      <span>Ativo selecionado</span>
+      <div class="active-asset-line">
+        <select class="asset-select" id="top-asset-select"></select>
+      </div>
+    </div>
+    <div class="terminal-metric green"><span>Ultimo</span><strong id="top-last">--</strong></div>
+    <div class="terminal-metric"><span>Bid / Ask</span><strong id="top-bidask">--</strong></div>
+    <div class="terminal-metric"><span>Book</span><strong id="top-book-status">--</strong></div>
+    <div class="terminal-metric"><span>Times</span><strong id="top-times-status">--</strong></div>
+    <div class="terminal-metric"><span>Delta 5s</span><strong id="top-delta">--</strong></div>
+    <div class="terminal-metric"><span>CSV</span><strong id="top-csv">--</strong></div>
+  </section>
 
   <section class="asset-screen active" id="asset-screen">
     <div class="asset-workbench">
@@ -732,6 +790,62 @@ tr:hover td{background:#ffffff05}
           </div>
         </section>
 
+        <section class="tab-panel hidden" id="panel-book">
+          <div class="dom-summary">
+            <div class="live-kv"><span>Topico</span><strong id="book-topic-label">--</strong></div>
+            <div class="live-kv"><span>Niveis compra</span><strong id="book-bid-count">--</strong></div>
+            <div class="live-kv"><span>Niveis venda</span><strong id="book-ask-count">--</strong></div>
+            <div class="live-kv"><span>Atualizacao</span><strong id="book-update">--</strong></div>
+          </div>
+          <div class="market-table-grid">
+            <div class="panel">
+              <div class="panel-head">
+                <div class="panel-title">Book compra</div>
+                <span class="tag green">BID</span>
+              </div>
+              <div class="table-wrap">
+                <table class="book-table">
+                  <thead><tr><th>Agente</th><th>Qtd</th><th>Preco</th><th>Hora</th></tr></thead>
+                  <tbody id="book-bids-body"></tbody>
+                </table>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="panel-head">
+                <div class="panel-title">Book venda</div>
+                <span class="tag red">ASK</span>
+              </div>
+              <div class="table-wrap">
+                <table class="book-table">
+                  <thead><tr><th>Preco</th><th>Qtd</th><th>Agente</th><th>Hora</th></tr></thead>
+                  <tbody id="book-asks-body"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="tab-panel hidden" id="panel-times">
+          <div class="times-grid">
+            <div class="panel">
+              <div class="panel-head">
+                <div class="panel-title">Times & Trades RTD</div>
+                <span class="tag green" id="times-topic-label">--</span>
+              </div>
+              <div class="table-wrap history-tape">
+                <table class="times-table">
+                  <thead><tr><th>Hora</th><th>Compradora</th><th>Preco</th><th>Qtd</th><th>Vendedora</th><th>Agressor</th></tr></thead>
+                  <tbody id="times-body"></tbody>
+                </table>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="panel-head"><div class="panel-title">Resumo T&amp;T</div></div>
+              <div class="panel-body"><div class="small-list" id="times-kv"></div></div>
+            </div>
+          </div>
+        </section>
+
         <section class="tab-panel hidden" id="panel-flow">
           <div class="dom-summary flow-summary">
             <div class="live-kv"><span>Delta 5s</span><strong id="flow-delta-5s">--</strong></div>
@@ -780,6 +894,84 @@ tr:hover td{background:#ffffff05}
             <div class="panel-head"><div class="panel-title">Debug do motor de fluxo</div></div>
             <div class="panel-body">
               <div class="flow-debug-grid" id="flow-debug-kv"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="tab-panel hidden" id="panel-alerts">
+          <div class="alert-grid">
+            <div class="panel">
+              <div class="panel-head"><div class="panel-title">Novo alerta de preco</div></div>
+              <div class="panel-body">
+                <div class="field-grid">
+                  <div class="field">
+                    <label for="alert-price">Preco</label>
+                    <input type="number" id="alert-price" step="0.5" placeholder="0.0">
+                  </div>
+                  <div class="field">
+                    <label for="alert-side">Condicao</label>
+                    <select id="alert-side">
+                      <option value="above">Acima ou igual</option>
+                      <option value="below">Abaixo ou igual</option>
+                    </select>
+                  </div>
+                  <div class="field asset-form-span">
+                    <label for="alert-note">Observacao</label>
+                    <input type="text" id="alert-note" placeholder="Nivel do setup">
+                  </div>
+                </div>
+                <div class="asset-actions-bar">
+                  <button class="btn-secondary ok" id="alert-add" type="button">Adicionar</button>
+                  <button class="btn-secondary bad" id="alert-clear" type="button">Limpar</button>
+                </div>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="panel-head"><div class="panel-title">Alertas ativos</div></div>
+              <div class="panel-body">
+                <div class="small-list" id="alerts-list"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="tab-panel hidden" id="panel-risk">
+          <div class="risk-grid">
+            <div class="panel">
+              <div class="panel-head"><div class="panel-title">Calculadora de risco local</div></div>
+              <div class="panel-body">
+                <div class="field-grid">
+                  <div class="field"><label for="risk-entry">Entrada</label><input type="number" id="risk-entry" step="0.5"></div>
+                  <div class="field"><label for="risk-stop">Stop</label><input type="number" id="risk-stop" step="0.5"></div>
+                  <div class="field"><label for="risk-target">Alvo</label><input type="number" id="risk-target" step="0.5"></div>
+                  <div class="field"><label for="risk-contracts">Contratos</label><input type="number" id="risk-contracts" step="1" value="1"></div>
+                  <div class="field"><label for="risk-point-value">Valor por ponto</label><input type="number" id="risk-point-value" step="0.01" placeholder="opcional"></div>
+                  <div class="field"><label for="risk-side">Lado</label><select id="risk-side"><option value="buy">Compra</option><option value="sell">Venda</option></select></div>
+                </div>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="panel-head"><div class="panel-title">Resultado</div></div>
+              <div class="panel-body">
+                <div class="risk-result" id="risk-result"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="tab-panel hidden" id="panel-history">
+          <div class="history-grid">
+            <div class="panel">
+              <div class="panel-head"><div class="panel-title">Historico carregado</div></div>
+              <div class="panel-body">
+                <div class="small-list" id="history-kv"></div>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="panel-head"><div class="panel-title">Ticks da sessao</div></div>
+              <div class="panel-body">
+                <div class="dom-tape history-tape" id="history-ticks"></div>
+              </div>
             </div>
           </div>
         </section>
@@ -1015,7 +1207,7 @@ function saveChartLayers() {
 function loadMainTab() {
   try {
     const raw = globalThis.localStorage?.getItem("wdo-main-tab");
-    return ["assets", "panorama", "dom", "flow", "signals", "diagnostics"].includes(raw) ? raw : "assets";
+    return MAIN_TABS.includes(raw) ? raw : "assets";
   } catch (_) {
     return "assets";
   }
@@ -1035,6 +1227,23 @@ function loadSelectedAsset() {
   }
 }
 
+function loadAlerts() {
+  try {
+    const parsed = JSON.parse(globalThis.localStorage?.getItem("wdo-price-alerts") || "[]");
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (_) {
+    return [];
+  }
+}
+
+function saveAlerts() {
+  try {
+    globalThis.localStorage?.setItem("wdo-price-alerts", JSON.stringify(state.alerts));
+  } catch (_) {}
+}
+
+const MAIN_TABS = ["assets", "panorama", "dom", "book", "times", "flow", "signals", "alerts", "risk", "history", "diagnostics"];
+
 const state = {
   ui: {
     mainTab: loadMainTab(),
@@ -1052,7 +1261,7 @@ const state = {
     recalcTimer: null,
     selectedAsset: loadSelectedAsset(),
     assets: [],
-    availableChannels: ["quote", "book", "timesTrades"],
+    availableChannels: ["price", "book", "timesTrades"],
     schemas: null,
     snapshotsByAsset: {},
     bookDepthByAsset: {},
@@ -1088,6 +1297,7 @@ const state = {
   priceScale: {
     factor: 1,
   },
+  alerts: loadAlerts(),
 };
 
 const COLORS = {
@@ -1127,6 +1337,13 @@ const refs = {
   mainTabs: document.getElementById("main-tabs"),
   assetScreen: document.getElementById("asset-screen"),
   terminalMain: document.getElementById("terminal-main"),
+  topAssetSelect: document.getElementById("top-asset-select"),
+  topLast: document.getElementById("top-last"),
+  topBidAsk: document.getElementById("top-bidask"),
+  topBookStatus: document.getElementById("top-book-status"),
+  topTimesStatus: document.getElementById("top-times-status"),
+  topDelta: document.getElementById("top-delta"),
+  topCsv: document.getElementById("top-csv"),
   file: document.getElementById("csv-file"),
   dropzone: document.getElementById("dropzone"),
   fileName: document.getElementById("file-name"),
@@ -1189,6 +1406,15 @@ const refs = {
   domLadder: document.getElementById("dom-ladder"),
   domTape: document.getElementById("dom-tape"),
   domKeyLevels: document.getElementById("dom-key-levels"),
+  bookTopicLabel: document.getElementById("book-topic-label"),
+  bookBidCount: document.getElementById("book-bid-count"),
+  bookAskCount: document.getElementById("book-ask-count"),
+  bookUpdate: document.getElementById("book-update"),
+  bookBidsBody: document.getElementById("book-bids-body"),
+  bookAsksBody: document.getElementById("book-asks-body"),
+  timesTopicLabel: document.getElementById("times-topic-label"),
+  timesBody: document.getElementById("times-body"),
+  timesKv: document.getElementById("times-kv"),
   flowDelta5s: document.getElementById("flow-delta-5s"),
   flowCumDelta: document.getElementById("flow-cum-delta"),
   flowImbalance: document.getElementById("flow-imbalance"),
@@ -1200,6 +1426,21 @@ const refs = {
   flowTrades: document.getElementById("flow-trades"),
   signalsBody: document.getElementById("signals-body"),
   flowDebugKv: document.getElementById("flow-debug-kv"),
+  alertPrice: document.getElementById("alert-price"),
+  alertSide: document.getElementById("alert-side"),
+  alertNote: document.getElementById("alert-note"),
+  alertAdd: document.getElementById("alert-add"),
+  alertClear: document.getElementById("alert-clear"),
+  alertsList: document.getElementById("alerts-list"),
+  riskEntry: document.getElementById("risk-entry"),
+  riskStop: document.getElementById("risk-stop"),
+  riskTarget: document.getElementById("risk-target"),
+  riskContracts: document.getElementById("risk-contracts"),
+  riskPointValue: document.getElementById("risk-point-value"),
+  riskSide: document.getElementById("risk-side"),
+  riskResult: document.getElementById("risk-result"),
+  historyKv: document.getElementById("history-kv"),
+  historyTicks: document.getElementById("history-ticks"),
   btn: document.getElementById("btn-calc"),
   levelsBody: document.getElementById("levels-body"),
   openingBody: document.getElementById("opening-body"),
@@ -1324,6 +1565,8 @@ function updateAssetsMessage(msg) {
 
   renderAssetList();
   renderAssetScreenList();
+  renderTopAssetSelect();
+  renderMarketStrip();
   const selected = selectedAssetConfig();
   populateAssetForm(selected);
   if (selected?.history?.hasCsv && state.assetEditor.loadedHistoryAsset !== selectedAsset()) {
@@ -1509,6 +1752,208 @@ function setAssetFormStatus(type, text) {
   setPill(refs.assetFormStatus, type, text);
 }
 
+function renderTopAssetSelect() {
+  if (!refs.topAssetSelect) return;
+  const assets = state.rtd.assets || [];
+  const options = assets.length ? assets : [{ asset: selectedAsset(), label: selectedAsset() }];
+  const current = selectedAsset();
+  refs.topAssetSelect.innerHTML = options.map(item => {
+    const asset = normalizeAsset(item.asset);
+    return `<option value="${escapeHtml(asset)}" ${asset === current ? "selected" : ""}>${escapeHtml(asset)}</option>`;
+  }).join("");
+}
+
+function renderMarketStrip() {
+  const asset = selectedAsset();
+  const snapshot = state.rtd.snapshotsByAsset[asset] || state.rtd.lastSnapshot;
+  const price = liveIntradayFromSnapshot(snapshot).price;
+  const book = liveBookFromSnapshot(snapshot);
+  const depth = liveBookDepthForAsset(asset);
+  const times = state.rtd.timesTradesByAsset[asset];
+  const flow = flowBucket(asset).metrics || {};
+  refs.topLast.textContent = fmt(price);
+  refs.topBidAsk.textContent = Number.isFinite(book.bid) && Number.isFinite(book.ask)
+    ? `${fmt(book.bid)} / ${fmt(book.ask)}`
+    : "--";
+  refs.topBookStatus.textContent = depth
+    ? `${(depth.bids || []).length} x ${(depth.asks || []).length}`
+    : selectedAssetConfig()?.bookRtd?.enabled ? "ligando" : "off";
+  refs.topTimesStatus.textContent = times
+    ? `${(times.trades || []).length} linhas`
+    : selectedAssetConfig()?.timesRtd?.enabled ? "ligando" : "off";
+  refs.topDelta.textContent = signedFmt(flow.delta5s, 0);
+  refs.topCsv.textContent = state.uploadedCount ? `${state.uploadedCount} pregoes` : "sem CSV";
+}
+
+function renderBookPanel() {
+  const depth = liveBookDepthForAsset();
+  if (!refs.bookBidsBody) return;
+  refs.bookTopicLabel.textContent = depth?.topic || selectedAssetConfig()?.bookRtd?.topic || "--";
+  refs.bookBidCount.textContent = depth ? String((depth.bids || []).length) : "--";
+  refs.bookAskCount.textContent = depth ? String((depth.asks || []).length) : "--";
+  refs.bookUpdate.textContent = depth?.localTimestamp ? depth.localTimestamp.slice(11, 19) : "--";
+
+  if (!depth) {
+    refs.bookBidsBody.innerHTML = `<tr><td colspan="4">Aguardando book RTD.</td></tr>`;
+    refs.bookAsksBody.innerHTML = `<tr><td colspan="4">Aguardando book RTD.</td></tr>`;
+    return;
+  }
+
+  refs.bookBidsBody.innerHTML = (depth.bids || []).slice(0, 50).map(row => `
+    <tr class="bid">
+      <td>${escapeHtml(row.agent || "--")}</td>
+      <td>${fmt(liveNumber(row.qty), 0)}</td>
+      <td class="strong">${fmt(liveNumber(row.price))}</td>
+      <td>${escapeHtml(row.time || "--")}</td>
+    </tr>
+  `).join("") || `<tr><td colspan="4">Sem niveis de compra.</td></tr>`;
+
+  refs.bookAsksBody.innerHTML = (depth.asks || []).slice(0, 50).map(row => `
+    <tr class="ask">
+      <td class="strong">${fmt(liveNumber(row.price))}</td>
+      <td>${fmt(liveNumber(row.qty), 0)}</td>
+      <td>${escapeHtml(row.agent || "--")}</td>
+      <td>${escapeHtml(row.time || "--")}</td>
+    </tr>
+  `).join("") || `<tr><td colspan="4">Sem niveis de venda.</td></tr>`;
+}
+
+function renderTimesPanel() {
+  const asset = selectedAsset();
+  const times = state.rtd.timesTradesByAsset[asset];
+  const trades = Array.isArray(times?.trades) ? times.trades : [];
+  if (!refs.timesBody) return;
+  refs.timesTopicLabel.textContent = times?.topic || selectedAssetConfig()?.timesRtd?.topic || "--";
+
+  if (!trades.length) {
+    refs.timesBody.innerHTML = `<tr><td colspan="6">Aguardando Times & Trades RTD.</td></tr>`;
+  } else {
+    refs.timesBody.innerHTML = trades.slice(0, 100).map(row => `
+      <tr>
+        <td>${escapeHtml(row.time || "--")}</td>
+        <td>${escapeHtml(row.buyer || "--")}</td>
+        <td class="strong">${fmt(liveNumber(row.price))}</td>
+        <td>${fmt(liveNumber(row.qty), 0)}</td>
+        <td>${escapeHtml(row.seller || "--")}</td>
+        <td>${escapeHtml(row.aggressor || "--")}</td>
+      </tr>
+    `).join("");
+  }
+
+  const buyAgg = trades.filter(row => String(row.aggressor || "").toLowerCase().includes("compra")).length;
+  const sellAgg = trades.filter(row => String(row.aggressor || "").toLowerCase().includes("venda")).length;
+  refs.timesKv.innerHTML = [
+    ["Linhas recebidas", fmt(trades.length, 0)],
+    ["Agressao compra", fmt(buyAgg, 0)],
+    ["Agressao venda", fmt(sellAgg, 0)],
+    ["Atualizacao", times?.localTimestamp ? times.localTimestamp.slice(11, 19) : "--"],
+    ["Coalescing", times?.coalescingMs ? `${times.coalescingMs} ms` : "--"],
+  ].map(([k, v]) => `<div class="kv"><span>${escapeHtml(k)}</span><span>${escapeHtml(v)}</span></div>`).join("");
+}
+
+function alertKey(alert) {
+  return `${alert.asset}|${alert.side}|${alert.price}|${alert.createdAt}`;
+}
+
+function addPriceAlert() {
+  const price = liveNumber(refs.alertPrice.value);
+  if (!Number.isFinite(price)) return;
+  state.alerts.unshift({
+    asset: selectedAsset(),
+    price,
+    side: refs.alertSide.value,
+    note: refs.alertNote.value || "",
+    createdAt: new Date().toISOString(),
+    triggeredAt: null,
+  });
+  state.alerts = state.alerts.slice(0, 80);
+  saveAlerts();
+  refs.alertPrice.value = "";
+  refs.alertNote.value = "";
+  renderAlerts();
+}
+
+function checkAlerts(price) {
+  if (!Number.isFinite(price)) return;
+  let changed = false;
+  state.alerts.forEach(alert => {
+    if (alert.triggeredAt || normalizeAsset(alert.asset) !== selectedAsset()) return;
+    const hit = alert.side === "above" ? price >= alert.price : price <= alert.price;
+    if (hit) {
+      alert.triggeredAt = new Date().toISOString();
+      changed = true;
+    }
+  });
+  if (changed) {
+    saveAlerts();
+    renderAlerts();
+  }
+}
+
+function renderAlerts() {
+  if (!refs.alertsList) return;
+  const alerts = state.alerts.filter(alert => normalizeAsset(alert.asset) === selectedAsset());
+  if (!alerts.length) {
+    refs.alertsList.innerHTML = `<div class="warn-line">Nenhum alerta para o ativo selecionado.</div>`;
+    return;
+  }
+
+  refs.alertsList.innerHTML = alerts.map(alert => `
+    <div class="alert-row ${alert.triggeredAt ? "triggered" : ""}">
+      <strong>${fmt(liveNumber(alert.price))}</strong>
+      <span>${escapeHtml(alert.note || (alert.side === "above" ? "Acima ou igual" : "Abaixo ou igual"))}</span>
+      <span>${alert.triggeredAt ? "acionado" : "ativo"}</span>
+      <button class="asset-action delete" type="button" data-alert-remove="${escapeHtml(alertKey(alert))}">Excluir</button>
+    </div>
+  `).join("");
+}
+
+function renderRisk() {
+  if (!refs.riskResult) return;
+  const entry = liveNumber(refs.riskEntry.value || refs.inputs.price.value);
+  const stop = liveNumber(refs.riskStop.value);
+  const target = liveNumber(refs.riskTarget.value);
+  const contracts = Math.max(1, Math.round(liveNumber(refs.riskContracts.value) || 1));
+  const pointValue = liveNumber(refs.riskPointValue.value);
+  const side = refs.riskSide.value;
+  const riskPts = side === "buy" ? entry - stop : stop - entry;
+  const targetPts = side === "buy" ? target - entry : entry - target;
+  const rr = Number.isFinite(riskPts) && riskPts > 0 && Number.isFinite(targetPts) ? targetPts / riskPts : NaN;
+  const financialRisk = Number.isFinite(pointValue) && Number.isFinite(riskPts) && riskPts > 0 ? riskPts * contracts * pointValue : NaN;
+  refs.riskResult.innerHTML = [
+    ["Entrada", fmt(entry)],
+    ["Risco pts", Number.isFinite(riskPts) ? fmt(riskPts) : "--"],
+    ["Alvo pts", Number.isFinite(targetPts) ? fmt(targetPts) : "--"],
+    ["R/R", Number.isFinite(rr) ? fmt(rr, 2) : "--"],
+    ["Contratos", fmt(contracts, 0)],
+    ["Risco financeiro", Number.isFinite(financialRisk) ? fmt(financialRisk, 2) : "--"],
+  ].map(([k, v]) => `<div class="live-kv"><span>${escapeHtml(k)}</span><strong>${escapeHtml(v)}</strong></div>`).join("");
+}
+
+function renderHistoryPanel() {
+  if (!refs.historyKv) return;
+  const ticks = state.rtd.ticks || [];
+  refs.historyKv.innerHTML = [
+    ["Ativo", selectedAsset()],
+    ["CSV", state.uploadedCount ? `${state.uploadedCount} pregoes` : "sem CSV"],
+    ["Janela", `${state.selectedWindow} dias`],
+    ["Ticks em memoria", fmt(ticks.length, 0)],
+    ["Ultimo snapshot", state.rtd.lastSnapshot?.localTimestamp || "--"],
+  ].map(([k, v]) => `<div class="kv"><span>${escapeHtml(k)}</span><span>${escapeHtml(v)}</span></div>`).join("");
+
+  refs.historyTicks.innerHTML = ticks.slice(0, 120).map(tick => {
+    const dir = tick.delta > 0 ? "up" : tick.delta < 0 ? "down" : "flat";
+    return `
+      <div class="dom-tick ${dir}">
+        <span>${escapeHtml(tick.time || "--")}</span>
+        <strong>${fmt(tick.price)}</strong>
+        <span>${tick.delta > 0 ? "+" : ""}${fmt(tick.delta)}</span>
+        <span>${escapeHtml(tick.side || "--")}</span>
+      </div>
+    `;
+  }).join("") || `<div class="warn-line">Aguardando ticks do RTD.</div>`;
+}
+
 function activateSubTab(tabName) {
   const tab = document.querySelector(`[data-tab="${tabName}"]`);
   const panel = document.getElementById(`panel-${tabName}`);
@@ -1519,7 +1964,7 @@ function activateSubTab(tabName) {
 }
 
 function showMainTab(tabName) {
-  const safe = ["assets", "panorama", "dom", "flow", "signals", "diagnostics"].includes(tabName) ? tabName : "assets";
+  const safe = MAIN_TABS.includes(tabName) ? tabName : "assets";
   state.ui.mainTab = safe;
   saveMainTab(safe);
   refs.mainTabs.querySelectorAll("[data-main-tab]").forEach(btn => {
@@ -1541,14 +1986,25 @@ function showMainTab(tabName) {
 
   if (safe === "panorama") activateSubTab("levels");
   else if (safe === "dom") activateSubTab("dom");
+  else if (safe === "book") activateSubTab("book");
+  else if (safe === "times") activateSubTab("times");
   else if (safe === "flow") activateSubTab("flow");
   else if (safe === "signals") activateSubTab("signals");
+  else if (safe === "alerts") activateSubTab("alerts");
+  else if (safe === "risk") activateSubTab("risk");
+  else if (safe === "history") activateSubTab("history");
   else if (safe === "diagnostics") activateSubTab("flowdebug");
 
   if (safe === "dom") renderDom();
+  if (safe === "book") renderBookPanel();
+  if (safe === "times") renderTimesPanel();
   if (safe === "flow") renderFlow();
   if (safe === "signals") renderSignals();
+  if (safe === "alerts") renderAlerts();
+  if (safe === "risk") renderRisk();
+  if (safe === "history") renderHistoryPanel();
   if (safe === "diagnostics") renderFlowDebug();
+  renderMarketStrip();
 }
 
 function renderSelectedAsset() {
@@ -1562,6 +2018,13 @@ function renderSelectedAsset() {
   renderSignals();
   renderFlowDebug();
   renderDom(snapshot);
+  renderBookPanel();
+  renderTimesPanel();
+  renderAlerts();
+  renderRisk();
+  renderHistoryPanel();
+  renderMarketStrip();
+  renderTopAssetSelect();
   renderAssetList();
 }
 
@@ -1570,6 +2033,7 @@ function selectAsset(asset) {
   try {
     globalThis.localStorage?.setItem("wdo-selected-asset", state.rtd.selectedAsset);
   } catch (_) {}
+  if (refs.topAssetSelect) refs.topAssetSelect.value = state.rtd.selectedAsset;
   populateAssetForm(selectedAssetConfig());
   if (state.assetEditor.loadedHistoryAsset !== state.rtd.selectedAsset) {
     state.assetEditor.loadedHistoryAsset = state.rtd.selectedAsset;
@@ -3404,6 +3868,8 @@ function applyFlowMessage(msg) {
   renderSignals();
   renderFlowDebug();
   renderDom();
+  renderMarketStrip();
+  renderHistoryPanel();
 }
 
 function applySignalMessage(msg) {
@@ -3421,6 +3887,8 @@ function applySignalMessage(msg) {
   renderSignals();
   renderFlowDebug();
   renderDom();
+  renderAlerts();
+  renderMarketStrip();
 }
 
 function applySignalsMessage(msg) {
@@ -3432,6 +3900,8 @@ function applySignalsMessage(msg) {
   syncSelectedFlow();
   renderSignals();
   renderDom();
+  renderAlerts();
+  renderMarketStrip();
 }
 
 async function loadInitialFlow() {
@@ -4080,7 +4550,11 @@ function applyLiveSnapshot(msg) {
   writeLiveInput(refs.inputs.vwap, intraday.vwapIntraday);
   writeLiveInput(refs.inputs.volume, intraday.volumeAcumulado, 0);
 
+  checkAlerts(liveNumber(intraday.precoAtual));
   renderDom(msg);
+  renderMarketStrip();
+  renderRisk();
+  renderHistoryPanel();
   scheduleLiveRecalc();
 }
 
@@ -4090,7 +4564,9 @@ function applyBookDepthMessage(msg) {
   state.rtd.bookDepthByAsset[asset] = msg;
   if (sameAsset(asset)) {
     renderDom(state.rtd.lastSnapshot);
+    renderBookPanel();
     renderFlowDebug();
+    renderMarketStrip();
   }
 }
 
@@ -4123,7 +4599,10 @@ function applyTimesTradesMessage(msg) {
     syncSelectedFlow();
     renderDomTape();
     renderFlowTrades();
+    renderTimesPanel();
     renderFlowDebug();
+    renderMarketStrip();
+    renderHistoryPanel();
   }
 }
 
@@ -4229,6 +4708,8 @@ function applyCsvContent(text, fileName, encoding, targets = {}) {
   setPill(refs.datePill, "", brDate(state.latest.date));
   updateReady();
   recalc();
+  renderMarketStrip();
+  renderHistoryPanel();
   return { ok: true, parsed };
 }
 
@@ -4321,6 +4802,28 @@ refs.mainTabs.addEventListener("click", ev => {
   showMainTab(tab.dataset.mainTab);
 });
 
+refs.topAssetSelect.addEventListener("change", ev => {
+  selectAsset(ev.target.value);
+});
+
+refs.alertAdd.addEventListener("click", addPriceAlert);
+refs.alertClear.addEventListener("click", () => {
+  state.alerts = state.alerts.filter(alert => normalizeAsset(alert.asset) !== selectedAsset());
+  saveAlerts();
+  renderAlerts();
+});
+refs.alertsList.addEventListener("click", ev => {
+  const remove = ev.target.closest("[data-alert-remove]");
+  if (!remove) return;
+  state.alerts = state.alerts.filter(alert => alertKey(alert) !== remove.dataset.alertRemove);
+  saveAlerts();
+  renderAlerts();
+});
+[refs.riskEntry, refs.riskStop, refs.riskTarget, refs.riskContracts, refs.riskPointValue].forEach(input => {
+  input.addEventListener("input", renderRisk);
+});
+refs.riskSide.addEventListener("change", renderRisk);
+
 refs.assetSave.addEventListener("click", () => saveAssetForm());
 refs.assetView.addEventListener("click", () => {
   const payload = assetFormPayload();
@@ -4404,6 +4907,7 @@ Object.values(refs.inputs).forEach(input => {
   input.addEventListener("input", () => {
     input.classList.remove("live-fed");
     updateReady();
+    renderRisk();
     if (!refs.btn.disabled) recalc();
   });
 });
@@ -4586,6 +5090,13 @@ renderDom();
 renderFlow();
 renderSignals();
 renderFlowDebug();
+renderTopAssetSelect();
+renderMarketStrip();
+renderBookPanel();
+renderTimesPanel();
+renderAlerts();
+renderRisk();
+renderHistoryPanel();
 showMainTab(state.ui.mainTab);
 loadAssets();
 connectRtdLive();

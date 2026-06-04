@@ -64,17 +64,24 @@ O CSV diario continua sendo a fonte do historico 21/45/63. O RTD preenche o intr
 O menu superior separa:
 
 - `Ativos`: cadastro de codigo, tres fontes RTD e CSV historico;
-- `Panorama`: grafico e subabas analiticas;
+- `Grafico`: grafico e subabas analiticas;
 - `DOM`: escada de preco;
+- `Book`: book de ofertas multi-nivel;
+- `T&T`: Times & Trades RTD;
 - `Fluxo`: delta, book, tape e metricas;
 - `Setups`: sinais;
-- `Diagnostico`: saude e debug.
+- `Alertas`: alertas locais por preco;
+- `Risco`: calculadora local de stop, alvo e contratos;
+- `Historico`: resumo do CSV e ticks em memoria;
+- `Sistema`: saude e debug.
+
+A faixa superior fica disponivel em todas as telas e mostra ativo selecionado, ultimo preco, bid/ask, status de Book, status de Times, delta 5s e CSV carregado.
 
 A tela `Ativos` seleciona qual ativo aparece nos campos intraday, DOM, fluxo e setups. Snapshots, book e Times & Trades de ativos diferentes ficam em caches separados no navegador, e as fontes podem ser ajustadas por ativo sem reiniciar o app.
 
 ## Aba DOM
 
-A aba `DOM` e a primeira aba principal. Ela mostra:
+A aba `DOM` mostra:
 
 - escada em tick size de 0,5;
 - ultimo preco ao centro;
@@ -84,6 +91,8 @@ A aba `DOM` e a primeira aba principal. Ela mostra:
 - pontos principais do motor quant quando o CSV ja foi carregado.
 
 Os pontos marcados incluem abertura, maxima, minima, VWAP/MED, POC, VAH, VAL, desvios por abertura, desvios por POC e confluencias.
+
+As mensagens auxiliares de profundidade sao coalescidas no cliente RTD para reduzir repintura da UI: `bookDepth` tem broadcast minimo de 100 ms e `timesTrades` de 150 ms. Snapshots de preco continuam no fluxo existente.
 
 ## Persistencia
 

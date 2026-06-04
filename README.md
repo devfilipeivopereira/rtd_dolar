@@ -40,14 +40,19 @@ O historico diario continua sendo carregado por CSV no navegador. O RTD preenche
 - VWAP/ancora opcional: `MED`
 - Volume acumulado: `VOL`
 
-O menu superior separa as telas por funcionalidade:
+O menu superior separa as telas por funcionalidade e a faixa superior mostra ativo selecionado, ultimo preco, bid/ask, status de Book, status de Times, delta e CSV:
 
 - `Ativos`: cadastro, CSV historico, ligar/desligar e excluir;
-- `Panorama`: grafico, niveis, abertura, POC, variacao, profile e backtest;
+- `Grafico`: grafico, niveis, abertura, POC, variacao, profile e backtest;
 - `DOM`: escada de preco e pontos principais;
+- `Book`: book de ofertas RTD em tabela de compra e venda;
+- `T&T`: Times & Trades RTD;
 - `Fluxo`: delta, book, tape e metricas de order flow;
 - `Setups`: sinais ativos e recentes;
-- `Diagnostico`: RTD, WebSocket e debug de fluxo.
+- `Alertas`: alertas locais de preco por ativo;
+- `Risco`: calculadora local de stop, alvo e contratos;
+- `Historico`: resumo do CSV e ticks em memoria;
+- `Sistema`: RTD, WebSocket e debug de fluxo.
 
 A aba `DOM` mostra:
 
@@ -161,4 +166,5 @@ logs/                   logs em runtime
 5. Manual: desligar `RTD Live` e editar os campos manualmente.
 6. Multiativo: adicionar um novo ativo em `Ativos`, ligar/desligar, trocar fontes, excluir e confirmar `/assets`.
 7. Book/T&T: confirmar mensagens `bookDepth` e `timesTrades` no WebSocket quando `BOOK0` e `T&T0` estiverem ligados.
-8. SQLite: confirmar criacao de `data/marketdata.sqlite` quando o provider for restaurado pelo NuGet.
+8. Abas operacionais: confirmar `Book`, `T&T`, `Alertas`, `Risco`, `Historico` e `Sistema` sem erro no navegador.
+9. SQLite: confirmar criacao de `data/marketdata.sqlite` quando o provider for restaurado pelo NuGet.
