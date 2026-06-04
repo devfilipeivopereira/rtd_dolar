@@ -10,6 +10,8 @@ A expansao de order flow usa os campos RTD ja disponiveis no Profit:
 
 O MVP nao e Times & Trades completo nem book multi-nivel. As metricas e sinais sao derivados do ultimo preco, quantidade, volume acumulado e topo do book.
 
+No gerenciador de ativos, o canal `timesTrades` alimenta o tape derivado com `ULT`, `QUL`, `NEG`, `QTT` e `VOL`. O canal `book` alimenta topo de book com `OCP`, `OVD`, `VOC` e `VOV`. Esses canais podem ser ligados/desligados por ativo.
+
 ## Fluxo
 
 ```text
@@ -23,7 +25,7 @@ MarketSnapshot
 
 O RTD continua rodando em thread STA. O `FlowProcessor` recebe snapshots em fila bounded/drop-old e usa coalescing para evitar interpretar updates campo-a-campo como negocios separados.
 
-Com varios ativos ligados, o `FlowProcessor` mantem `SnapshotCoalescer`, `FlowEngine`, trades, VWAP, profile e sinais separados por ativo. A mensagem `/flow` continua retornando o ultimo fluxo visto para compatibilidade, enquanto o WebSocket transmite cada `flow` com o respectivo `asset`.
+Com varios ativos ligados, o `FlowProcessor` mantem `SnapshotCoalescer`, `FlowEngine`, trades, VWAP, profile e sinais separados por ativo. A mensagem `/flow` continua retornando o ultimo fluxo visto para compatibilidade, enquanto o WebSocket transmite cada `flow` com o respectivo `asset`. Ao excluir um ativo, o estado de fluxo dele tambem e removido da memoria.
 
 ## Endpoints
 

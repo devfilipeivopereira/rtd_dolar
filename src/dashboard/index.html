@@ -64,20 +64,28 @@ button{cursor:pointer}
 .rtd-toggle.active{background:#123125;border-color:#1f8a70;color:#8ef2d2}
 input.live-fed{border-color:#1f8a70;box-shadow:0 0 0 2px #12b88618}
 .asset-compose{display:grid;grid-template-columns:minmax(0,1fr) 94px;gap:8px;margin-bottom:8px}
+.asset-channel-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:8px}
+.asset-channel{
+  min-height:30px;display:flex;align-items:center;gap:6px;border:1px solid var(--line);
+  background:#10141a;color:var(--muted);border-radius:6px;padding:6px 7px;
+  font-size:10px;font-weight:900;cursor:pointer;user-select:none;
+}
+.asset-channel input{width:13px;height:13px;margin:0;accent-color:var(--green)}
+.asset-channel:has(input:checked){border-color:#1f8a70;color:#dffcf3;background:#123125}
 .asset-add{
   height:36px;border:1px solid #1f8a70;background:#123125;color:#8ef2d2;
   border-radius:6px;font-size:11px;font-weight:900;text-transform:uppercase;
 }
-.asset-list{display:flex;flex-direction:column;gap:7px;max-height:190px;overflow:auto}
+.asset-list{display:flex;flex-direction:column;gap:7px;max-height:250px;overflow:auto}
 .asset-row{
-  display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;
+  display:grid;grid-template-columns:minmax(0,1fr);gap:8px;align-items:center;
   border:1px solid var(--line);background:#10141a;border-radius:6px;padding:8px;
 }
 .asset-row.selected{border-color:#1f8a70;background:#123125}
 .asset-name{min-width:0}
 .asset-name strong{display:block;font-family:var(--mono);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .asset-name span{display:block;color:var(--muted);font-size:10px;margin-top:3px}
-.asset-actions{display:flex;gap:5px}
+.asset-actions{display:flex;gap:5px;flex-wrap:wrap}
 .asset-action{
   height:28px;border:1px solid var(--line);background:#0e1318;color:var(--muted);
   border-radius:5px;padding:0 8px;font-size:10px;font-weight:900;
@@ -85,6 +93,14 @@ input.live-fed{border-color:#1f8a70;box-shadow:0 0 0 2px #12b88618}
 .asset-action.view{border-color:#285d80;color:#9bd7ff;background:#10202b}
 .asset-action.on{border-color:#1f7a66;color:#9df2d5;background:#0d261f}
 .asset-action.off{border-color:#7a2b2b;color:#ff9b9b;background:#2b1111}
+.asset-action.delete{border-color:#7a2b2b;color:#ff9b9b;background:#2b1111}
+.asset-row-channels{display:flex;gap:5px;flex-wrap:wrap}
+.asset-chip{
+  display:inline-flex;align-items:center;gap:5px;min-height:24px;border:1px solid var(--line);
+  background:#0e1318;color:var(--muted);border-radius:5px;padding:0 6px;font-size:10px;font-weight:900;
+}
+.asset-chip input{width:12px;height:12px;margin:0;accent-color:var(--green)}
+.asset-chip:has(input:checked){border-color:#1f8a70;color:#9df2d5;background:#0d261f}
 .layout{
   display:grid;grid-template-columns:360px minmax(0,1fr);gap:0;
   min-height:calc(100vh - 64px);
@@ -385,6 +401,11 @@ tr:hover td{background:#ffffff05}
         <div class="asset-compose">
           <input type="text" id="asset-input" placeholder="WDOFUT_F_0" autocomplete="off">
           <button class="asset-add" id="asset-add" type="button">Adicionar</button>
+        </div>
+        <div class="asset-channel-grid" id="asset-add-channels">
+          <label class="asset-channel"><input type="checkbox" value="quote" checked> Cotacao</label>
+          <label class="asset-channel"><input type="checkbox" value="book" checked> Book</label>
+          <label class="asset-channel"><input type="checkbox" value="timesTrades" checked> Times</label>
         </div>
         <div class="asset-list" id="asset-list"></div>
       </section>
@@ -845,6 +866,7 @@ const state = {
     recalcTimer: null,
     selectedAsset: "WDOFUT_F_0",
     assets: [],
+    availableChannels: ["quote", "book", "timesTrades"],
     snapshotsByAsset: {},
     lastSnapshot: null,
     ticksByAsset: {},
@@ -917,6 +939,7 @@ const refs = {
   rtdStatus: document.getElementById("rtd-status"),
   assetInput: document.getElementById("asset-input"),
   assetAdd: document.getElementById("asset-add"),
+  assetAddChannels: document.getElementById("asset-add-channels"),
   assetList: document.getElementById("asset-list"),
   rtdAsset: document.getElementById("rtd-asset"),
   rtdLast: document.getElementById("rtd-last"),
@@ -996,6 +1019,41 @@ function sameAsset(asset, target = selectedAsset()) {
   return normalizeAsset(asset) === normalizeAsset(target);
 }
 
+function normalizeChannel(channel) {
+  const value = String(channel || "").trim();
+  if (!value) return "";
+  if (["cotacao", "quote"].includes(value.toLowerCase())) return "quote";
+  if (["book", "ofertas", "bookofertas"].includes(value.toLowerCase())) return "book";
+  if (["times", "trades", "timestrades", "timesandtrades"].includes(value.toLowerCase())) return "timesTrades";
+  return value;
+}
+
+function channelLabel(channel) {
+  const normalized = normalizeChannel(channel);
+  if (normalized === "quote") return "Cotacao";
+  if (normalized === "book") return "Book";
+  if (normalized === "timesTrades") return "Times";
+  return normalized || "Canal";
+}
+
+function normalizeChannels(channels) {
+  const input = Array.isArray(channels) && channels.length ? channels : state.rtd.availableChannels;
+  const seen = new Set();
+  const out = [];
+  input.forEach(channel => {
+    const normalized = normalizeChannel(channel);
+    if (!normalized || seen.has(normalized)) return;
+    seen.add(normalized);
+    out.push(normalized);
+  });
+  return out.length ? out : ["quote"];
+}
+
+function selectedAddChannels() {
+  const checked = [...refs.assetAddChannels.querySelectorAll("input:checked")].map(input => input.value);
+  return normalizeChannels(checked);
+}
+
 function flowBucket(asset) {
   const key = normalizeAsset(asset);
   if (!state.flow.byAsset[key]) {
@@ -1026,10 +1084,13 @@ function syncSelectedTicks() {
 function updateAssetsMessage(msg) {
   if (!msg || !Array.isArray(msg.assets)) return;
   state.rtd.assets = msg.assets;
+  if (Array.isArray(msg.availableChannels) && msg.availableChannels.length) {
+    state.rtd.availableChannels = normalizeChannels(msg.availableChannels);
+  }
 
   if (!state.rtd.assets.some(item => sameAsset(item.asset))) {
     const first = state.rtd.assets[0]?.asset;
-    if (first) state.rtd.selectedAsset = normalizeAsset(first);
+    state.rtd.selectedAsset = first ? normalizeAsset(first) : "WDOFUT_F_0";
   }
 
   renderAssetList();
@@ -1049,16 +1110,26 @@ function renderAssetList() {
     const selected = sameAsset(asset);
     const enabled = !!item.enabled;
     const subscribed = !!item.subscribed;
+    const channels = normalizeChannels(item.channels);
+    const fieldCount = Array.isArray(item.fields) ? item.fields.length : 0;
     const status = enabled ? (subscribed ? "assinado" : "ligando") : "desligado";
     return `
       <div class="asset-row ${selected ? "selected" : ""}">
         <div class="asset-name">
           <strong>${escapeHtml(asset)}</strong>
-          <span>${escapeHtml(status)}${item.isDefault ? " | padrao" : ""}</span>
+          <span>${escapeHtml(status)}${item.isDefault ? " | padrao" : ""}${fieldCount ? ` | ${fieldCount} campos` : ""}</span>
+        </div>
+        <div class="asset-row-channels">
+          ${state.rtd.availableChannels.map(channel => {
+            const normalized = normalizeChannel(channel);
+            const checked = channels.includes(normalized);
+            return `<label class="asset-chip"><input type="checkbox" data-asset-channel="${escapeHtml(asset)}" value="${escapeHtml(normalized)}" ${checked ? "checked" : ""}> ${escapeHtml(channelLabel(normalized))}</label>`;
+          }).join("")}
         </div>
         <div class="asset-actions">
           <button class="asset-action view" type="button" data-asset-view="${escapeHtml(asset)}">Ver</button>
           <button class="asset-action ${enabled ? "on" : "off"}" type="button" data-asset-toggle="${escapeHtml(asset)}" data-enabled="${enabled ? "false" : "true"}">${enabled ? "Ligado" : "Desligado"}</button>
+          <button class="asset-action delete" type="button" data-asset-delete="${escapeHtml(asset)}">Excluir</button>
         </div>
       </div>
     `;
@@ -1105,12 +1176,13 @@ async function addAssetFromInput() {
   const raw = String(refs.assetInput?.value || "").trim();
   if (!raw) return;
   const asset = normalizeAsset(raw);
+  const channels = selectedAddChannels();
 
   try {
     const res = await fetch("/assets", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ asset, enabled: true }),
+      body: JSON.stringify({ asset, enabled: true, channels }),
     });
     if (!res.ok) throw new Error(await res.text());
     const msg = await res.json();
@@ -1119,6 +1191,47 @@ async function addAssetFromInput() {
     refs.assetInput.value = "";
   } catch (err) {
     setRtdStatus("bad", "Falha ativo");
+  }
+}
+
+async function updateAssetChannels(asset, channels) {
+  const normalized = normalizeAsset(asset);
+  const safeChannels = normalizeChannels(channels);
+
+  try {
+    const res = await fetch("/assets/channels", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ asset: normalized, channels: safeChannels }),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    updateAssetsMessage(await res.json());
+    if (sameAsset(normalized)) renderSelectedAsset();
+  } catch (_) {
+    setRtdStatus("bad", "Falha canais");
+  }
+}
+
+async function deleteAsset(asset) {
+  const normalized = normalizeAsset(asset);
+  if (!window.confirm(`Excluir RTD ${normalized}?`)) return;
+
+  try {
+    const res = await fetch("/assets/delete", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ asset: normalized }),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    const msg = await res.json();
+    delete state.rtd.snapshotsByAsset[normalized];
+    delete state.rtd.ticksByAsset[normalized];
+    delete state.rtd.lastPriceByAsset[normalized];
+    delete state.flow.byAsset[normalized];
+    updateAssetsMessage(msg);
+    renderSelectedAsset();
+  } catch (_) {
+    setRtdStatus("bad", "Falha excluir");
   }
 }
 
@@ -3680,7 +3793,30 @@ refs.assetList.addEventListener("click", ev => {
   const toggle = ev.target.closest("[data-asset-toggle]");
   if (toggle) {
     toggleAsset(toggle.dataset.assetToggle, toggle.dataset.enabled === "true");
+    return;
   }
+
+  const remove = ev.target.closest("[data-asset-delete]");
+  if (remove) {
+    deleteAsset(remove.dataset.assetDelete);
+  }
+});
+
+refs.assetList.addEventListener("change", ev => {
+  const input = ev.target.closest("[data-asset-channel]");
+  if (!input) return;
+
+  const asset = normalizeAsset(input.dataset.assetChannel);
+  const checked = [...refs.assetList.querySelectorAll("[data-asset-channel]")]
+    .filter(item => normalizeAsset(item.dataset.assetChannel) === asset && item.checked)
+    .map(item => item.value);
+  if (!checked.length) {
+    input.checked = true;
+    setRtdStatus("warn", "Canal obrig.");
+    return;
+  }
+
+  updateAssetChannels(asset, checked);
 });
 
 function renderChartOnly() {

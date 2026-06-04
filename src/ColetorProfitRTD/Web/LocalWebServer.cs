@@ -21,6 +21,8 @@ namespace ColetorProfitRTD.Web
         private readonly Func<object> _assetsFactory;
         private readonly Func<Dictionary<string, object>, object> _assetAddHandler;
         private readonly Func<Dictionary<string, object>, object> _assetToggleHandler;
+        private readonly Func<Dictionary<string, object>, object> _assetDeleteHandler;
+        private readonly Func<Dictionary<string, object>, object> _assetChannelsHandler;
         private readonly WebSocketHub _hub;
         private CancellationTokenSource _cts;
 
@@ -35,6 +37,8 @@ namespace ColetorProfitRTD.Web
             Func<object> assetsFactory,
             Func<Dictionary<string, object>, object> assetAddHandler,
             Func<Dictionary<string, object>, object> assetToggleHandler,
+            Func<Dictionary<string, object>, object> assetDeleteHandler,
+            Func<Dictionary<string, object>, object> assetChannelsHandler,
             WebSocketHub hub,
             Logger log)
         {
@@ -48,6 +52,8 @@ namespace ColetorProfitRTD.Web
             _assetsFactory = assetsFactory;
             _assetAddHandler = assetAddHandler;
             _assetToggleHandler = assetToggleHandler;
+            _assetDeleteHandler = assetDeleteHandler;
+            _assetChannelsHandler = assetChannelsHandler;
             _hub = hub;
             _log = log;
             _listener.Prefixes.Add("http://localhost:" + Port + "/");
@@ -154,12 +160,33 @@ namespace ColetorProfitRTD.Web
                         await WriteJsonAsync(context, _assetAddHandler(body));
                         return;
                     }
+
+                    if (string.Equals(context.Request.HttpMethod, "DELETE", StringComparison.OrdinalIgnoreCase))
+                    {
+                        Dictionary<string, object> body = await ReadJsonBodyAsync(context);
+                        await WriteJsonAsync(context, _assetDeleteHandler(body));
+                        return;
+                    }
                 }
 
                 if (IsPath(path, "/assets/toggle") && string.Equals(context.Request.HttpMethod, "POST", StringComparison.OrdinalIgnoreCase))
                 {
                     Dictionary<string, object> body = await ReadJsonBodyAsync(context);
                     await WriteJsonAsync(context, _assetToggleHandler(body));
+                    return;
+                }
+
+                if (IsPath(path, "/assets/delete") && string.Equals(context.Request.HttpMethod, "POST", StringComparison.OrdinalIgnoreCase))
+                {
+                    Dictionary<string, object> body = await ReadJsonBodyAsync(context);
+                    await WriteJsonAsync(context, _assetDeleteHandler(body));
+                    return;
+                }
+
+                if (IsPath(path, "/assets/channels") && string.Equals(context.Request.HttpMethod, "POST", StringComparison.OrdinalIgnoreCase))
+                {
+                    Dictionary<string, object> body = await ReadJsonBodyAsync(context);
+                    await WriteJsonAsync(context, _assetChannelsHandler(body));
                     return;
                 }
 

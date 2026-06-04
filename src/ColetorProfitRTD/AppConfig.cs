@@ -34,6 +34,8 @@ namespace ColetorProfitRTD
             config.Rtd.Assets = NormalizeAssets(config.Rtd.Asset, config.Rtd.Assets);
             config.Rtd.ActiveAssets = NormalizeAssets(config.Rtd.Asset, config.Rtd.ActiveAssets);
             config.Rtd.Fields = NormalizeFields(config.Rtd.Fields);
+            config.Rtd.ChannelFields = NormalizeChannelFields(config.Rtd.ChannelFields);
+            config.Rtd.AssetChannels = NormalizeAssetChannels(config.Rtd.Assets, config.Rtd.AssetChannels);
 
             return config;
         }
@@ -63,6 +65,73 @@ namespace ColetorProfitRTD
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .ToList();
         }
+
+        private static Dictionary<string, List<string>> NormalizeChannelFields(Dictionary<string, List<string>> channelFields)
+        {
+            var result = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (KeyValuePair<string, IReadOnlyList<string>> pair in RtdFieldCatalog.DefaultChannelFields)
+            {
+                result[pair.Key] = NormalizeFields(pair.Value.ToList());
+            }
+
+            if (channelFields != null)
+            {
+                foreach (KeyValuePair<string, List<string>> pair in channelFields)
+                {
+                    string channel = RtdFieldCatalog.NormalizeChannel(pair.Key);
+                    if (string.IsNullOrWhiteSpace(channel))
+                    {
+                        continue;
+                    }
+
+                    result[channel] = NormalizeFields(pair.Value);
+                }
+            }
+
+            return result;
+        }
+
+        private static Dictionary<string, List<string>> NormalizeAssetChannels(List<string> assets, Dictionary<string, List<string>> assetChannels)
+        {
+            var result = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (string asset in assets ?? new List<string>())
+            {
+                result[asset] = RtdFieldCatalog.DefaultChannels.ToList();
+            }
+
+            if (assetChannels != null)
+            {
+                foreach (KeyValuePair<string, List<string>> pair in assetChannels)
+                {
+                    string asset = string.IsNullOrWhiteSpace(pair.Key) ? null : pair.Key.Trim().ToUpperInvariant();
+                    if (string.IsNullOrWhiteSpace(asset))
+                    {
+                        continue;
+                    }
+
+                    result[asset] = NormalizeChannels(pair.Value);
+                }
+            }
+
+            return result;
+        }
+
+        public static List<string> NormalizeChannels(List<string> channels)
+        {
+            IEnumerable<string> source = channels == null || channels.Count == 0
+                ? RtdFieldCatalog.DefaultChannels
+                : channels;
+
+            List<string> normalized = source
+                .Select(RtdFieldCatalog.NormalizeChannel)
+                .Where(x => !string.IsNullOrWhiteSpace(x))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            return normalized.Count == 0 ? RtdFieldCatalog.DefaultChannels.ToList() : normalized;
+        }
     }
 
     public sealed class RtdConfig
@@ -71,6 +140,12 @@ namespace ColetorProfitRTD
         public string Asset { get; set; } = "WDOFUT_F_0";
         public List<string> Assets { get; set; } = new List<string> { "WDOFUT_F_0" };
         public List<string> ActiveAssets { get; set; } = new List<string> { "WDOFUT_F_0" };
+        public Dictionary<string, List<string>> AssetChannels { get; set; } = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["WDOFUT_F_0"] = RtdFieldCatalog.DefaultChannels.ToList()
+        };
+        public Dictionary<string, List<string>> ChannelFields { get; set; } = RtdFieldCatalog.DefaultChannelFields
+            .ToDictionary(x => x.Key, x => x.Value.ToList(), StringComparer.OrdinalIgnoreCase);
         public int PollIntervalMs { get; set; } = 250;
         public int ReconnectIntervalMs { get; set; } = 5000;
         public List<string> Fields { get; set; } = RtdFieldCatalog.DefaultLiveFields.ToList();

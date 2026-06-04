@@ -66,6 +66,15 @@ namespace ColetorProfitRTD.MarketData
             }
         }
 
+        public void Remove(string asset)
+        {
+            lock (_lock)
+            {
+                string key = NormalizeAsset(asset);
+                _snapshots.Remove(key);
+            }
+        }
+
         private MarketSnapshot CurrentUnlocked(string asset)
         {
             string key = NormalizeAsset(asset);

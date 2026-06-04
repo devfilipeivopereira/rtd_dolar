@@ -20,6 +20,7 @@ namespace ColetorProfitRTD.Rtd
         private readonly Dictionary<string, int> _topicByKey = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
         private readonly HashSet<string> _knownAssets = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         private readonly HashSet<string> _activeAssets = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, List<string>> _assetChannels = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
         private readonly Queue<Action<IRtdServer>> _controlCommands = new Queue<Action<IRtdServer>>();
         private Thread _thread;
         private RtdUpdateEvent _callback;
@@ -44,6 +45,7 @@ namespace ColetorProfitRTD.Rtd
                 if (!string.IsNullOrWhiteSpace(normalized))
                 {
                     _knownAssets.Add(normalized);
+                    _assetChannels[normalized] = ChannelsFor(normalized);
                 }
             }
 
@@ -58,6 +60,7 @@ namespace ColetorProfitRTD.Rtd
                 {
                     _knownAssets.Add(normalized);
                     _activeAssets.Add(normalized);
+                    _assetChannels[normalized] = ChannelsFor(normalized);
                 }
             }
         }
@@ -107,11 +110,13 @@ namespace ColetorProfitRTD.Rtd
             List<string> knownAssets;
             List<string> activeAssets;
             List<string> subscribedAssets;
+            Dictionary<string, List<string>> channelsByAsset;
 
             lock (_assetLock)
             {
                 knownAssets = _knownAssets.OrderBy(x => x).ToList();
                 activeAssets = _activeAssets.ToList();
+                channelsByAsset = _assetChannels.ToDictionary(x => x.Key, x => x.Value.ToList(), StringComparer.OrdinalIgnoreCase);
             }
 
             lock (_topicLock)
@@ -128,12 +133,14 @@ namespace ColetorProfitRTD.Rtd
                     ["asset"] = asset,
                     ["enabled"] = activeAssets.Contains(asset, StringComparer.OrdinalIgnoreCase),
                     ["subscribed"] = subscribedAssets.Contains(asset, StringComparer.OrdinalIgnoreCase),
-                    ["isDefault"] = string.Equals(asset, _config.Asset, StringComparison.OrdinalIgnoreCase)
+                    ["isDefault"] = string.Equals(asset, _config.Asset, StringComparison.OrdinalIgnoreCase),
+                    ["channels"] = channelsByAsset.TryGetValue(asset, out List<string> channels) ? channels : RtdFieldCatalog.DefaultChannels.ToList(),
+                    ["fields"] = ResolveFieldsForAsset(asset).ToList()
                 })
                 .ToList();
         }
 
-        public Dictionary<string, object> AddAsset(string asset, bool enabled)
+        public Dictionary<string, object> AddAsset(string asset, bool enabled, List<string> channels)
         {
             string normalized = NormalizeAsset(asset);
             if (string.IsNullOrWhiteSpace(normalized))
@@ -141,9 +148,12 @@ namespace ColetorProfitRTD.Rtd
                 throw new ArgumentException("Ativo invalido.", nameof(asset));
             }
 
+            List<string> normalizedChannels = AppConfig.NormalizeChannels(channels);
+
             lock (_assetLock)
             {
                 _knownAssets.Add(normalized);
+                _assetChannels[normalized] = normalizedChannels;
                 if (enabled)
                 {
                     _activeAssets.Add(normalized);
@@ -156,6 +166,60 @@ namespace ColetorProfitRTD.Rtd
             }
 
             return AssetStates().First(x => string.Equals((string)x["asset"], normalized, StringComparison.OrdinalIgnoreCase));
+        }
+
+        public Dictionary<string, object> SetAssetChannels(string asset, List<string> channels)
+        {
+            string normalized = NormalizeAsset(asset);
+            if (string.IsNullOrWhiteSpace(normalized))
+            {
+                throw new ArgumentException("Ativo invalido.", nameof(asset));
+            }
+
+            bool active;
+
+            lock (_assetLock)
+            {
+                _knownAssets.Add(normalized);
+                _assetChannels[normalized] = AppConfig.NormalizeChannels(channels);
+                active = _activeAssets.Contains(normalized);
+            }
+
+            if (active)
+            {
+                EnqueueControl(server =>
+                {
+                    DisconnectAsset(server, normalized);
+                    SubscribeAsset(server, normalized);
+                });
+            }
+
+            return AssetStates().First(x => string.Equals((string)x["asset"], normalized, StringComparison.OrdinalIgnoreCase));
+        }
+
+        public Dictionary<string, object> DeleteAsset(string asset)
+        {
+            string normalized = NormalizeAsset(asset);
+            if (string.IsNullOrWhiteSpace(normalized))
+            {
+                throw new ArgumentException("Ativo invalido.", nameof(asset));
+            }
+
+            lock (_assetLock)
+            {
+                _knownAssets.Remove(normalized);
+                _activeAssets.Remove(normalized);
+                _assetChannels.Remove(normalized);
+            }
+
+            EnqueueControl(server => DisconnectAsset(server, normalized));
+            _state.Remove(normalized);
+
+            return new Dictionary<string, object>
+            {
+                ["asset"] = normalized,
+                ["deleted"] = true
+            };
         }
 
         public Dictionary<string, object> SetAssetEnabled(string asset, bool enabled)
@@ -171,6 +235,10 @@ namespace ColetorProfitRTD.Rtd
             lock (_assetLock)
             {
                 _knownAssets.Add(normalized);
+                if (!_assetChannels.ContainsKey(normalized))
+                {
+                    _assetChannels[normalized] = ChannelsFor(normalized);
+                }
                 changed = enabled ? _activeAssets.Add(normalized) : _activeAssets.Remove(normalized);
             }
 
@@ -332,7 +400,7 @@ namespace ColetorProfitRTD.Rtd
 
             string normalizedAsset = NormalizeAsset(asset);
 
-            foreach (string field in _config.Fields.Select(x => x.Trim().ToUpperInvariant()).Distinct())
+            foreach (string field in ResolveFieldsForAsset(normalizedAsset))
             {
                 string key = normalizedAsset + ":" + field;
                 lock (_topicLock)
@@ -517,6 +585,56 @@ namespace ColetorProfitRTD.Rtd
         {
             MarketSnapshot snapshot = _state.Update(topic.Asset, topic.Field, value, Status);
             SnapshotReceived?.Invoke(snapshot);
+        }
+
+        private List<string> ChannelsFor(string asset)
+        {
+            string normalized = NormalizeAsset(asset);
+
+            if (_config.AssetChannels != null &&
+                _config.AssetChannels.TryGetValue(normalized, out List<string> channels))
+            {
+                return AppConfig.NormalizeChannels(channels);
+            }
+
+            return RtdFieldCatalog.DefaultChannels.ToList();
+        }
+
+        private List<string> ResolveFieldsForAsset(string asset)
+        {
+            List<string> channels;
+
+            lock (_assetLock)
+            {
+                if (!_assetChannels.TryGetValue(asset, out channels))
+                {
+                    channels = ChannelsFor(asset);
+                }
+
+                channels = AppConfig.NormalizeChannels(channels);
+            }
+
+            var fields = new List<string>();
+
+            foreach (string channel in channels)
+            {
+                if (_config.ChannelFields != null &&
+                    _config.ChannelFields.TryGetValue(channel, out List<string> channelFields))
+                {
+                    fields.AddRange(channelFields);
+                }
+            }
+
+            if (fields.Count == 0)
+            {
+                fields.AddRange(_config.Fields);
+            }
+
+            return fields
+                .Where(x => !string.IsNullOrWhiteSpace(x))
+                .Select(x => x.Trim().ToUpperInvariant())
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
         }
 
         private void Disconnect(IRtdServer server)

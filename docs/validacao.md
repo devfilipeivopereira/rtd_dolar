@@ -36,6 +36,9 @@ GET http://localhost:5000/signals
 GET http://localhost:5000/assets
 POST http://localhost:5000/assets
 POST http://localhost:5000/assets/toggle
+POST http://localhost:5000/assets/channels
+POST http://localhost:5000/assets/delete
+DELETE http://localhost:5000/assets
 WS  ws://localhost:5000/ws
 ```
 
@@ -43,10 +46,16 @@ Exemplos:
 
 ```json
 POST /assets
-{ "asset": "WINFUT_F_0", "enabled": true }
+{ "asset": "WINFUT_F_0", "enabled": true, "channels": ["quote", "book", "timesTrades"] }
 
 POST /assets/toggle
 { "asset": "WINFUT_F_0", "enabled": false }
+
+POST /assets/channels
+{ "asset": "WINFUT_F_0", "channels": ["quote", "book"] }
+
+POST /assets/delete
+{ "asset": "WINFUT_F_0" }
 ```
 
 ## x64 ou x86
@@ -74,9 +83,13 @@ Sem CSV, a aba DOM ainda pode mostrar ticks RTD, bid/ask e tape. Pontos como POC
 ## Multiativo
 
 - `/assets` deve listar `enabled`, `subscribed` e `isDefault`.
+- `/assets` deve listar `channels` e `fields` por ativo.
 - Ativo desligado deve parar de receber novos snapshots.
+- Ativo excluido deve sumir de `/assets` e da lista do dashboard.
 - Ao selecionar outro ativo no dashboard, campos intraday, DOM, fluxo e setups devem mostrar somente aquele ativo.
 - Order flow, delta e sinais nao devem misturar ativos diferentes.
+- Ao remover o canal `book`, campos de bid/ask deixam de atualizar depois da reassinatura.
+- Ao remover o canal `timesTrades`, tape derivado deixa de receber novos updates de `QUL`, `NEG`, `QTT` e `VOL`.
 
 ## SQLite
 

@@ -32,6 +32,19 @@ O cadastro de ativos tem dois niveis:
 
 Durante a execucao, o dashboard chama `POST /assets` para adicionar ativo e `POST /assets/toggle` para ligar/desligar a assinatura daquele simbolo. Desligar remove os topicos RTD daquele ativo no servidor COM.
 
+Tambem existem:
+
+- `POST /assets/channels`: troca os canais RTD assinados para um ativo;
+- `POST /assets/delete` ou `DELETE /assets`: remove o ativo da lista, desassina os topicos e limpa o snapshot em memoria.
+
+Os canais atuais sao:
+
+- `quote`: cotacao e campos intraday principais;
+- `book`: topo de book por `OCP`, `OVD`, `VOC`, `VOV` e `VPJ`;
+- `timesTrades`: ultimo negocio e agregados por `ULT`, `QUL`, `NEG`, `QTT` e `VOL`.
+
+Na implementacao atual, `book` e `timesTrades` sao canais derivados do mesmo servidor `RTDTrading.RTDServer`. Eles preparam a arquitetura para book profundo e Times & Trades completo quando os respectivos RTDs/formulas estiverem disponiveis.
+
 ## Frontend
 
 O frontend fica em `src/dashboard/index.html` e usa o HTML do `dolar-points` como base.
@@ -46,7 +59,7 @@ O CSV diario continua sendo a fonte do historico 21/45/63. O RTD preenche o intr
 - volume acumulado;
 - book e volume projetado.
 
-A secao `Ativos RTD` seleciona qual ativo aparece nos campos intraday, DOM, fluxo e setups. Snapshots de ativos diferentes ficam em caches separados no navegador.
+A secao `Ativos RTD` seleciona qual ativo aparece nos campos intraday, DOM, fluxo e setups. Snapshots de ativos diferentes ficam em caches separados no navegador, e os canais podem ser ajustados por ativo sem reiniciar o app.
 
 ## Aba DOM
 

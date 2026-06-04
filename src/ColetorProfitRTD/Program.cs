@@ -1,6 +1,8 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using ColetorProfitRTD.Flow;
@@ -103,6 +105,8 @@ namespace ColetorProfitRTD
                 () => BuildAssets(rtdClient),
                 body => AddAsset(rtdClient, body),
                 body => ToggleAsset(rtdClient, body),
+                body => DeleteAsset(rtdClient, flowProcessor, body),
+                body => UpdateAssetChannels(rtdClient, body),
                 hub,
                 log))
             {
@@ -198,6 +202,7 @@ namespace ColetorProfitRTD
             {
                 ["type"] = "assets",
                 ["assets"] = rtdClient.AssetStates(),
+                ["availableChannels"] = RtdFieldCatalog.DefaultChannels.ToList(),
                 ["localTimestamp"] = DateTimeOffset.Now.ToString("o")
             };
         }
@@ -206,13 +211,48 @@ namespace ColetorProfitRTD
         {
             string asset = GetString(body, "asset");
             bool enabled = GetBool(body, "enabled", true);
-            Dictionary<string, object> state = rtdClient.AddAsset(asset, enabled);
+            List<string> channels = GetStringList(body, "channels");
+            Dictionary<string, object> state = rtdClient.AddAsset(asset, enabled, channels);
 
             return new Dictionary<string, object>
             {
                 ["type"] = "asset",
                 ["asset"] = state,
                 ["assets"] = rtdClient.AssetStates(),
+                ["availableChannels"] = RtdFieldCatalog.DefaultChannels.ToList(),
+                ["localTimestamp"] = DateTimeOffset.Now.ToString("o")
+            };
+        }
+
+        private static Dictionary<string, object> UpdateAssetChannels(RtdClient rtdClient, Dictionary<string, object> body)
+        {
+            string asset = GetString(body, "asset");
+            List<string> channels = GetStringList(body, "channels");
+            Dictionary<string, object> state = rtdClient.SetAssetChannels(asset, channels);
+
+            return new Dictionary<string, object>
+            {
+                ["type"] = "asset",
+                ["asset"] = state,
+                ["assets"] = rtdClient.AssetStates(),
+                ["availableChannels"] = RtdFieldCatalog.DefaultChannels.ToList(),
+                ["localTimestamp"] = DateTimeOffset.Now.ToString("o")
+            };
+        }
+
+        private static Dictionary<string, object> DeleteAsset(RtdClient rtdClient, FlowProcessor flowProcessor, Dictionary<string, object> body)
+        {
+            string asset = GetString(body, "asset");
+            Dictionary<string, object> deleted = rtdClient.DeleteAsset(asset);
+            flowProcessor.RemoveAsset(asset);
+
+            return new Dictionary<string, object>
+            {
+                ["type"] = "assetDeleted",
+                ["asset"] = deleted,
+                ["deletedAsset"] = deleted["asset"],
+                ["assets"] = rtdClient.AssetStates(),
+                ["availableChannels"] = RtdFieldCatalog.DefaultChannels.ToList(),
                 ["localTimestamp"] = DateTimeOffset.Now.ToString("o")
             };
         }
@@ -228,6 +268,7 @@ namespace ColetorProfitRTD
                 ["type"] = "asset",
                 ["asset"] = state,
                 ["assets"] = rtdClient.AssetStates(),
+                ["availableChannels"] = RtdFieldCatalog.DefaultChannels.ToList(),
                 ["localTimestamp"] = DateTimeOffset.Now.ToString("o")
             };
         }
@@ -255,6 +296,35 @@ namespace ColetorProfitRTD
             }
 
             return bool.TryParse(value.ToString(), out bool parsed) ? parsed : fallback;
+        }
+
+        private static List<string> GetStringList(Dictionary<string, object> body, string key)
+        {
+            var result = new List<string>();
+
+            if (body == null || !body.TryGetValue(key, out object value) || value == null)
+            {
+                return result;
+            }
+
+            if (value is string text)
+            {
+                result.Add(text);
+                return result;
+            }
+
+            if (value is IEnumerable enumerable)
+            {
+                foreach (object item in enumerable)
+                {
+                    if (item != null)
+                    {
+                        result.Add(item.ToString());
+                    }
+                }
+            }
+
+            return result;
         }
 
         private static string ResolveConfigPath()

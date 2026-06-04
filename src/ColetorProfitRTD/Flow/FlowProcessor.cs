@@ -144,6 +144,28 @@ namespace ColetorProfitRTD.Flow
             };
         }
 
+        public void RemoveAsset(string asset)
+        {
+            if (string.IsNullOrWhiteSpace(asset))
+            {
+                return;
+            }
+
+            string key = asset.Trim().ToUpperInvariant();
+
+            lock (_lock)
+            {
+                _states.Remove(key);
+
+                if (_lastFlowMessage != null &&
+                    _lastFlowMessage.TryGetValue("asset", out object value) &&
+                    string.Equals(Convert.ToString(value), key, StringComparison.OrdinalIgnoreCase))
+                {
+                    _lastFlowMessage = null;
+                }
+            }
+        }
+
         public void Dispose()
         {
             Stop();

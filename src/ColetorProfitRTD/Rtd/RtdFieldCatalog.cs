@@ -19,6 +19,10 @@ namespace ColetorProfitRTD.Rtd
 
     public static class RtdFieldCatalog
     {
+        public const string QuoteChannel = "quote";
+        public const string BookChannel = "book";
+        public const string TimesTradesChannel = "timesTrades";
+
         public static readonly IReadOnlyList<RtdFieldInfo> Fields = new[]
         {
             new RtdFieldInfo("DAT", "Data", true),
@@ -93,5 +97,63 @@ namespace ColetorProfitRTD.Rtd
             .Where(x => x.DefaultLive)
             .Select(x => x.Code)
             .ToList();
+
+        public static readonly IReadOnlyList<string> DefaultChannels = new[]
+        {
+            QuoteChannel,
+            BookChannel,
+            TimesTradesChannel
+        };
+
+        public static readonly IReadOnlyDictionary<string, IReadOnlyList<string>> DefaultChannelFields =
+            new Dictionary<string, IReadOnlyList<string>>(System.StringComparer.OrdinalIgnoreCase)
+            {
+                [QuoteChannel] = new[]
+                {
+                    "DAT", "HOR", "ULT", "ABE", "MAX", "MIN", "FEC", "VAR", "VARPTS",
+                    "MED", "AJU", "AJA", "VEN", "VAL", "CAB", "EST"
+                },
+                [BookChannel] = new[]
+                {
+                    "OCP", "OVD", "VOC", "VOV", "VPJ"
+                },
+                [TimesTradesChannel] = new[]
+                {
+                    "DAT", "HOR", "ULT", "QUL", "NEG", "QTT", "VOL"
+                }
+            };
+
+        public static string NormalizeChannel(string channel)
+        {
+            if (string.IsNullOrWhiteSpace(channel))
+            {
+                return null;
+            }
+
+            string value = channel.Trim();
+
+            if (value.Equals("cotacao", System.StringComparison.OrdinalIgnoreCase) ||
+                value.Equals("quote", System.StringComparison.OrdinalIgnoreCase))
+            {
+                return QuoteChannel;
+            }
+
+            if (value.Equals("book", System.StringComparison.OrdinalIgnoreCase) ||
+                value.Equals("ofertas", System.StringComparison.OrdinalIgnoreCase) ||
+                value.Equals("bookOfertas", System.StringComparison.OrdinalIgnoreCase))
+            {
+                return BookChannel;
+            }
+
+            if (value.Equals("times", System.StringComparison.OrdinalIgnoreCase) ||
+                value.Equals("trades", System.StringComparison.OrdinalIgnoreCase) ||
+                value.Equals("timesTrades", System.StringComparison.OrdinalIgnoreCase) ||
+                value.Equals("timesAndTrades", System.StringComparison.OrdinalIgnoreCase))
+            {
+                return TimesTradesChannel;
+            }
+
+            return value;
+        }
     }
 }
