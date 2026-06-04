@@ -18,9 +18,10 @@
 - Tela `Painel` como entrada operacional com checklist, atalhos, setups, planos e alertas.
 - Tela `Cotacoes` como watchlist operacional entre o cadastro de ativos e as telas de analise.
 - Tela `Boleta` para planos locais de entrada, stop, alvo, risco e status por toque de preco, sem envio de ordens.
+- Tela `Ajustes` para parametros locais de tick, DOM, renderizacao, memoria de tape/sinais e valor por ponto.
 - Faixa superior operacional com ativo selecionado, ultimo preco, bid/ask, Book, Times, delta e CSV.
 - Coalescing auxiliar para `bookDepth` e `timesTrades`, reduzindo repintura sem bloquear snapshots de preco.
-- Scheduler de render no navegador para agrupar DOM, Painel, Cotacoes e Historico em 120 ms, mantendo inputs de preco imediatos.
+- Scheduler de render no navegador para agrupar DOM, Painel, Cotacoes e Historico, com padrao de 120 ms e ajuste pela UI, mantendo inputs de preco imediatos.
 
 ## Fluxo de validacao
 
@@ -34,7 +35,7 @@
 8. Abrir `Painel` e confirmar checklist, atalhos, setups, planos e alertas.
 9. Abrir `Cotacoes` e testar os atalhos para `Grafico`, `DOM`, `Book`, `T&T` e `Boleta`.
 10. Salvar um plano local na `Boleta` e confirmar que nenhum endpoint de ordem e chamado.
-11. Abrir `Book`, `T&T`, `Alertas`, `Risco`, `Historico` e `Sistema`.
+11. Abrir `Book`, `T&T`, `Alertas`, `Risco`, `Historico`, `Ajustes` e `Sistema`.
 
 ## Build validado
 

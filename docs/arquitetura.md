@@ -76,6 +76,7 @@ O menu superior separa:
 - `Alertas`: alertas locais por preco;
 - `Risco`: calculadora local de stop, alvo e contratos;
 - `Historico`: resumo do CSV e ticks em memoria;
+- `Ajustes`: parametros locais de tick, DOM, renderizacao, memoria e valor por ponto;
 - `Sistema`: saude e debug.
 
 A faixa superior fica disponivel em todas as telas e mostra ativo selecionado, ultimo preco, bid/ask, status de Book, status de Times, delta 5s e CSV carregado.
@@ -86,13 +87,15 @@ A tela `Ativos` configura fontes e CSV. A tela `Cotacoes` e a mesa de monitorame
 
 A `Boleta` persiste planos no navegador por ativo. Ela calcula risco e R/R, acompanha se entrada, alvo ou stop foram tocados pelo preco RTD e nao chama nenhum endpoint de envio de ordem.
 
+A tela `Ajustes` persiste preferencias no navegador em `wdo-ui-settings`. Ela controla tamanho do tick, quantidade de niveis do DOM, intervalo de renderizacao, limite de trades/sinais em memoria e valor por ponto padrao para `Boleta` e `Risco`.
+
 A selecao de ativo define o que aparece nos campos intraday, DOM, fluxo e setups. Snapshots, book e Times & Trades de ativos diferentes ficam em caches separados no navegador, e as fontes podem ser ajustadas por ativo sem reiniciar o app.
 
 ## Aba DOM
 
 A aba `DOM` mostra:
 
-- escada em tick size de 0,5;
+- escada em tick size configuravel, com padrao de 0,5;
 - ultimo preco ao centro;
 - bid/ask do snapshot de preco;
 - volumes de book multi-nivel quando `bookDepth` chega;
@@ -103,7 +106,7 @@ Os pontos marcados incluem abertura, maxima, minima, VWAP/MED, POC, VAH, VAL, de
 
 As mensagens auxiliares de profundidade sao coalescidas no cliente RTD para reduzir repintura da UI: `bookDepth` tem broadcast minimo de 100 ms e `timesTrades` de 150 ms. Snapshots de preco continuam no fluxo existente.
 
-No navegador, campos criticos de preco e inputs intraday sao preenchidos a cada snapshot. Renderizacoes densas como DOM completo, `Painel`, `Cotacoes` e `Historico` usam scheduler curto de 120 ms para reduzir travamentos quando o RTD envia muitos updates.
+No navegador, campos criticos de preco e inputs intraday sao preenchidos a cada snapshot. Renderizacoes densas como DOM completo, `Painel`, `Cotacoes` e `Historico` usam scheduler curto, com padrao de 120 ms e ajuste pela aba `Ajustes`, para reduzir travamentos quando o RTD envia muitos updates.
 
 ## Persistencia
 

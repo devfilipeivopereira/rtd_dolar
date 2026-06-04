@@ -55,6 +55,7 @@ O menu superior separa as telas por funcionalidade e a faixa superior mostra ati
 - `Alertas`: alertas locais de preco por ativo;
 - `Risco`: calculadora local de stop, alvo e contratos;
 - `Historico`: resumo do CSV e ticks em memoria;
+- `Ajustes`: parametros locais de tick, DOM, renderizacao, memoria de tape/sinais e valor por ponto;
 - `Sistema`: RTD, WebSocket e debug de fluxo.
 
 A aba `DOM` mostra:
@@ -91,7 +92,8 @@ Use o MSBuild do Visual Studio 2022/Build Tools. O MSBuild antigo de `C:\Windows
 8. Clique em `Salvar`.
 9. Abra `Painel` para ver checklist operacional, atalhos, setups, planos e alertas.
 10. Abra `Cotacoes` para monitorar os ativos cadastrados e entrar em `Grafico`, `DOM`, `Book`, `T&T` ou `Boleta`.
-11. Deixe o modo `RTD Live` ativo para preencher o intraday automaticamente.
+11. Abra `Ajustes` se quiser mudar niveis do DOM, cadencia de renderizacao ou valor por ponto padrao.
+12. Deixe o modo `RTD Live` ativo para preencher o intraday automaticamente.
 
 A `Boleta` e apenas um plano local/simulado. O aplicativo nao envia ordens para o Profit.
 
@@ -176,6 +178,7 @@ logs/                   logs em runtime
 8. Painel: confirmar checklist, atalhos, setups, planos e alertas do ativo selecionado.
 9. Cotacoes: confirmar que a watchlist mostra todos os ativos e que os botoes abrem `Grafico`, `DOM`, `Book`, `T&T` e `Boleta`.
 10. Boleta: salvar um plano local e confirmar status `aguardando`, `aberto`, `alvo` ou `stop` conforme o preco.
-11. Abas operacionais: confirmar `Book`, `T&T`, `Alertas`, `Risco`, `Historico` e `Sistema` sem erro no navegador.
-12. Performance: confirmar que DOM, Painel e Cotacoes seguem responsivos com RTD ativo; campos intraday devem atualizar imediatamente.
-13. SQLite: confirmar criacao de `data/marketdata.sqlite` quando o provider for restaurado pelo NuGet.
+11. Abas operacionais: confirmar `Book`, `T&T`, `Alertas`, `Risco`, `Historico`, `Ajustes` e `Sistema` sem erro no navegador.
+12. Ajustes: alterar niveis do DOM e intervalo de renderizacao, salvar, recarregar a pagina e confirmar persistencia local.
+13. Performance: confirmar que DOM, Painel e Cotacoes seguem responsivos com RTD ativo; campos intraday devem atualizar imediatamente.
+14. SQLite: confirmar criacao de `data/marketdata.sqlite` quando o provider for restaurado pelo NuGet.

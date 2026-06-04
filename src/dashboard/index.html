@@ -515,6 +515,7 @@ tr:hover td{background:#ffffff05}
         <button class="main-tab" data-main-tab="alerts" type="button">Alertas</button>
         <button class="main-tab" data-main-tab="risk" type="button">Risco</button>
         <button class="main-tab" data-main-tab="history" type="button">Historico</button>
+        <button class="main-tab" data-main-tab="settings" type="button">Ajustes</button>
         <button class="main-tab" data-main-tab="diagnostics" type="button">Sistema</button>
       </div>
     </nav>
@@ -848,6 +849,7 @@ tr:hover td{background:#ffffff05}
                   <button class="quick-action" type="button" data-dashboard-open="book"><strong>Book</strong><span>Ofertas multi-nivel</span></button>
                   <button class="quick-action" type="button" data-dashboard-open="times"><strong>T&amp;T</strong><span>Negocios do RTD</span></button>
                   <button class="quick-action" type="button" data-dashboard-open="orders"><strong>Boleta</strong><span>Plano local de risco</span></button>
+                  <button class="quick-action" type="button" data-dashboard-open="settings"><strong>Ajustes</strong><span>DOM, render e memoria</span></button>
                   <button class="quick-action" type="button" data-dashboard-open="assets"><strong>Ativos</strong><span>Cadastro e fontes RTD</span></button>
                 </div>
               </div>
@@ -1200,6 +1202,56 @@ tr:hover td{background:#ffffff05}
           </div>
         </section>
 
+        <section class="tab-panel hidden" id="panel-settings">
+          <div class="risk-grid">
+            <div class="panel">
+              <div class="panel-head">
+                <div class="panel-title">Ajustes da estacao</div>
+                <span class="tag amber">local</span>
+              </div>
+              <div class="panel-body">
+                <div class="field-grid">
+                  <div class="field">
+                    <label for="settings-tick-size">Tamanho do tick</label>
+                    <input type="number" id="settings-tick-size" step="0.5" min="0.01">
+                  </div>
+                  <div class="field">
+                    <label for="settings-dom-ticks">Niveis no DOM</label>
+                    <input type="number" id="settings-dom-ticks" step="10" min="40" max="600">
+                  </div>
+                  <div class="field">
+                    <label for="settings-render-ms">Intervalo de renderizacao ms</label>
+                    <input type="number" id="settings-render-ms" step="10" min="33" max="1000">
+                  </div>
+                  <div class="field">
+                    <label for="settings-max-trades">Trades em memoria</label>
+                    <input type="number" id="settings-max-trades" step="10" min="20" max="500">
+                  </div>
+                  <div class="field">
+                    <label for="settings-max-signals">Sinais em memoria</label>
+                    <input type="number" id="settings-max-signals" step="10" min="10" max="300">
+                  </div>
+                  <div class="field">
+                    <label for="settings-point-value">Valor por ponto padrao</label>
+                    <input type="number" id="settings-point-value" step="0.01" placeholder="opcional">
+                  </div>
+                </div>
+                <div class="asset-actions-bar">
+                  <button class="btn-secondary ok" id="settings-save" type="button">Salvar</button>
+                  <button class="btn-secondary bad" id="settings-reset" type="button">Restaurar padrao</button>
+                </div>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="panel-head"><div class="panel-title">Estado dos ajustes</div></div>
+              <div class="panel-body">
+                <div class="risk-result" id="settings-summary"></div>
+                <div class="small-list" id="settings-notes"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <section class="tab-panel hidden" id="panel-levels">
           <div class="panel-grid">
             <div class="panel">
@@ -1481,11 +1533,55 @@ function saveOrderPlans() {
   } catch (_) {}
 }
 
-const MAIN_TABS = ["dashboard", "assets", "quotes", "panorama", "dom", "book", "times", "flow", "signals", "orders", "alerts", "risk", "history", "diagnostics"];
+const DEFAULT_UI_SETTINGS = {
+  tickSize: 0.5,
+  domVisibleTicks: 200,
+  liveIntervalMs: 120,
+  maxTrades: 120,
+  maxSignals: 80,
+  defaultPointValue: null,
+};
+
+function finiteSetting(value, fallback, min, max) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return fallback;
+  return Math.min(max, Math.max(min, n));
+}
+
+function sanitizeUiSettings(raw) {
+  const source = raw && typeof raw === "object" ? raw : {};
+  const pointValue = Number(source.defaultPointValue);
+  return {
+    tickSize: finiteSetting(source.tickSize, DEFAULT_UI_SETTINGS.tickSize, 0.01, 100),
+    domVisibleTicks: Math.round(finiteSetting(source.domVisibleTicks, DEFAULT_UI_SETTINGS.domVisibleTicks, 40, 600)),
+    liveIntervalMs: Math.round(finiteSetting(source.liveIntervalMs, DEFAULT_UI_SETTINGS.liveIntervalMs, 33, 1000)),
+    maxTrades: Math.round(finiteSetting(source.maxTrades, DEFAULT_UI_SETTINGS.maxTrades, 20, 500)),
+    maxSignals: Math.round(finiteSetting(source.maxSignals, DEFAULT_UI_SETTINGS.maxSignals, 10, 300)),
+    defaultPointValue: Number.isFinite(pointValue) && pointValue > 0 ? pointValue : null,
+  };
+}
+
+function loadUiSettings() {
+  try {
+    const raw = globalThis.localStorage?.getItem("wdo-ui-settings");
+    return sanitizeUiSettings(raw ? JSON.parse(raw) : DEFAULT_UI_SETTINGS);
+  } catch (_) {
+    return sanitizeUiSettings(DEFAULT_UI_SETTINGS);
+  }
+}
+
+function saveUiSettings(settings) {
+  try {
+    globalThis.localStorage?.setItem("wdo-ui-settings", JSON.stringify(settings));
+  } catch (_) {}
+}
+
+const MAIN_TABS = ["dashboard", "assets", "quotes", "panorama", "dom", "book", "times", "flow", "signals", "orders", "alerts", "risk", "history", "settings", "diagnostics"];
 
 const state = {
   ui: {
     mainTab: loadMainTab(),
+    settings: loadUiSettings(),
   },
   bars: [],
   uploadedCount: 0,
@@ -1545,6 +1641,12 @@ const state = {
   alerts: loadAlerts(),
   orderPlans: loadOrderPlans(),
 };
+
+state.rtd.tickSize = state.ui.settings.tickSize;
+state.rtd.domVisibleTicks = state.ui.settings.domVisibleTicks;
+state.render.liveIntervalMs = state.ui.settings.liveIntervalMs;
+state.flow.maxTrades = state.ui.settings.maxTrades;
+state.flow.maxSignals = state.ui.settings.maxSignals;
 
 const COLORS = {
   grid: "#30384455",
@@ -1712,6 +1814,16 @@ const refs = {
   riskPointValue: document.getElementById("risk-point-value"),
   riskSide: document.getElementById("risk-side"),
   riskResult: document.getElementById("risk-result"),
+  settingsTickSize: document.getElementById("settings-tick-size"),
+  settingsDomTicks: document.getElementById("settings-dom-ticks"),
+  settingsRenderMs: document.getElementById("settings-render-ms"),
+  settingsMaxTrades: document.getElementById("settings-max-trades"),
+  settingsMaxSignals: document.getElementById("settings-max-signals"),
+  settingsPointValue: document.getElementById("settings-point-value"),
+  settingsSave: document.getElementById("settings-save"),
+  settingsReset: document.getElementById("settings-reset"),
+  settingsSummary: document.getElementById("settings-summary"),
+  settingsNotes: document.getElementById("settings-notes"),
   historyKv: document.getElementById("history-kv"),
   historyTicks: document.getElementById("history-ticks"),
   btn: document.getElementById("btn-calc"),
@@ -2540,6 +2652,83 @@ function renderRisk() {
   ].map(([k, v]) => `<div class="live-kv"><span>${escapeHtml(k)}</span><strong>${escapeHtml(v)}</strong></div>`).join("");
 }
 
+function populateSettingsForm() {
+  const settings = state.ui.settings;
+  if (!refs.settingsTickSize) return;
+  refs.settingsTickSize.value = settings.tickSize;
+  refs.settingsDomTicks.value = settings.domVisibleTicks;
+  refs.settingsRenderMs.value = settings.liveIntervalMs;
+  refs.settingsMaxTrades.value = settings.maxTrades;
+  refs.settingsMaxSignals.value = settings.maxSignals;
+  refs.settingsPointValue.value = Number.isFinite(settings.defaultPointValue) ? settings.defaultPointValue : "";
+}
+
+function collectSettingsForm() {
+  return sanitizeUiSettings({
+    tickSize: refs.settingsTickSize?.value,
+    domVisibleTicks: refs.settingsDomTicks?.value,
+    liveIntervalMs: refs.settingsRenderMs?.value,
+    maxTrades: refs.settingsMaxTrades?.value,
+    maxSignals: refs.settingsMaxSignals?.value,
+    defaultPointValue: refs.settingsPointValue?.value,
+  });
+}
+
+function applyDefaultPointValue() {
+  const pointValue = state.ui.settings.defaultPointValue;
+  if (!Number.isFinite(pointValue)) return;
+  const formatted = String(pointValue);
+  if (refs.riskPointValue && !refs.riskPointValue.value) refs.riskPointValue.value = formatted;
+  if (refs.orderPointValue && !refs.orderPointValue.value) refs.orderPointValue.value = formatted;
+}
+
+function applyUiSettings(settings, options = {}) {
+  state.ui.settings = sanitizeUiSettings(settings);
+  state.rtd.tickSize = state.ui.settings.tickSize;
+  state.rtd.domVisibleTicks = state.ui.settings.domVisibleTicks;
+  state.render.liveIntervalMs = state.ui.settings.liveIntervalMs;
+  state.flow.maxTrades = state.ui.settings.maxTrades;
+  state.flow.maxSignals = state.ui.settings.maxSignals;
+  state.flow.trades = state.flow.trades.slice(0, state.flow.maxTrades);
+  state.flow.signals = state.flow.signals.slice(0, state.flow.maxSignals);
+  Object.values(state.flow.byAsset || {}).forEach(bucket => {
+    bucket.trades = (bucket.trades || []).slice(0, state.flow.maxTrades);
+    bucket.signals = (bucket.signals || []).slice(0, state.flow.maxSignals);
+  });
+  if (options.persist !== false) saveUiSettings(state.ui.settings);
+  if (options.fillDefaults !== false) applyDefaultPointValue();
+  if (options.populate !== false) populateSettingsForm();
+  renderSettings();
+  renderDom();
+  renderFlowTrades();
+  renderSignals();
+  renderRisk();
+  renderOrderSummary();
+  renderDashboard();
+}
+
+function renderSettings() {
+  if (!refs.settingsSummary) return;
+  const settings = state.ui.settings;
+  refs.settingsSummary.innerHTML = [
+    ["Tick", fmt(settings.tickSize)],
+    ["DOM", `${fmt(settings.domVisibleTicks, 0)} niveis`],
+    ["Render", `${fmt(settings.liveIntervalMs, 0)} ms`],
+    ["Trades", fmt(settings.maxTrades, 0)],
+    ["Sinais", fmt(settings.maxSignals, 0)],
+    ["Valor ponto", Number.isFinite(settings.defaultPointValue) ? `R$ ${fmt(settings.defaultPointValue, 2)}` : "--"],
+  ].map(([k, v]) => `<div class="live-kv"><span>${escapeHtml(k)}</span><strong>${escapeHtml(v)}</strong></div>`).join("");
+
+  const notes = [
+    `DOM monta ${settings.domVisibleTicks} niveis em torno do ultimo preco do ativo selecionado.`,
+    `Render live consolida atualizacoes a cada ${settings.liveIntervalMs} ms para preservar fluidez.`,
+    Number.isFinite(settings.defaultPointValue)
+      ? "Valor por ponto aplicado em Boleta e Risco quando os campos estiverem vazios."
+      : "Valor por ponto permanece manual em Boleta e Risco.",
+  ];
+  refs.settingsNotes.innerHTML = notes.map(note => `<div class="warn-line">${escapeHtml(note)}</div>`).join("");
+}
+
 function renderHistoryPanel() {
   if (!refs.historyKv) return;
   const ticks = state.rtd.ticks || [];
@@ -2606,6 +2795,7 @@ function showMainTab(tabName) {
   else if (safe === "alerts") activateSubTab("alerts");
   else if (safe === "risk") activateSubTab("risk");
   else if (safe === "history") activateSubTab("history");
+  else if (safe === "settings") activateSubTab("settings");
   else if (safe === "diagnostics") activateSubTab("flowdebug");
 
   if (safe === "dashboard") renderDashboard();
@@ -2619,6 +2809,7 @@ function showMainTab(tabName) {
   if (safe === "alerts") renderAlerts();
   if (safe === "risk") renderRisk();
   if (safe === "history") renderHistoryPanel();
+  if (safe === "settings") renderSettings();
   if (safe === "diagnostics") renderFlowDebug();
   renderMarketStrip();
 }
@@ -5534,6 +5725,26 @@ refs.alertsList.addEventListener("click", ev => {
 });
 refs.riskSide.addEventListener("change", renderRisk);
 
+refs.settingsSave.addEventListener("click", () => {
+  applyUiSettings(collectSettingsForm());
+});
+refs.settingsReset.addEventListener("click", () => {
+  applyUiSettings(DEFAULT_UI_SETTINGS);
+});
+[refs.settingsTickSize, refs.settingsDomTicks, refs.settingsRenderMs, refs.settingsMaxTrades, refs.settingsMaxSignals, refs.settingsPointValue].forEach(input => {
+  input.addEventListener("input", () => {
+    const preview = collectSettingsForm();
+    refs.settingsSummary.innerHTML = [
+      ["Tick", fmt(preview.tickSize)],
+      ["DOM", `${fmt(preview.domVisibleTicks, 0)} niveis`],
+      ["Render", `${fmt(preview.liveIntervalMs, 0)} ms`],
+      ["Trades", fmt(preview.maxTrades, 0)],
+      ["Sinais", fmt(preview.maxSignals, 0)],
+      ["Valor ponto", Number.isFinite(preview.defaultPointValue) ? `R$ ${fmt(preview.defaultPointValue, 2)}` : "--"],
+    ].map(([k, v]) => `<div class="live-kv"><span>${escapeHtml(k)}</span><strong>${escapeHtml(v)}</strong></div>`).join("");
+  });
+});
+
 refs.assetSave.addEventListener("click", () => saveAssetForm());
 refs.assetView.addEventListener("click", () => {
   const payload = assetFormPayload();
@@ -5798,6 +6009,9 @@ refs.cards.innerHTML = ["Sigma", "Z-score", "POC", "ATR", "Regime", "Divergencia
     <div class="card-sub">Aguardando CSV</div>
   </div>
 `).join("");
+populateSettingsForm();
+applyDefaultPointValue();
+renderSettings();
 renderDom();
 renderFlow();
 renderSignals();

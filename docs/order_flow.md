@@ -82,6 +82,7 @@ O dashboard usa o menu superior:
 - `Alertas`: alertas locais de preco por ativo;
 - `Risco`: calculadora local de stop, alvo e contratos;
 - `Historico`: CSV carregado e ticks recentes em memoria;
+- `Ajustes`: limites locais de renderizacao, DOM, trades e sinais;
 - `Sistema`: qualidade, eventos, bookDepth, Times & Trades, sinais e fila.
 
 A aba `DOM` tambem marca sinais ativos como pontos de flow.
