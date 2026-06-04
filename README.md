@@ -40,7 +40,7 @@ O historico diario continua sendo carregado por CSV no navegador. O RTD preenche
 - VWAP/ancora opcional: `MED`
 - Volume acumulado: `VOL`
 
-O menu superior agora separa o terminal em grupos de analise: `Inicio`, `Cadastro`, `Mercado`, `Fluxo`, `Analise` e `Sistema`. A hotbar contextual abaixo mostra apenas as telas do grupo ativo, enquanto a faixa superior mantem ativo selecionado, ultimo preco, bid/ask, status de Book, status de Times, delta, latencia WebSocket local, mensagens por segundo e CSV:
+O menu superior agora separa o terminal em grupos de analise: `Inicio`, `Cadastro`, `Mercado`, `Fluxo`, `Analise` e `Sistema`. A hotbar contextual abaixo mostra apenas as telas do grupo ativo, enquanto a faixa superior mantem ativo selecionado, ultimo preco, bid/ask, status de Book, status de Times, delta, latencia WebSocket local, mensagens por segundo, render da UI e CSV:
 
 - `Painel`: entrada de analise com leitura rapida de contexto, checklist, atalhos, setups, oportunidades e alertas;
 - `Radar`: oportunidades observacionais ranqueadas por setup, nivel, proximidade, delta e imbalance, com ranking multiativo;
@@ -106,7 +106,7 @@ Use o MSBuild do Visual Studio 2022/Build Tools. O MSBuild antigo de `C:\Windows
 14. Abra `Ajustes` se quiser alternar entre `Rapido`, `Equilibrado` e `Detalhado`, ou mudar niveis do DOM, cadencia de renderizacao e valor por ponto padrao.
 15. Abra `Conexoes` para confirmar coletor, Profit RTD, WebSocket, arquitetura e fontes por ativo.
 16. Deixe o modo `RTD Live` ativo para preencher o intraday automaticamente.
-17. Confira `Latencia WS` e `Msg/s` na faixa superior ou em `Sistema` para diagnosticar atraso entre backend local e navegador.
+17. Confira `Latencia WS`, `Msg/s` e `Render UI` na faixa superior ou em `Sistema` para diagnosticar atraso entre backend local, navegador e desenho da tela.
 18. Use os grupos superiores, a hotbar contextual, `Alt+1` a `Alt+9` ou `Ctrl+K` para alternar telas e selecionar ativos rapidamente.
 
 O aplicativo e somente para analise e busca de oportunidades. Ele nao envia nada ao Profit nem controla execucao.
@@ -201,7 +201,7 @@ logs/                   logs em runtime
 17. Navegacao: confirmar grupos superiores, hotbar contextual, memoria da ultima tela por grupo e atalhos `Alt+1` a `Alt+9`, sem disparar quando o foco esta em campos de texto.
 18. Paleta: confirmar `Ctrl+K`, busca de telas, busca de ativos, setas, `Enter` e `Esc`.
 19. Performance: confirmar que a aba ativa segue responsiva com RTD ativo; campos intraday devem atualizar imediatamente e telas invisiveis nao devem causar travamento perceptivel.
-20. Telemetria: confirmar que `Latencia WS` e `Msg/s` mudam quando chegam mensagens WebSocket. Essa leitura mede o trecho backend local -> navegador, nao latencia de bolsa ou Profit.
+20. Telemetria: confirmar que `Latencia WS`, `Msg/s` e `Render UI` mudam quando chegam mensagens WebSocket. Essas leituras medem backend local -> navegador e custo de desenho da tela, nao latencia de bolsa ou Profit.
 21. Design QA: rodar `node tools/validate-dashboard-design.js` e confirmar `Dashboard design tokens OK`.
 22. Linguagem de produto: rodar `node tools/validate-product-language.js` e confirmar `Product language OK`.
 23. SQLite: confirmar criacao de `data/marketdata.sqlite` quando o provider for restaurado pelo NuGet.

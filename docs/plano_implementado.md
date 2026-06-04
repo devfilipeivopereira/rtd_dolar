@@ -26,7 +26,7 @@
 - Hotbar de analise contextual por grupo, com memoria da ultima tela usada e atalhos `Alt+1` a `Alt+9` para telas de uso frequente.
 - Paleta `Ctrl+K` para buscar telas e ativos cadastrados.
 - Faixa superior de contexto com ativo selecionado, ultimo preco, bid/ask, Book, Times, delta e CSV.
-- Telemetria WebSocket no frontend com latencia local, mensagens por segundo, reconexoes e contadores por tipo de mensagem.
+- Telemetria no frontend com latencia WebSocket local, mensagens por segundo, render da UI, reconexoes e contadores por tipo de mensagem.
 - Coalescing auxiliar para `bookDepth` e `timesTrades`, reduzindo repintura sem bloquear snapshots de preco.
 - Scheduler de render no navegador orientado pela aba ativa, com padrao de 120 ms no preset `Equilibrado`, presets de desempenho pela UI e inputs de preco imediatos.
 - Validador `tools/validate-dashboard-design.js` para preservar tokens Industrial, mono, plano e sem sombras/gradientes.
@@ -52,7 +52,7 @@
 16. Confirmar `Conexoes` com `/health`, arquitetura, Profit RTD, WebSocket e fontes por ativo.
 17. Confirmar grupos superiores, hotbar contextual, memoria da ultima tela por grupo e atalhos `Alt+1` a `Alt+9`.
 18. Confirmar paleta `Ctrl+K` para telas e ativos.
-19. Confirmar `Latencia WS`, `Msg/s` e contadores no `Sistema`.
+19. Confirmar `Latencia WS`, `Msg/s`, `Render UI` e contadores no `Sistema`.
 20. Rodar `node tools/validate-dashboard-design.js`.
 21. Rodar `node tools/validate-product-language.js`.
 

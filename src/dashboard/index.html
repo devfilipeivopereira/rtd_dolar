@@ -62,7 +62,7 @@ button{cursor:pointer}
 .main-tab.active{border-color:#1f8a70;background:#092217;color:#b9ffe9}
 .top-meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
 .market-strip{
-  min-height:48px;display:grid;grid-template-columns:minmax(210px,.9fr) repeat(8,minmax(120px,1fr));
+  min-height:48px;display:grid;grid-template-columns:minmax(210px,.9fr) repeat(9,minmax(112px,1fr));
   gap:0;border-bottom:1px solid var(--line);background:#080908;position:sticky;top:64px;z-index:19;
 }
 .terminal-metric{
@@ -621,6 +621,7 @@ tr:hover td{background:#ffffff05}
     <div class="terminal-metric" id="top-delta-tile"><span>Delta 5s</span><strong id="top-delta">--</strong></div>
     <div class="terminal-metric" id="top-latency-tile"><span>Latencia WS</span><strong id="top-latency">--</strong></div>
     <div class="terminal-metric"><span>Msg/s</span><strong id="top-rate">--</strong></div>
+    <div class="terminal-metric" id="top-render-tile"><span>Render UI</span><strong id="top-render">--</strong></div>
     <div class="terminal-metric"><span>CSV</span><strong id="top-csv">--</strong></div>
   </section>
 
@@ -2029,6 +2030,10 @@ const state = {
   render: {
     liveTimer: null,
     lastLiveRenderMs: 0,
+    lastDurationMs: null,
+    maxDurationMs: 0,
+    durationSamples: [],
+    lastBatchAt: null,
     liveIntervalMs: 120,
     pendingSnapshot: null,
   },
@@ -2132,6 +2137,8 @@ const refs = {
   topLatencyTile: document.getElementById("top-latency-tile"),
   topLatency: document.getElementById("top-latency"),
   topRate: document.getElementById("top-rate"),
+  topRenderTile: document.getElementById("top-render-tile"),
+  topRender: document.getElementById("top-render"),
   topCsv: document.getElementById("top-csv"),
   file: document.getElementById("csv-file"),
   dropzone: document.getElementById("dropzone"),
@@ -2675,6 +2682,8 @@ function renderMarketStrip() {
   refs.topLatency.textContent = fmtMs(state.telemetry.lastLagMs);
   setMetricTone(refs.topLatencyTile, state.telemetry.lastLagMs > 1200 ? "red" : state.telemetry.lastLagMs > 500 ? "amber" : "");
   refs.topRate.textContent = `${fmt(wsMessageRate(), 1)}/s`;
+  refs.topRender.textContent = fmtMs(state.render.lastDurationMs);
+  setMetricTone(refs.topRenderTile, state.render.lastDurationMs > 120 ? "red" : state.render.lastDurationMs > 60 ? "amber" : state.render.lastDurationMs > 0 ? "green" : "");
   refs.topCsv.textContent = state.uploadedCount ? `${state.uploadedCount} pregoes` : "sem CSV";
 }
 
@@ -6085,7 +6094,7 @@ function renderDesk(msg = state.rtd.lastSnapshot) {
   renderDeskLevels(msg);
 }
 
-function renderActiveLivePanels(snapshot = state.rtd.lastSnapshot) {
+function renderActiveLivePanels(snapshot = state.rtd.lastSnapshot, options = {}) {
   const tab = state.ui.mainTab;
 
   if (tab === "dashboard") renderDashboard();
@@ -6104,13 +6113,13 @@ function renderActiveLivePanels(snapshot = state.rtd.lastSnapshot) {
   else if (tab === "history") renderHistoryPanel();
   else if (tab === "settings") renderSettings();
   else if (tab === "connections") renderConnections();
-  else if (tab === "diagnostics") renderFlowDebug();
+  else if (tab === "diagnostics" && !options.deferDiagnostics) renderFlowDebug();
   else if (tab === "assets") {
     renderAssetScreenList();
     renderAssetList();
   }
 
-  renderMarketStrip();
+  if (options.marketStrip !== false) renderMarketStrip();
 }
 
 function renderLiveAssetChange(asset, snapshot = state.rtd.lastSnapshot) {
@@ -6125,12 +6134,33 @@ function nowMs() {
   return globalThis.performance?.now ? globalThis.performance.now() : Date.now();
 }
 
+function recordRenderDuration(durationMs) {
+  const duration = Math.max(0, liveNumber(durationMs) || 0);
+  state.render.lastDurationMs = duration;
+  state.render.maxDurationMs = Math.max(state.render.maxDurationMs || 0, duration);
+  state.render.lastBatchAt = Date.now();
+  state.render.durationSamples.push(duration);
+  if (state.render.durationSamples.length > 60) {
+    state.render.durationSamples = state.render.durationSamples.slice(-60);
+  }
+}
+
+function averageRenderDuration() {
+  const samples = state.render.durationSamples || [];
+  if (!samples.length) return NaN;
+  return samples.reduce((sum, item) => sum + item, 0) / samples.length;
+}
+
 function runLiveRenderBatch() {
   state.render.liveTimer = null;
   state.render.lastLiveRenderMs = nowMs();
+  const started = nowMs();
   const snapshot = state.render.pendingSnapshot || state.rtd.lastSnapshot;
   state.render.pendingSnapshot = null;
-  renderActiveLivePanels(snapshot);
+  renderActiveLivePanels(snapshot, { marketStrip: false, deferDiagnostics: true });
+  recordRenderDuration(nowMs() - started);
+  renderMarketStrip();
+  if (state.ui.mainTab === "diagnostics") renderFlowDebug();
 }
 
 function scheduleLiveRender(snapshot = null, immediate = false) {
@@ -6315,6 +6345,9 @@ function renderFlowDebug() {
     ["Socket", socketState],
     ["Latencia WS", fmtMs(state.telemetry.lastLagMs)],
     ["Mensagens/s", `${fmt(wsMessageRate(), 1)}/s`],
+    ["Render UI", fmtMs(state.render.lastDurationMs)],
+    ["Render medio", fmtMs(averageRenderDuration())],
+    ["Render pico", fmtMs(state.render.maxDurationMs)],
     ["Ultima mensagem", lastMessage],
     ["Reconexoes", fmt(state.telemetry.reconnects, 0)],
     ["WS snapshot/flow", `${fmt(counts.snapshot || 0, 0)} / ${fmt(counts.flow || 0, 0)}`],

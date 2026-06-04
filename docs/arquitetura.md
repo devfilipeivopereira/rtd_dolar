@@ -81,9 +81,9 @@ O menu superior separa:
 - `Historico`: resumo do CSV e ticks em memoria;
 - `Ajustes`: presets de desempenho, parametros locais de tick, DOM, renderizacao, memoria e valor por ponto;
 - `Conexoes`: estado do coletor, Profit RTD, WebSocket, `/health` e fontes por ativo;
-- `Sistema`: saude, telemetria WebSocket e debug.
+- `Sistema`: saude, telemetria WebSocket, render da UI e debug.
 
-A faixa superior fica disponivel em todas as telas e mostra ativo selecionado, ultimo preco, bid/ask, status de Book, status de Times, delta 5s, latencia WebSocket local, mensagens por segundo e CSV carregado.
+A faixa superior fica disponivel em todas as telas e mostra ativo selecionado, ultimo preco, bid/ask, status de Book, status de Times, delta 5s, latencia WebSocket local, mensagens por segundo, render da UI e CSV carregado.
 
 A hotbar de analise fica abaixo da faixa superior e abre telas de uso frequente por clique ou `Alt+1` a `Alt+9`. Ela acelera a leitura sem substituir o menu superior, que continua agrupando todas as funcionalidades.
 
@@ -124,7 +124,7 @@ As mensagens auxiliares de profundidade sao coalescidas no cliente RTD para redu
 
 No navegador, campos criticos de preco e inputs intraday sao preenchidos a cada snapshot. Renderizacoes densas usam scheduler curto, com padrao de 120 ms no preset `Equilibrado` e ajuste pela aba `Ajustes`. O batch ao vivo renderiza a aba ativa e evita repintar telas invisiveis como DOM, Mesa, Painel, Monitor, Cotacoes e Historico no mesmo pulso.
 
-A telemetria `Latencia WS` e calculada no navegador comparando o recebimento da mensagem com `localTimestamp` enviado pelo backend local. Ela serve para diagnosticar atraso entre coletor e interface; nao mede latencia de bolsa ou Profit.
+A telemetria `Latencia WS` e calculada no navegador comparando o recebimento da mensagem com `localTimestamp` enviado pelo backend local. A metrica `Render UI` mede a duracao do ultimo batch de desenho da aba ativa, com media e pico no `Sistema`. Essas leituras servem para diagnosticar atraso entre coletor, navegador e interface; nao medem latencia de bolsa ou Profit.
 
 ## Persistencia
 

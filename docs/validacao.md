@@ -42,7 +42,7 @@ Resultado esperado:
 22. Confirmar hotbar por clique e atalhos `Alt+1` a `Alt+9`.
 23. Confirmar que os atalhos nao disparam quando o foco esta em campos de texto, select ou textarea.
 24. Confirmar `Ctrl+K`, busca de telas e ativos, navegacao por setas, `Enter` para abrir e `Esc` para fechar.
-25. Confirmar que `Latencia WS` e `Msg/s` aparecem na faixa superior e no `Sistema` quando chegam mensagens do WebSocket.
+25. Confirmar que `Latencia WS`, `Msg/s` e `Render UI` aparecem na faixa superior e no `Sistema` quando chegam mensagens do WebSocket.
 
 ## Endpoints
 
@@ -130,7 +130,7 @@ Sem CSV, a aba DOM ainda pode mostrar ticks RTD, bid/ask e tape. Pontos como POC
 - A paleta `Ctrl+K` deve buscar telas e ativos cadastrados sem depender de recarregar a pagina.
 - `Book` e `T&T` devem atualizar sem travar a pagina mesmo com muitos campos RTD, respeitando coalescing do backend.
 - Campos intraday devem ser preenchidos a cada snapshot; o lote curto configuravel deve renderizar principalmente a aba ativa para manter a UI responsiva com RTD intenso.
-- `Latencia WS` deve ser tratada como diagnostico backend local -> navegador, nao como latencia de bolsa ou Profit.
+- `Latencia WS` deve ser tratada como diagnostico backend local -> navegador, e `Render UI` como custo de desenho da tela ativa; nenhuma delas mede latencia de bolsa ou Profit.
 
 ## SQLite
 
