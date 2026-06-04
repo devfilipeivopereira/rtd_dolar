@@ -44,11 +44,12 @@ Resultado esperado:
 24. Confirmar `Ctrl+K`, busca de telas e ativos, navegacao por setas, `Enter` para abrir e `Esc` para fechar.
 25. Confirmar que `Latencia WS`, `Msg/s` e `Render UI` aparecem na faixa superior e no `Sistema` quando chegam mensagens do WebSocket.
 26. Confirmar no `Painel` que `Score Quant`, `Indicadores Quant`, `Base Quant` e `Evidencias Quant` aparecem.
-27. Confirmar que o `Score Quant` fica aguardando ou penalizado quando faltar CSV, preco RTD ou fluxo/T&T.
+27. Confirmar que o `Score Quant` fica aguardando ou penalizado quando faltar CSV, preco RTD, fluxo/T&T ou quando o feed estiver atrasado/parado.
 28. Confirmar no `Painel` que o roteiro mostra `Proximo passo` e etapas `Ativo`, `RTD preco`, `CSV`, `Book/T&T`, `Fluxo` e `Score`.
 29. Abrir `Sistema` e confirmar `Render motivos` e `Render ativos` mudando conforme chegam snapshots, book, Times, flow e sinais.
 30. Confirmar na faixa superior que `Feed` mostra `Ao vivo` com RTD atualizando e muda para `Atrasado`/`Parado` quando o snapshot do ativo selecionado fica antigo.
 31. Confirmar que `Cotacoes` e `Conexoes` mostram `Feed` por ativo, usando `Ao vivo`, `Atrasado`, `Parado`, `Sem preco` ou `Desligado`.
+32. Confirmar que `Radar` e ranking multiativo rebaixam candidatos com feed atrasado/parado e mostram essa evidencia.
 
 ## Endpoints
 
@@ -138,10 +139,11 @@ Sem CSV, a aba DOM ainda pode mostrar ticks RTD, bid/ask e tape. Pontos como POC
 - Campos intraday devem ser preenchidos a cada snapshot; o lote curto configuravel deve renderizar principalmente a aba ativa para manter a UI responsiva com RTD intenso.
 - `Latencia WS` deve ser tratada como diagnostico backend local -> navegador, e `Render UI` como custo de desenho da tela ativa; nenhuma delas mede latencia de bolsa ou Profit.
 - `Painel` deve mostrar `Score Quant`, `Indicadores Quant`, `Base Quant` e `Evidencias Quant`, combinando CSV estatistico, RTD de preco e fluxo/T&T quando disponiveis.
-- Sem uma das fontes principais, a `Base Quant` deve explicitar a falta e o score nao deve parecer uma confirmacao forte.
+- Sem uma das fontes principais, ou com feed atrasado/parado, a `Base Quant` deve explicitar a falta/idade e o score nao deve parecer uma confirmacao forte.
 - O roteiro do `Painel` deve indicar o proximo passo real e abrir a tela correta: `Ativos`, `Conexoes`, `Fluxo`, `Radar` ou `Mesa`.
 - O scheduler de render deve agrupar motivos por lote e evitar repintar a tela ativa quando o evento nao e relevante para ela.
 - O feed deve diferenciar RTD conectado de snapshot fresco; `Cotacoes` deve mostrar Feed por ativo e `Conexoes` deve mostrar `Idade backend`, `Feed selecionado` e Feed por ativo.
+- `Score Quant` e `Radar` devem usar a freshness como controle de confianca: `Ao vivo` preserva score, `Atrasado` reduz score e `Parado` reduz fortemente.
 
 ## SQLite
 
@@ -197,7 +199,7 @@ Resultado esperado:
 Quant surface OK
 ```
 
-Esse check falha se o dashboard perder estimadores de volatilidade, ATR, profile proxy, backtest proxy, radar, alinhamento de fluxo ou os rótulos visiveis `Score Quant`, `Indicadores Quant`, `Base Quant` e `Evidencias Quant`.
+Esse check falha se o dashboard perder estimadores de volatilidade, ATR, profile proxy, backtest proxy, radar, alinhamento de fluxo, penalizacao de feed ou os rotulos visiveis `Score Quant`, `Indicadores Quant`, `Base Quant` e `Evidencias Quant`.
 
 ## Render QA
 
@@ -229,7 +231,7 @@ Resultado esperado:
 Feed freshness OK
 ```
 
-Esse check falha se `/health` perder `lastUpdateAgeMs`, se a faixa superior perder `Feed`, ou se o dashboard perder `Ao vivo`, `Atrasado`, `Parado`, `Idade backend` e `Feed selecionado`.
+Esse check falha se `/health` perder `lastUpdateAgeMs`, se a faixa superior perder `Feed`, ou se o dashboard perder `Ao vivo`, `Atrasado`, `Parado`, `Idade backend` e `Feed selecionado`. A validacao quant complementar tambem protege o uso dessa freshness no `Score Quant` e no `Radar`.
 
 ## Navegacao
 

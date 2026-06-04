@@ -42,6 +42,8 @@ O historico diario continua sendo carregado por CSV no navegador. O RTD preenche
 
 O motor analitico combina estatistica historica, indicadores tecnicos e fluxo em tempo real. O CSV alimenta estimadores de volatilidade Garman-Klass, Parkinson, Rogers-Satchell, Yang-Zhang, ATR, z-score, regime, profile proxy, POC, VAH/VAL, confluencias e backtest proxy. O RTD alimenta preco intraday, book, Times & Trades, delta, imbalance, VWAP derivada, microprice e tape. O `Painel` mostra `Score Quant`, `Indicadores Quant`, `Base Quant` e `Evidencias Quant` para deixar claro quais dados sustentam cada oportunidade observacional.
 
+O RTD tambem entra como controle de qualidade. Quando o snapshot do ativo fica `Atrasado` ou `Parado`, o `Score Quant` e o `Radar` aplicam penalizacao de confianca, mostram `feed atrasado` ou `feed parado` na base/evidencias e impedem que uma oportunidade pareca forte so porque o ultimo preco ficou congelado.
+
 Esses sinais sao ferramentas de analise quantitativa e tape reading. Eles nao prometem resultado financeiro; a robustez vem de fonte de dados identificavel, penalizacao quando falta dado, evidencias visiveis e validacao manual/automatizada.
 
 O menu superior agora separa o terminal em grupos de analise: `Inicio`, `Cadastro`, `Mercado`, `Fluxo`, `Analise` e `Sistema`. A hotbar contextual abaixo mostra apenas as telas do grupo ativo, enquanto a faixa superior mantem ativo selecionado, ultimo preco, bid/ask, status de Book, status de Times, delta, latencia WebSocket local, mensagens por segundo, render da UI e CSV:
@@ -219,8 +221,8 @@ logs/                   logs em runtime
 23. Quant QA: rodar `node tools/validate-quant-surface.js` e confirmar `Quant surface OK`.
 24. Render QA: rodar `node tools/validate-live-render-scheduler.js` e confirmar `Live render scheduler OK`.
 25. Feed QA: rodar `node tools/validate-feed-freshness.js` e confirmar `Feed freshness OK`.
-26. Score Quant: confirmar no `Painel` que `Score Quant`, `Indicadores Quant`, `Base Quant` e `Evidencias Quant` aparecem; sem CSV, RTD ou fluxo, o score deve ficar penalizado ou aguardando dados.
+26. Score Quant: confirmar no `Painel` que `Score Quant`, `Indicadores Quant`, `Base Quant` e `Evidencias Quant` aparecem; sem CSV, RTD, fluxo ou com feed atrasado/parado, o score deve ficar penalizado ou aguardando dados.
 27. Roteiro: confirmar que `Proximo passo` muda entre Ativos, Conexoes, Fluxo, Radar e Mesa conforme faltam dados ou conforme o score fica utilizavel.
 28. Sistema: confirmar `Render motivos` e `Render ativos` mudando conforme chegam snapshot, book, times, flow e signal.
-29. Feed parado: pausar/fechar o Profit ou interromper updates e confirmar que `Feed` muda de `Ao vivo` para `Atrasado`/`Parado` na faixa superior, em `Cotacoes` e em `Conexoes`.
+29. Feed parado: pausar/fechar o Profit ou interromper updates e confirmar que `Feed` muda de `Ao vivo` para `Atrasado`/`Parado` na faixa superior, em `Cotacoes` e em `Conexoes`, e que `Score Quant`/`Radar` rebaixam a confianca.
 30. SQLite: confirmar criacao de `data/marketdata.sqlite` quando o provider for restaurado pelo NuGet.

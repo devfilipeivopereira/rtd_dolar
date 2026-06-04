@@ -3138,6 +3138,7 @@ function quantReversalAssessment(snapshot, flow = {}) {
   const r = state.result;
   const metrics = flow.metrics || {};
   const price = currentDomPrice(snapshot);
+  const freshness = feedFreshness(snapshot);
   const step = state.rtd.tickSize || 0.5;
   const radar = collectRadarOpportunities(snapshot)[0] || null;
   const nearest = Number.isFinite(price)
@@ -3178,12 +3179,13 @@ function quantReversalAssessment(snapshot, flow = {}) {
   const hasStats = !!r && Number.isFinite(rawScore);
   const hasFlow = !!flow.lastMessage || !!state.rtd.timesTradesByAsset[selectedAsset()];
   const hasPrice = Number.isFinite(price);
-  const dataPenalty = (hasStats ? 1 : 0.55) * (hasFlow ? 1 : 0.88) * (hasPrice ? 1 : 0.60);
+  const feedPenalty = freshness.tone === "green" ? 1 : freshness.tone === "amber" ? 0.72 : 0.35;
+  const dataPenalty = (hasStats ? 1 : 0.55) * (hasFlow ? 1 : 0.88) * (hasPrice ? 1 : 0.60) * feedPenalty;
   const finalScore = Number.isFinite(rawScore) ? clamp(rawScore * dataPenalty, 0, 100) : NaN;
   const confidence = quantConfidence(finalScore);
   const sources = [
     hasStats ? `CSV ${state.selectedWindow}d` : "",
-    hasPrice ? "RTD preco" : "",
+    hasPrice ? `RTD preco ${freshness.label}` : "",
     hasFlow ? (state.rtd.timesTradesByAsset[selectedAsset()] ? "T&T real" : "fluxo derivado") : "",
     state.result ? "confluencia/backtest" : "",
   ].filter(Boolean);
@@ -3193,6 +3195,7 @@ function quantReversalAssessment(snapshot, flow = {}) {
     Number.isFinite(backtestRate) ? `backtest ${fmt(backtestRate, 0)}%` : "",
     Number.isFinite(zAbs) ? `z ${fmt(zAbs, 2)}` : "",
     Number.isFinite(flowScore) ? `fluxo ${fmt(flowScore, 0)}` : "",
+    hasPrice && freshness.tone !== "green" ? `feed ${freshness.label} ${freshness.detail}` : "",
   ].filter(Boolean);
   return {
     score: finalScore,
@@ -3201,7 +3204,7 @@ function quantReversalAssessment(snapshot, flow = {}) {
     sources,
     reasons,
     indicatorSummary: quantIndicatorSummary(r),
-    dataQuality: sources.length >= 3 ? "completa" : sources.length >= 2 ? "parcial" : "insuficiente",
+    dataQuality: freshness.tone === "red" ? "feed parado" : freshness.tone === "amber" ? "feed atrasado" : sources.length >= 3 ? "completa" : sources.length >= 2 ? "parcial" : "insuficiente",
   };
 }
 
@@ -3337,6 +3340,9 @@ function collectRadarOpportunities(msg = state.rtd.lastSnapshot) {
   const price = currentDomPrice(msg);
   if (!Number.isFinite(price)) return [];
   const metrics = state.flow.metrics || {};
+  const freshness = feedFreshness(msg);
+  const feedPenalty = freshness.tone === "green" ? 1 : freshness.tone === "amber" ? 0.72 : 0.35;
+  const feedReason = freshness.tone === "green" ? "" : `feed ${freshness.label}`;
   const step = state.rtd.tickSize || 0.5;
   const items = [];
   const seen = new Set();
@@ -3360,8 +3366,8 @@ function collectRadarOpportunities(msg = state.rtd.lastSnapshot) {
       currentPrice: price,
       levelPrice,
       distTicks,
-      score: clamp((Number.isFinite(baseScore) ? baseScore : 55) + flowAlignment(direction, metrics) - Math.min(18, distTicks * 0.6), 0, 100),
-      reasons: [signal.dataQuality || "fluxo", signal.levelLabel || "", ...(signal.reasons || [])].filter(Boolean).slice(0, 3),
+      score: clamp(((Number.isFinite(baseScore) ? baseScore : 55) + flowAlignment(direction, metrics) - Math.min(18, distTicks * 0.6)) * feedPenalty, 0, 100),
+      reasons: [feedReason, signal.dataQuality || "fluxo", signal.levelLabel || "", ...(signal.reasons || [])].filter(Boolean).slice(0, 3),
       source: "Setups",
     });
   });
@@ -3380,8 +3386,8 @@ function collectRadarOpportunities(msg = state.rtd.lastSnapshot) {
       currentPrice: price,
       levelPrice: level.price,
       distTicks,
-      score: clamp((liveNumber(level.score) || 45) * 0.55 + proximityScore + flowAlignment(direction, metrics), 0, 100),
-      reasons: [level.source, level.type, distTicks <= 6 ? "perto do preco" : ""].filter(Boolean).slice(0, 3),
+      score: clamp(((liveNumber(level.score) || 45) * 0.55 + proximityScore + flowAlignment(direction, metrics)) * feedPenalty, 0, 100),
+      reasons: [feedReason, level.source, level.type, distTicks <= 6 ? "perto do preco" : ""].filter(Boolean).slice(0, 3),
       source: level.source || "Nivel",
     });
   });
@@ -3420,12 +3426,14 @@ function assetRadarRows() {
     const depth = state.rtd.bookDepthByAsset[asset];
     const times = state.rtd.timesTradesByAsset[asset];
     const priceOk = Number.isFinite(intraday.price);
+    const freshness = assetFeedFreshness(asset, item);
+    const feedLive = freshness.tone === "green";
     const signals = (flow.signals || []).length;
     const delta = liveNumber(metrics.delta5s);
     const imbalance = liveNumber(metrics.topBookImbalance);
     const ageMs = snapshot?.localTimestamp ? Math.max(0, Date.now() - Date.parse(snapshot.localTimestamp)) : NaN;
     let score = 0;
-    if (priceOk) score += 25;
+    if (priceOk) score += feedLive ? 25 : freshness.tone === "amber" ? 12 : 4;
     if (depth) score += 12;
     if (times) score += 10;
     score += Math.min(28, signals * 9);
@@ -3435,7 +3443,7 @@ function assetRadarRows() {
     if (item.enabled === false) score *= 0.35;
 
     const reasons = [
-      priceOk ? "preco vivo" : "sem preco",
+      priceOk ? `feed ${freshness.label}` : "sem preco",
       signals ? `${signals} setups` : "",
       depth ? "book" : "",
       times ? "tape" : "",

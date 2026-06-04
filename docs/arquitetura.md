@@ -65,7 +65,7 @@ O CSV diario continua sendo a fonte do historico 21/45/63. O RTD preenche o intr
 
 O motor quant usa duas familias de entrada. O CSV historico alimenta volatilidade Garman-Klass, Parkinson, Rogers-Satchell, Yang-Zhang, ATR, z-score, regime de mercado, profile proxy, POC, VAH/VAL, confluencias e backtest proxy. O RTD alimenta preco atual, abertura, maxima/minima parcial, VWAP/MED, book, Times & Trades, delta, imbalance, microprice, VWAP derivada e tape.
 
-O `Score Quant` no `Painel` consolida essas entradas em uma leitura observacional de reversao ou continuidade. Ele pondera nivel/proximidade, regime estatistico, backtest proxy, z-score e alinhamento de fluxo. Quando falta CSV, preco RTD ou fluxo/T&T, o score e penalizado e a `Base Quant` mostra a falta de fonte. A interface tambem exibe `Indicadores Quant` e `Evidencias Quant`, para que o usuario veja de onde saiu o numero.
+O `Score Quant` no `Painel` consolida essas entradas em uma leitura observacional de reversao ou continuidade. Ele pondera nivel/proximidade, regime estatistico, backtest proxy, z-score e alinhamento de fluxo. Quando falta CSV, preco RTD ou fluxo/T&T, o score e penalizado e a `Base Quant` mostra a falta de fonte. Quando o snapshot do ativo fica atrasado ou parado, o score recebe penalizacao adicional, a qualidade muda para `feed atrasado` ou `feed parado` e as evidencias exibem a idade do feed. A interface tambem exibe `Indicadores Quant` e `Evidencias Quant`, para que o usuario veja de onde saiu o numero.
 
 Esse motor e analitico: ele procura pontos de reversao e oportunidades por estatistica, indicador tecnico e leitura de fluxo, sem promessa de resultado financeiro e sem envio ao Profit.
 
@@ -101,7 +101,7 @@ A tela `Painel` e a entrada de analise. Ela resume RTD, ativo selecionado, ultim
 
 Logo abaixo dos cards de contexto, o `Painel` mostra um roteiro de analise com `Proximo passo` e etapas clicaveis: `Ativo`, `RTD preco`, `CSV`, `Book/T&T`, `Fluxo` e `Score`. A decisao e baseada no estado real do ativo selecionado. Sem cadastro, abre `Ativos`; sem preco, abre `Conexoes`; sem CSV, volta para `Ativos`; sem fluxo, abre `Fluxo`; com score utilizavel, abre `Radar`; caso contrario, abre `Mesa`.
 
-A tela `Radar` ranqueia oportunidades observacionais por setups, niveis, proximidade, delta e imbalance. Tambem mostra ativos em atencao para troca rapida de contexto.
+A tela `Radar` ranqueia oportunidades observacionais por setups, niveis, proximidade, delta e imbalance. O ranking usa a freshness do feed como parte do score: ativo com preco fresco pode subir, ativo atrasado ou parado e rebaixado e mostra a evidencia do feed. Tambem mostra ativos em atencao para troca rapida de contexto.
 
 A tela `Monitor` e a mesa de acompanhamento ao vivo. Ela junta watchlist compacta, estado do ativo selecionado, setups ativos, tape, oportunidades e alertas sem editar cadastro nem parametros.
 
@@ -136,7 +136,7 @@ No navegador, campos criticos de preco e inputs intraday sao preenchidos a cada 
 
 O scheduler do navegador agora acumula motivos de render (`snapshot`, `book`, `times`, `flow`, `signal`, `status`, `ui`) e ativos impactados. Antes de redesenhar, ele verifica se o evento afeta a tela ativa. Por exemplo, uma mensagem `flow` nao repinta a tela `Book`, e uma mensagem `book` nao repinta a tela `T&T`. Telas de contexto amplo como `Painel`, `Mesa`, `Monitor`, `Radar`, `Cotacoes`, `Conexoes` e `Sistema` continuam recebendo todos os motivos relevantes.
 
-O backend inclui `lastUpdateAgeMs` em `/health` e tambem envia `lastUpdate`, `lastUpdateAgeMs`, `lastPrice`, `hasPrice` e `feedStatus` em cada ativo de `/assets`. No navegador, a faixa superior calcula a idade do snapshot do ativo selecionado e classifica o feed como `Ao vivo`, `Atrasado`, `Parado`, `Sem preco` ou `Manual`. `Cotacoes` e `Conexoes` repetem essa leitura por ativo. O polling de `/health` tambem aciona um render `status`, para que a UI indique feed parado mesmo quando nenhuma nova mensagem chega pelo WebSocket.
+O backend inclui `lastUpdateAgeMs` em `/health` e tambem envia `lastUpdate`, `lastUpdateAgeMs`, `lastPrice`, `hasPrice` e `feedStatus` em cada ativo de `/assets`. No navegador, a faixa superior calcula a idade do snapshot do ativo selecionado e classifica o feed como `Ao vivo`, `Atrasado`, `Parado`, `Sem preco` ou `Manual`. `Cotacoes` e `Conexoes` repetem essa leitura por ativo. O polling de `/health` tambem aciona um render `status`, para que a UI indique feed parado mesmo quando nenhuma nova mensagem chega pelo WebSocket. A mesma freshness alimenta o `Score Quant` e o `Radar`, evitando score alto baseado em preco congelado.
 
 A telemetria `Latencia WS` e calculada no navegador comparando o recebimento da mensagem com `localTimestamp` enviado pelo backend local. A metrica `Render UI` mede a duracao do ultimo batch de desenho da aba ativa, com media e pico no `Sistema`. Essas leituras servem para diagnosticar atraso entre coletor, navegador e interface; nao medem latencia de bolsa ou Profit.
 

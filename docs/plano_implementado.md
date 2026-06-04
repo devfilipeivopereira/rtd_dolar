@@ -33,6 +33,7 @@
 - Scheduler de render no navegador orientado pela aba ativa, com fila por motivo/ativo, filtro de relevancia por tela, padrao de 120 ms no preset `Equilibrado`, presets de desempenho pela UI e inputs de preco imediatos.
 - Deteccao de feed parado com `lastUpdateAgeMs` no `/health`, metrica `Feed` na faixa superior e diagnostico `Idade backend` / `Feed selecionado` em `Conexoes`.
 - Freshness por ativo em `/assets`, `Cotacoes` e `Conexoes`, com `feedStatus`, `lastUpdateAgeMs`, `lastPrice` e `hasPrice`.
+- Penalizacao de freshness no `Score Quant`, no `Radar` e no ranking multiativo, para rebaixar feed atrasado/parado e expor a evidencia ao usuario.
 - Validador `tools/validate-dashboard-design.js` para preservar tokens Industrial, mono, plano e sem sombras/gradientes.
 - Validador `tools/validate-product-language.js` para preservar o foco em analise/oportunidades e bloquear linguagem de envio de operacoes.
 - Validador `tools/validate-quant-surface.js` para preservar estimadores, indicadores, radar, score quant e evidencias visiveis.
@@ -69,6 +70,7 @@
 26. Confirmar o roteiro de analise com `Proximo passo` e atalhos para Ativos, Conexoes, Fluxo, Radar e Mesa.
 27. Confirmar `Render motivos` e `Render ativos` no `Sistema`.
 28. Confirmar `Feed`, `Idade backend`, `Feed selecionado` e Feed por ativo em tempo real.
+29. Confirmar que `Score Quant` e `Radar` reduzem confianca quando o feed fica `Atrasado` ou `Parado`.
 
 ## Build validado
 
