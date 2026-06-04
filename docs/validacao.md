@@ -151,3 +151,12 @@ Dashboard design tokens OK
 ```
 
 Esse check falha se o dashboard reintroduzir sombras, gradientes, filtros decorativos ou fontes fora da familia mono.
+
+## Navegacao
+
+No navegador, confirme:
+
+1. Os grupos superiores `Inicio`, `Cadastro`, `Mercado`, `Fluxo`, `Controle` e `Sistema` trocam a hotbar contextual.
+2. Ao voltar para um grupo, a hotbar reabre a ultima tela usada naquele grupo.
+3. `Buscar`, `Ctrl+K`, setas, `Enter` e `Esc` continuam funcionando.
+4. `Alt+1` a `Alt+9` continuam abrindo as telas frequentes quando o foco nao esta em campo de texto.

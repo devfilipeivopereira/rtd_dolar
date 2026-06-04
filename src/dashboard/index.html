@@ -49,13 +49,12 @@ button{cursor:pointer}
 }
 .brand-title{font-size:15px;font-weight:800;letter-spacing:.03em;text-transform:uppercase;white-space:nowrap}
 .brand-sub{font-size:11px;color:var(--muted);margin-top:2px;white-space:nowrap}
-.main-tabs{display:flex;align-items:center;gap:8px;min-width:0;margin:0 14px;flex:1;justify-content:center;overflow:auto}
-.tab-group{
-  display:flex;align-items:center;gap:3px;min-width:max-content;padding:3px;border:1px solid #202833;background:#0B0C0A;
+.main-tabs{display:flex;align-items:center;gap:6px;min-width:0;margin:0 14px;flex:1;justify-content:center;overflow:auto}
+.workspace-tab{
+  height:36px;padding:0 14px;border:1px solid var(--line);background:#0B0C0A;color:var(--muted);
+  font-family:var(--mono);font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;
 }
-.tab-group-label{
-  padding:0 7px;color:var(--soft);font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;
-}
+.workspace-tab.active{border-color:#1f8a70;background:#092217;color:#b9ffe9}
 .main-tab{
   height:34px;padding:0 12px;border:1px solid var(--line);background:#0B0C0A;color:var(--muted);
   font-family:var(--mono);font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.04em;
@@ -84,6 +83,13 @@ button{cursor:pointer}
 .module-hotbar{display:flex;align-items:center;gap:4px;border-bottom:1px solid var(--line);background:#11161c;padding:6px 10px;overflow:auto;position:sticky;top:112px;z-index:18}
 .module-hotbar .main-tab{height:30px;font-size:10px}
 .module-hotbar .main-tab.active{border-color:#1f8a70;background:#092217;color:#b9ffe9}
+.hotbar-group-label{height:30px;display:inline-flex;align-items:center;padding:0 8px;border:1px solid #202833;background:#0B0C0A;color:var(--soft);font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;white-space:nowrap}
+.hotbar-spacer{flex:1;min-width:12px}
+.hotbar-command,.top-command{
+  height:30px;border:1px solid #285d80;background:#10202b;color:#9bd7ff;
+  padding:0 10px;font-size:10px;font-weight:900;text-transform:uppercase;white-space:nowrap;
+}
+.top-command{height:30px}
 .hotkey{display:inline-flex;align-items:center;justify-content:center;min-height:18px;margin-right:6px;padding:0 5px;border:1px solid #39424f;background:#0B0C0A;color:#9aa7b5;font-size:9px;font-weight:900}
 .pill{
   display:inline-flex;align-items:center;justify-content:center;gap:7px;
@@ -517,41 +523,9 @@ tr:hover td{background:#ffffff05}
         <div class="brand-sub">Volatilidade, volume profile proxy, value areas e confluencia</div>
       </div>
     </div>
-    <nav class="main-tabs" id="main-tabs">
-      <div class="tab-group">
-        <span class="tab-group-label">Inicio</span>
-        <button class="main-tab active" data-main-tab="dashboard" type="button">Painel</button>
-        <button class="main-tab" data-main-tab="monitor" type="button">Monitor</button>
-      </div>
-      <div class="tab-group">
-        <span class="tab-group-label">Cadastro</span>
-        <button class="main-tab" data-main-tab="assets" type="button">Ativos</button>
-      </div>
-      <div class="tab-group">
-        <span class="tab-group-label">Mercado</span>
-        <button class="main-tab" data-main-tab="quotes" type="button">Cotacoes</button>
-        <button class="main-tab" data-main-tab="panorama" type="button">Grafico</button>
-        <button class="main-tab" data-main-tab="dom" type="button">DOM</button>
-        <button class="main-tab" data-main-tab="book" type="button">Book</button>
-        <button class="main-tab" data-main-tab="times" type="button">T&amp;T</button>
-      </div>
-      <div class="tab-group">
-        <span class="tab-group-label">Fluxo</span>
-        <button class="main-tab" data-main-tab="flow" type="button">Fluxo</button>
-        <button class="main-tab" data-main-tab="signals" type="button">Setups</button>
-      </div>
-      <div class="tab-group">
-        <span class="tab-group-label">Controle</span>
-        <button class="main-tab" data-main-tab="orders" type="button">Boleta</button>
-        <button class="main-tab" data-main-tab="alerts" type="button">Alertas</button>
-        <button class="main-tab" data-main-tab="risk" type="button">Risco</button>
-        <button class="main-tab" data-main-tab="history" type="button">Historico</button>
-        <button class="main-tab" data-main-tab="settings" type="button">Ajustes</button>
-        <button class="main-tab" data-main-tab="connections" type="button">Conexoes</button>
-        <button class="main-tab" data-main-tab="diagnostics" type="button">Sistema</button>
-      </div>
-    </nav>
+    <nav class="main-tabs" id="main-tabs" aria-label="Areas do terminal"></nav>
     <div class="top-meta">
+      <button class="top-command" id="top-command" type="button" title="Abrir comando rapido">Buscar</button>
       <span class="pill" id="file-pill">Sem CSV</span>
       <span class="pill warn" id="rtd-pill">RTD Manual</span>
       <span class="pill" id="date-pill">Aguardando</span>
@@ -570,23 +544,13 @@ tr:hover td{background:#ffffff05}
     <div class="terminal-metric"><span>Bid / Ask</span><strong id="top-bidask">--</strong></div>
     <div class="terminal-metric"><span>Book</span><strong id="top-book-status">--</strong></div>
     <div class="terminal-metric"><span>Times</span><strong id="top-times-status">--</strong></div>
-    <div class="terminal-metric"><span>Delta 5s</span><strong id="top-delta">--</strong></div>
-    <div class="terminal-metric"><span>Latencia WS</span><strong id="top-latency">--</strong></div>
+    <div class="terminal-metric" id="top-delta-tile"><span>Delta 5s</span><strong id="top-delta">--</strong></div>
+    <div class="terminal-metric" id="top-latency-tile"><span>Latencia WS</span><strong id="top-latency">--</strong></div>
     <div class="terminal-metric"><span>Msg/s</span><strong id="top-rate">--</strong></div>
     <div class="terminal-metric"><span>CSV</span><strong id="top-csv">--</strong></div>
   </section>
 
-  <nav class="module-hotbar" id="module-hotbar">
-    <button class="main-tab" data-hot-tab="monitor" type="button"><span class="hotkey">Alt+1</span>Monitor</button>
-    <button class="main-tab" data-hot-tab="dom" type="button"><span class="hotkey">Alt+2</span>DOM</button>
-    <button class="main-tab" data-hot-tab="book" type="button"><span class="hotkey">Alt+3</span>Book</button>
-    <button class="main-tab" data-hot-tab="times" type="button"><span class="hotkey">Alt+4</span>T&amp;T</button>
-    <button class="main-tab" data-hot-tab="flow" type="button"><span class="hotkey">Alt+5</span>Fluxo</button>
-    <button class="main-tab" data-hot-tab="orders" type="button"><span class="hotkey">Alt+6</span>Boleta</button>
-    <button class="main-tab" data-hot-tab="assets" type="button"><span class="hotkey">Alt+7</span>Ativos</button>
-    <button class="main-tab" data-hot-tab="connections" type="button"><span class="hotkey">Alt+8</span>Conexoes</button>
-    <button class="main-tab" data-hot-tab="diagnostics" type="button"><span class="hotkey">Alt+9</span>Sistema</button>
-  </nav>
+  <nav class="module-hotbar" id="module-hotbar" aria-label="Telas do grupo ativo"></nav>
 
   <div class="command-overlay hidden" id="command-palette">
     <div class="command-box">
@@ -1659,6 +1623,24 @@ function saveMainTab(tab) {
   } catch (_) {}
 }
 
+function loadWorkspaceTabs() {
+  try {
+    const parsed = JSON.parse(globalThis.localStorage?.getItem("wdo-workspace-tabs") || "{}");
+    return Object.fromEntries(WORKSPACE_GROUPS.map(group => {
+      const saved = parsed[group.id];
+      return [group.id, group.tabs.includes(saved) ? saved : group.tabs[0]];
+    }));
+  } catch (_) {
+    return Object.fromEntries(WORKSPACE_GROUPS.map(group => [group.id, group.tabs[0]]));
+  }
+}
+
+function saveWorkspaceTabs() {
+  try {
+    globalThis.localStorage?.setItem("wdo-workspace-tabs", JSON.stringify(state.ui.workspaceTabs));
+  } catch (_) {}
+}
+
 function loadSelectedAsset() {
   try {
     return normalizeAsset(globalThis.localStorage?.getItem("wdo-selected-asset") || "WDOFUT_F_0");
@@ -1740,7 +1722,34 @@ function saveUiSettings(settings) {
   } catch (_) {}
 }
 
-const MAIN_TABS = ["dashboard", "monitor", "assets", "quotes", "panorama", "dom", "book", "times", "flow", "signals", "orders", "alerts", "risk", "history", "settings", "connections", "diagnostics"];
+const TAB_META = {
+  dashboard: { label: "Painel", detail: "Checklist e atalhos" },
+  monitor: { label: "Monitor", detail: "Watchlist, setups e tape" },
+  assets: { label: "Ativos", detail: "Cadastro RTD e CSV" },
+  quotes: { label: "Cotacoes", detail: "Lista completa de ativos" },
+  panorama: { label: "Grafico", detail: "Niveis e estudos" },
+  dom: { label: "DOM", detail: "Escada de preco" },
+  book: { label: "Book", detail: "Ofertas RTD" },
+  times: { label: "T&T", detail: "Times & Trades" },
+  flow: { label: "Fluxo", detail: "Delta e metricas" },
+  signals: { label: "Setups", detail: "Sinais ativos" },
+  orders: { label: "Boleta", detail: "Plano local" },
+  alerts: { label: "Alertas", detail: "Alertas de preco" },
+  risk: { label: "Risco", detail: "Calculadora local" },
+  history: { label: "Historico", detail: "CSV e ticks" },
+  settings: { label: "Ajustes", detail: "Parametros locais" },
+  connections: { label: "Conexoes", detail: "Feed e fontes" },
+  diagnostics: { label: "Sistema", detail: "Diagnostico" },
+};
+const WORKSPACE_GROUPS = [
+  { id: "home", label: "Inicio", tabs: ["dashboard", "monitor"] },
+  { id: "setup", label: "Cadastro", tabs: ["assets"] },
+  { id: "market", label: "Mercado", tabs: ["quotes", "panorama", "dom", "book", "times"] },
+  { id: "flow", label: "Fluxo", tabs: ["flow", "signals"] },
+  { id: "control", label: "Controle", tabs: ["orders", "alerts", "risk", "history"] },
+  { id: "system", label: "Sistema", tabs: ["settings", "connections", "diagnostics"] },
+];
+const MAIN_TABS = WORKSPACE_GROUPS.flatMap(group => group.tabs);
 const HOTKEY_TABS = {
   "1": "monitor",
   "2": "dom",
@@ -1752,29 +1761,12 @@ const HOTKEY_TABS = {
   "8": "connections",
   "9": "diagnostics",
 };
-const COMMAND_ACTIONS = [
-  { label: "Painel", detail: "Checklist e atalhos", tab: "dashboard" },
-  { label: "Monitor", detail: "Watchlist, setups e tape", tab: "monitor" },
-  { label: "Ativos", detail: "Cadastro RTD e CSV", tab: "assets" },
-  { label: "Cotacoes", detail: "Lista completa de ativos", tab: "quotes" },
-  { label: "Grafico", detail: "Niveis e estudos", tab: "panorama" },
-  { label: "DOM", detail: "Escada de preco", tab: "dom" },
-  { label: "Book", detail: "Ofertas RTD", tab: "book" },
-  { label: "T&T", detail: "Times & Trades", tab: "times" },
-  { label: "Fluxo", detail: "Delta e metricas", tab: "flow" },
-  { label: "Setups", detail: "Sinais ativos", tab: "signals" },
-  { label: "Boleta", detail: "Plano local", tab: "orders" },
-  { label: "Alertas", detail: "Alertas de preco", tab: "alerts" },
-  { label: "Risco", detail: "Calculadora local", tab: "risk" },
-  { label: "Historico", detail: "CSV e ticks", tab: "history" },
-  { label: "Ajustes", detail: "Parametros locais", tab: "settings" },
-  { label: "Conexoes", detail: "Feed e fontes", tab: "connections" },
-  { label: "Sistema", detail: "Diagnostico", tab: "diagnostics" },
-];
+const COMMAND_ACTIONS = MAIN_TABS.map(tab => ({ ...TAB_META[tab], tab }));
 
 const state = {
   ui: {
     mainTab: loadMainTab(),
+    workspaceTabs: loadWorkspaceTabs(),
     settings: loadUiSettings(),
     commandOpen: false,
     commandIndex: 0,
@@ -1895,6 +1887,7 @@ const refs = {
   app: document.querySelector(".app"),
   mainTabs: document.getElementById("main-tabs"),
   moduleHotbar: document.getElementById("module-hotbar"),
+  topCommand: document.getElementById("top-command"),
   commandPalette: document.getElementById("command-palette"),
   commandInput: document.getElementById("command-input"),
   commandResults: document.getElementById("command-results"),
@@ -1906,7 +1899,9 @@ const refs = {
   topBidAsk: document.getElementById("top-bidask"),
   topBookStatus: document.getElementById("top-book-status"),
   topTimesStatus: document.getElementById("top-times-status"),
+  topDeltaTile: document.getElementById("top-delta-tile"),
   topDelta: document.getElementById("top-delta"),
+  topLatencyTile: document.getElementById("top-latency-tile"),
   topLatency: document.getElementById("top-latency"),
   topRate: document.getElementById("top-rate"),
   topCsv: document.getElementById("top-csv"),
@@ -2398,6 +2393,12 @@ function renderTopAssetSelect() {
   }).join("");
 }
 
+function setMetricTone(el, tone = "") {
+  if (!el) return;
+  el.classList.remove("green", "red", "amber");
+  if (tone) el.classList.add(tone);
+}
+
 function renderMarketStrip() {
   const asset = selectedAsset();
   const snapshot = state.rtd.snapshotsByAsset[asset] || null;
@@ -2416,8 +2417,11 @@ function renderMarketStrip() {
   refs.topTimesStatus.textContent = times
     ? `${(times.trades || []).length} linhas`
     : selectedAssetConfig()?.timesRtd?.enabled ? "ligando" : "off";
-  refs.topDelta.textContent = signedFmt(flow.delta5s, 0);
+  const delta5s = liveNumber(flow.delta5s);
+  refs.topDelta.textContent = signedFmt(delta5s, 0);
+  setMetricTone(refs.topDeltaTile, delta5s > 0 ? "green" : delta5s < 0 ? "red" : "");
   refs.topLatency.textContent = fmtMs(state.telemetry.lastLagMs);
+  setMetricTone(refs.topLatencyTile, state.telemetry.lastLagMs > 1200 ? "red" : state.telemetry.lastLagMs > 500 ? "amber" : "");
   refs.topRate.textContent = `${fmt(wsMessageRate(), 1)}/s`;
   refs.topCsv.textContent = state.uploadedCount ? `${state.uploadedCount} pregoes` : "sem CSV";
 }
@@ -3287,6 +3291,57 @@ function renderHistoryPanel() {
   }).join("") || `<div class="warn-line">Aguardando ticks do RTD.</div>`;
 }
 
+function workspaceGroupForTab(tabName) {
+  return WORKSPACE_GROUPS.find(group => group.tabs.includes(tabName)) || WORKSPACE_GROUPS[0];
+}
+
+function workspaceGroupById(groupId) {
+  return WORKSPACE_GROUPS.find(group => group.id === groupId) || WORKSPACE_GROUPS[0];
+}
+
+function hotkeyForTab(tabName) {
+  const pair = Object.entries(HOTKEY_TABS).find(([, tab]) => tab === tabName);
+  return pair ? `Alt+${pair[0]}` : "";
+}
+
+function renderWorkspaceGroups(activeTab = state.ui.mainTab) {
+  if (!refs.mainTabs) return;
+  const activeGroup = workspaceGroupForTab(activeTab).id;
+  refs.mainTabs.innerHTML = WORKSPACE_GROUPS.map(group => `
+    <button class="workspace-tab ${group.id === activeGroup ? "active" : ""}" data-main-tab-group="${escapeHtml(group.id)}" type="button">
+      ${escapeHtml(group.label)}
+    </button>
+  `).join("");
+}
+
+function renderModuleHotbar(activeTab = state.ui.mainTab) {
+  if (!refs.moduleHotbar) return;
+  const group = workspaceGroupForTab(activeTab);
+  const buttons = group.tabs.map(tab => {
+    const meta = TAB_META[tab] || { label: tab };
+    const hotkey = hotkeyForTab(tab);
+    return `
+      <button class="main-tab ${tab === activeTab ? "active" : ""}" data-hot-tab="${escapeHtml(tab)}" type="button">
+        ${hotkey ? `<span class="hotkey">${escapeHtml(hotkey)}</span>` : ""}
+        ${escapeHtml(meta.label)}
+      </button>
+    `;
+  }).join("");
+
+  refs.moduleHotbar.innerHTML = `
+    <span class="hotbar-group-label">${escapeHtml(group.label)}</span>
+    ${buttons}
+    <span class="hotbar-spacer"></span>
+    <button class="hotbar-command" data-command-open="true" type="button">Buscar</button>
+  `;
+}
+
+function showWorkspaceGroup(groupId) {
+  const group = workspaceGroupById(groupId);
+  const saved = state.ui.workspaceTabs[group.id];
+  showMainTab(group.tabs.includes(saved) ? saved : group.tabs[0]);
+}
+
 function activateSubTab(tabName) {
   const tab = document.querySelector(`[data-tab="${tabName}"]`);
   const panel = document.getElementById(`panel-${tabName}`);
@@ -3298,14 +3353,13 @@ function activateSubTab(tabName) {
 
 function showMainTab(tabName) {
   const safe = MAIN_TABS.includes(tabName) ? tabName : "dashboard";
+  const group = workspaceGroupForTab(safe);
   state.ui.mainTab = safe;
+  state.ui.workspaceTabs[group.id] = safe;
   saveMainTab(safe);
-  refs.mainTabs.querySelectorAll("[data-main-tab]").forEach(btn => {
-    btn.classList.toggle("active", btn.dataset.mainTab === safe);
-  });
-  refs.moduleHotbar.querySelectorAll("[data-hot-tab]").forEach(btn => {
-    btn.classList.toggle("active", btn.dataset.hotTab === safe);
-  });
+  saveWorkspaceTabs();
+  renderWorkspaceGroups(safe);
+  renderModuleHotbar(safe);
 
   const assetsMode = safe === "assets";
   refs.assetScreen.classList.toggle("active", assetsMode);
@@ -6272,17 +6326,23 @@ async function deleteSelectedAsset() {
 }
 
 refs.mainTabs.addEventListener("click", ev => {
-  const tab = ev.target.closest("[data-main-tab]");
-  if (!tab) return;
-  showMainTab(tab.dataset.mainTab);
+  const group = ev.target.closest("[data-main-tab-group]");
+  if (!group) return;
+  showWorkspaceGroup(group.dataset.mainTabGroup);
 });
 
 refs.moduleHotbar.addEventListener("click", ev => {
+  const command = ev.target.closest("[data-command-open]");
+  if (command) {
+    openCommandPalette();
+    return;
+  }
   const tab = ev.target.closest("[data-hot-tab]");
   if (!tab) return;
   showMainTab(tab.dataset.hotTab);
 });
 
+refs.topCommand.addEventListener("click", () => openCommandPalette());
 refs.commandClose.addEventListener("click", closeCommandPalette);
 refs.commandInput.addEventListener("input", () => {
   state.ui.commandIndex = 0;

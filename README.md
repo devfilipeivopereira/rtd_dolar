@@ -40,7 +40,7 @@ O historico diario continua sendo carregado por CSV no navegador. O RTD preenche
 - VWAP/ancora opcional: `MED`
 - Volume acumulado: `VOL`
 
-O menu superior separa as telas por funcionalidade e a faixa superior mostra ativo selecionado, ultimo preco, bid/ask, status de Book, status de Times, delta, latencia WebSocket local, mensagens por segundo e CSV:
+O menu superior agora separa o terminal em grupos operacionais: `Inicio`, `Cadastro`, `Mercado`, `Fluxo`, `Controle` e `Sistema`. A hotbar contextual abaixo mostra apenas as telas do grupo ativo, enquanto a faixa superior mantem ativo selecionado, ultimo preco, bid/ask, status de Book, status de Times, delta, latencia WebSocket local, mensagens por segundo e CSV:
 
 - `Painel`: entrada operacional com checklist, atalhos, setups, planos e alertas;
 - `Monitor`: mesa ao vivo com watchlist compacta, estado do ativo, setups, tape, planos e alertas;
@@ -60,7 +60,7 @@ O menu superior separa as telas por funcionalidade e a faixa superior mostra ati
 - `Conexoes`: estado do coletor, Profit RTD, WebSocket, `/health` e fontes por ativo;
 - `Sistema`: RTD, WebSocket, telemetria de mensagens e debug de fluxo.
 
-A hotbar abaixo da faixa superior abre telas com clique ou teclado: `Alt+1` Monitor, `Alt+2` DOM, `Alt+3` Book, `Alt+4` T&T, `Alt+5` Fluxo, `Alt+6` Boleta, `Alt+7` Ativos, `Alt+8` Conexoes e `Alt+9` Sistema.
+A hotbar lembra a ultima tela usada dentro de cada grupo e ainda abre telas frequentes por teclado: `Alt+1` Monitor, `Alt+2` DOM, `Alt+3` Book, `Alt+4` T&T, `Alt+5` Fluxo, `Alt+6` Boleta, `Alt+7` Ativos, `Alt+8` Conexoes e `Alt+9` Sistema.
 
 `Ctrl+K` abre a paleta de comandos para buscar telas e ativos cadastrados.
 
@@ -103,7 +103,7 @@ Use o MSBuild do Visual Studio 2022/Build Tools. O MSBuild antigo de `C:\Windows
 13. Abra `Conexoes` para confirmar coletor, Profit RTD, WebSocket, arquitetura e fontes por ativo.
 14. Deixe o modo `RTD Live` ativo para preencher o intraday automaticamente.
 15. Confira `Latencia WS` e `Msg/s` na faixa superior ou em `Sistema` para diagnosticar atraso entre backend local e navegador.
-16. Use a hotbar, `Alt+1` a `Alt+9` ou `Ctrl+K` para alternar telas e selecionar ativos rapidamente.
+16. Use os grupos superiores, a hotbar contextual, `Alt+1` a `Alt+9` ou `Ctrl+K` para alternar telas e selecionar ativos rapidamente.
 
 A `Boleta` e apenas um plano local/simulado. O aplicativo nao envia ordens para o Profit.
 
@@ -192,7 +192,7 @@ logs/                   logs em runtime
 12. Abas operacionais: confirmar `Book`, `T&T`, `Alertas`, `Risco`, `Historico`, `Ajustes`, `Conexoes` e `Sistema` sem erro no navegador.
 13. Conexoes: confirmar polling de `/health`, arquitetura x64/x86, Profit RTD, WebSocket e status `Preco`, `Book`, `Times` por ativo.
 14. Ajustes: alterar niveis do DOM e intervalo de renderizacao, salvar, recarregar a pagina e confirmar persistencia local.
-15. Hotbar: confirmar clique e atalhos `Alt+1` a `Alt+9`, sem disparar quando o foco esta em campos de texto.
+15. Navegacao: confirmar grupos superiores, hotbar contextual, memoria da ultima tela por grupo e atalhos `Alt+1` a `Alt+9`, sem disparar quando o foco esta em campos de texto.
 16. Paleta: confirmar `Ctrl+K`, busca de telas, busca de ativos, setas, `Enter` e `Esc`.
 17. Performance: confirmar que DOM, Painel, Monitor e Cotacoes seguem responsivos com RTD ativo; campos intraday devem atualizar imediatamente.
 18. Telemetria: confirmar que `Latencia WS` e `Msg/s` mudam quando chegam mensagens WebSocket. Essa leitura mede o trecho backend local -> navegador, nao latencia de bolsa ou execucao.
