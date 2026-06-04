@@ -71,6 +71,7 @@ Scores sao limitados por qualidade:
 
 O dashboard usa o menu superior:
 
+- `Cotacoes`: watchlist de ativos com ultimo preco, bid/ask, delta e status das fontes;
 - `DOM`: escada de preco com pontos, book no nivel e sinais ativos;
 - `Book`: tabelas dedicadas de compra e venda por nivel;
 - `T&T`: Times & Trades real do RTD quando disponivel;

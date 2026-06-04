@@ -64,6 +64,7 @@ O CSV diario continua sendo a fonte do historico 21/45/63. O RTD preenche o intr
 O menu superior separa:
 
 - `Ativos`: cadastro de codigo, tres fontes RTD e CSV historico;
+- `Cotacoes`: watchlist operacional com todos os ativos cadastrados;
 - `Grafico`: grafico e subabas analiticas;
 - `DOM`: escada de preco;
 - `Book`: book de ofertas multi-nivel;
@@ -77,7 +78,9 @@ O menu superior separa:
 
 A faixa superior fica disponivel em todas as telas e mostra ativo selecionado, ultimo preco, bid/ask, status de Book, status de Times, delta 5s e CSV carregado.
 
-A tela `Ativos` seleciona qual ativo aparece nos campos intraday, DOM, fluxo e setups. Snapshots, book e Times & Trades de ativos diferentes ficam em caches separados no navegador, e as fontes podem ser ajustadas por ativo sem reiniciar o app.
+A tela `Ativos` configura fontes e CSV. A tela `Cotacoes` e a mesa de monitoramento: cada linha mostra ultimo preco, bid/ask, delta, status de Book, status de Times, status das fontes `P/B/T` e botoes para abrir `Grafico`, `DOM`, `Book` ou `T&T` daquele ativo.
+
+A selecao de ativo define o que aparece nos campos intraday, DOM, fluxo e setups. Snapshots, book e Times & Trades de ativos diferentes ficam em caches separados no navegador, e as fontes podem ser ajustadas por ativo sem reiniciar o app.
 
 ## Aba DOM
 

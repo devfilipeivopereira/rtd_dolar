@@ -49,7 +49,13 @@ button{cursor:pointer}
 }
 .brand-title{font-size:15px;font-weight:800;letter-spacing:.03em;text-transform:uppercase;white-space:nowrap}
 .brand-sub{font-size:11px;color:var(--muted);margin-top:2px;white-space:nowrap}
-.main-tabs{display:flex;align-items:center;gap:4px;min-width:0;margin:0 14px;flex:1;justify-content:center;overflow:auto}
+.main-tabs{display:flex;align-items:center;gap:8px;min-width:0;margin:0 14px;flex:1;justify-content:center;overflow:auto}
+.tab-group{
+  display:flex;align-items:center;gap:3px;min-width:max-content;padding:3px;border:1px solid #202833;background:#0B0C0A;
+}
+.tab-group-label{
+  padding:0 7px;color:var(--soft);font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;
+}
 .main-tab{
   height:34px;padding:0 12px;border:1px solid var(--line);background:#0B0C0A;color:var(--muted);
   font-family:var(--mono);font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.04em;
@@ -364,6 +370,22 @@ tr:hover td{background:#ffffff05}
 .dom-summary{display:grid;grid-template-columns:repeat(4,minmax(120px,1fr));gap:8px;margin-bottom:10px}
 .dom-summary .live-kv{padding:9px 10px}
 .flow-summary{grid-template-columns:repeat(6,minmax(110px,1fr))}
+.quotes-board{border:1px solid var(--line);background:var(--panel);min-height:calc(100vh - 154px)}
+.quotes-table td,.quotes-table th{text-align:right;white-space:nowrap}
+.quotes-table td:first-child,.quotes-table th:first-child{text-align:left}
+.quotes-table tr.selected td{background:#0d261f;color:#dffcf3}
+.quote-asset-cell{display:flex;align-items:center;gap:8px;min-width:220px}
+.quote-asset-meta{display:flex;flex-direction:column;gap:2px;min-width:0}
+.quote-asset-meta strong{font-size:12px;color:var(--txt)}
+.quote-asset-meta span{font-size:10px;color:var(--muted)}
+.source-stack{display:flex;gap:4px;justify-content:flex-end}
+.source-dot{
+  width:28px;height:22px;display:inline-grid;place-items:center;border:1px solid var(--line);
+  color:var(--soft);background:#0e1318;font-size:9px;font-weight:900;
+}
+.source-dot.ok{border-color:#1f7a66;color:#9df2d5;background:#0d261f}
+.source-dot.warn{border-color:#7a5f1f;color:#ffd66b;background:#28210d}
+.source-dot.off{border-color:#555d69;color:#738091;background:#0e1318}
 .market-table-grid{display:grid;grid-template-columns:minmax(320px,1fr) minmax(320px,1fr);gap:14px}
 .book-table td,.book-table th{text-align:right}
 .book-table td:first-child,.book-table th:first-child{text-align:left}
@@ -399,6 +421,7 @@ tr:hover td{background:#ffffff05}
   .layout{grid-template-columns:1fr}
   .market-strip{top:0;position:relative;grid-template-columns:repeat(2,minmax(0,1fr))}
   .module-hotbar{display:flex}
+  .main-tabs{justify-content:flex-start}
   .sidebar{max-height:none;border-right:0;border-bottom:1px solid var(--line)}
   .asset-workbench{grid-template-columns:1fr}
   .asset-form-grid{grid-template-columns:1fr}
@@ -439,17 +462,30 @@ tr:hover td{background:#ffffff05}
       </div>
     </div>
     <nav class="main-tabs" id="main-tabs">
-      <button class="main-tab active" data-main-tab="assets" type="button">Ativos</button>
-      <button class="main-tab" data-main-tab="panorama" type="button">Grafico</button>
-      <button class="main-tab" data-main-tab="dom" type="button">DOM</button>
-      <button class="main-tab" data-main-tab="book" type="button">Book</button>
-      <button class="main-tab" data-main-tab="times" type="button">T&amp;T</button>
-      <button class="main-tab" data-main-tab="flow" type="button">Fluxo</button>
-      <button class="main-tab" data-main-tab="signals" type="button">Setups</button>
-      <button class="main-tab" data-main-tab="alerts" type="button">Alertas</button>
-      <button class="main-tab" data-main-tab="risk" type="button">Risco</button>
-      <button class="main-tab" data-main-tab="history" type="button">Historico</button>
-      <button class="main-tab" data-main-tab="diagnostics" type="button">Sistema</button>
+      <div class="tab-group">
+        <span class="tab-group-label">Cadastro</span>
+        <button class="main-tab active" data-main-tab="assets" type="button">Ativos</button>
+      </div>
+      <div class="tab-group">
+        <span class="tab-group-label">Mercado</span>
+        <button class="main-tab" data-main-tab="quotes" type="button">Cotacoes</button>
+        <button class="main-tab" data-main-tab="panorama" type="button">Grafico</button>
+        <button class="main-tab" data-main-tab="dom" type="button">DOM</button>
+        <button class="main-tab" data-main-tab="book" type="button">Book</button>
+        <button class="main-tab" data-main-tab="times" type="button">T&amp;T</button>
+      </div>
+      <div class="tab-group">
+        <span class="tab-group-label">Fluxo</span>
+        <button class="main-tab" data-main-tab="flow" type="button">Fluxo</button>
+        <button class="main-tab" data-main-tab="signals" type="button">Setups</button>
+      </div>
+      <div class="tab-group">
+        <span class="tab-group-label">Controle</span>
+        <button class="main-tab" data-main-tab="alerts" type="button">Alertas</button>
+        <button class="main-tab" data-main-tab="risk" type="button">Risco</button>
+        <button class="main-tab" data-main-tab="history" type="button">Historico</button>
+        <button class="main-tab" data-main-tab="diagnostics" type="button">Sistema</button>
+      </div>
     </nav>
     <div class="top-meta">
       <span class="pill" id="file-pill">Sem CSV</span>
@@ -758,6 +794,38 @@ tr:hover td{background:#ffffff05}
       </nav>
 
       <div class="content">
+        <section class="tab-panel hidden" id="panel-quotes">
+          <div class="dom-summary">
+            <div class="live-kv"><span>Ativos</span><strong id="quotes-total">--</strong></div>
+            <div class="live-kv"><span>Ligados</span><strong id="quotes-enabled">--</strong></div>
+            <div class="live-kv"><span>RTD OK</span><strong id="quotes-connected">--</strong></div>
+            <div class="live-kv"><span>CSV</span><strong id="quotes-csv">--</strong></div>
+          </div>
+          <div class="quotes-board">
+            <div class="panel-head">
+              <div class="panel-title">Cotacoes cadastradas</div>
+              <span class="tag" id="quotes-update">Aguardando</span>
+            </div>
+            <div class="table-wrap">
+              <table class="quotes-table">
+                <thead>
+                  <tr>
+                    <th>Ativo</th>
+                    <th>Ultimo</th>
+                    <th>Bid / Ask</th>
+                    <th>Delta 5s</th>
+                    <th>Book</th>
+                    <th>Times</th>
+                    <th>Fontes</th>
+                    <th>Acoes</th>
+                  </tr>
+                </thead>
+                <tbody id="quotes-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
         <section class="tab-panel" id="panel-dom">
           <div class="dom-summary">
             <div class="live-kv"><span>Ultimo</span><strong id="dom-last-price">--</strong></div>
@@ -1242,7 +1310,7 @@ function saveAlerts() {
   } catch (_) {}
 }
 
-const MAIN_TABS = ["assets", "panorama", "dom", "book", "times", "flow", "signals", "alerts", "risk", "history", "diagnostics"];
+const MAIN_TABS = ["assets", "quotes", "panorama", "dom", "book", "times", "flow", "signals", "alerts", "risk", "history", "diagnostics"];
 
 const state = {
   ui: {
@@ -1390,6 +1458,12 @@ const refs = {
   rtdLast: document.getElementById("rtd-last"),
   rtdBook: document.getElementById("rtd-book"),
   rtdVpj: document.getElementById("rtd-vpj"),
+  quotesTotal: document.getElementById("quotes-total"),
+  quotesEnabled: document.getElementById("quotes-enabled"),
+  quotesConnected: document.getElementById("quotes-connected"),
+  quotesCsv: document.getElementById("quotes-csv"),
+  quotesUpdate: document.getElementById("quotes-update"),
+  quotesBody: document.getElementById("quotes-body"),
   datePill: document.getElementById("date-pill"),
   regimePill: document.getElementById("regime-pill"),
   windowPill: document.getElementById("window-pill"),
@@ -1567,9 +1641,10 @@ function updateAssetsMessage(msg) {
   renderAssetScreenList();
   renderTopAssetSelect();
   renderMarketStrip();
+  renderQuotesPanel();
   const selected = selectedAssetConfig();
   populateAssetForm(selected);
-  if (selected?.history?.hasCsv && state.assetEditor.loadedHistoryAsset !== selectedAsset()) {
+  if (historyHasCsv(selected?.history) && state.assetEditor.loadedHistoryAsset !== selectedAsset()) {
     state.assetEditor.loadedHistoryAsset = selectedAsset();
     loadSavedAssetHistory(selectedAsset());
   }
@@ -1623,6 +1698,14 @@ function sourceIsOk(source) {
   return !!source?.enabled && !!source?.subscribed;
 }
 
+function historyHasCsv(history) {
+  return !!(history?.hasCsv ?? history?.HasCsv);
+}
+
+function historyFileName(history) {
+  return history?.fileName || history?.FileName || "";
+}
+
 function statusTagClass(ok, enabled) {
   if (ok) return "tag green";
   if (enabled) return "tag amber";
@@ -1645,7 +1728,7 @@ function renderAssetScreenList() {
     const priceOk = sourceIsOk(item.priceRtd);
     const bookOk = sourceIsOk(item.bookRtd);
     const timesOk = sourceIsOk(item.timesRtd);
-    const csvOk = !!item.history?.hasCsv;
+    const csvOk = historyHasCsv(item.history);
     return `
       <div class="asset-row ${selected ? "selected" : ""}">
         <div class="asset-name">
@@ -1696,8 +1779,8 @@ function populateAssetForm(item = selectedAssetConfig()) {
   refs.assetTimesTopic.value = times.topic || "T&T0";
   refs.assetTimesRows.value = times.rows || 100;
   refs.assetTimesEnabled.checked = times.enabled !== false;
-  refs.assetHistoryName.textContent = item?.history?.hasCsv ? item.history.fileName || "history.csv" : "Sem CSV";
-  refs.assetHistoryFileName.textContent = state.assetEditor.draftCsvName || (item?.history?.fileName ? item.history.fileName : "Selecione o CSV diario do ativo");
+  refs.assetHistoryName.textContent = historyHasCsv(item?.history) ? historyFileName(item.history) || "history.csv" : "Sem CSV";
+  refs.assetHistoryFileName.textContent = state.assetEditor.draftCsvName || (historyFileName(item?.history) || "Selecione o CSV diario do ativo");
   setAssetStatusTags(item);
   renderFieldChips(refs.assetPriceFields, price.fields || defaultSchemaFields("price"));
   renderFieldChips(refs.assetBookFields, book.fields || defaultSchemaFields("book"));
@@ -1708,7 +1791,7 @@ function setAssetStatusTags(item = selectedAssetConfig()) {
   const priceOk = sourceIsOk(item?.priceRtd);
   const bookOk = sourceIsOk(item?.bookRtd);
   const timesOk = sourceIsOk(item?.timesRtd);
-  const csvOk = !!item?.history?.hasCsv;
+  const csvOk = historyHasCsv(item?.history);
   refs.assetPriceOk.className = statusTagClass(priceOk, item?.priceRtd?.enabled);
   refs.assetBookOk.className = statusTagClass(bookOk, item?.bookRtd?.enabled);
   refs.assetTimesOk.className = statusTagClass(timesOk, item?.timesRtd?.enabled);
@@ -1783,6 +1866,89 @@ function renderMarketStrip() {
     : selectedAssetConfig()?.timesRtd?.enabled ? "ligando" : "off";
   refs.topDelta.textContent = signedFmt(flow.delta5s, 0);
   refs.topCsv.textContent = state.uploadedCount ? `${state.uploadedCount} pregoes` : "sem CSV";
+}
+
+function sourceStateClass(source) {
+  if (sourceIsOk(source)) return "ok";
+  if (source?.enabled) return "warn";
+  return "off";
+}
+
+function renderSourceDot(label, source) {
+  return `<span class="source-dot ${sourceStateClass(source)}">${escapeHtml(label)}</span>`;
+}
+
+function renderQuotesPanel() {
+  if (!refs.quotesBody) return;
+  const assets = state.rtd.assets || [];
+  const enabledCount = assets.filter(item => item.enabled).length;
+  const connectedCount = assets.filter(item => item.subscribed || sourceIsOk(item.priceRtd)).length;
+  const csvCount = assets.filter(item => historyHasCsv(item.history)).length;
+
+  refs.quotesTotal.textContent = fmt(assets.length, 0);
+  refs.quotesEnabled.textContent = fmt(enabledCount, 0);
+  refs.quotesConnected.textContent = fmt(connectedCount, 0);
+  refs.quotesCsv.textContent = fmt(csvCount, 0);
+  refs.quotesUpdate.textContent = state.rtd.lastSnapshot?.localTimestamp
+    ? state.rtd.lastSnapshot.localTimestamp.slice(11, 19)
+    : "Aguardando";
+
+  if (!assets.length) {
+    refs.quotesBody.innerHTML = `<tr><td colspan="8">Nenhum ativo cadastrado.</td></tr>`;
+    return;
+  }
+
+  refs.quotesBody.innerHTML = assets.map(item => {
+    const asset = normalizeAsset(item.asset);
+    const snapshot = state.rtd.snapshotsByAsset[asset] || null;
+    const intraday = liveIntradayFromSnapshot(snapshot);
+    const book = liveBookFromSnapshot(snapshot);
+    const flow = flowBucket(asset).metrics || {};
+    const depth = state.rtd.bookDepthByAsset[asset];
+    const times = state.rtd.timesTradesByAsset[asset];
+    const label = item.label && normalizeAsset(item.label) !== asset ? item.label : item.asset;
+    const bidAsk = Number.isFinite(book.bid) && Number.isFinite(book.ask)
+      ? `${fmt(book.bid)} / ${fmt(book.ask)}`
+      : "--";
+    const bookText = depth
+      ? `${(depth.bids || []).length} x ${(depth.asks || []).length}`
+      : item.bookRtd?.enabled ? "ligando" : "off";
+    const timesText = times
+      ? `${(times.trades || []).length}`
+      : item.timesRtd?.enabled ? "ligando" : "off";
+    return `
+      <tr class="${sameAsset(asset) ? "selected" : ""}">
+        <td>
+          <div class="quote-asset-cell">
+            <button class="asset-action view" type="button" data-quotes-open="panorama" data-asset="${escapeHtml(asset)}">Ver</button>
+            <div class="quote-asset-meta">
+              <strong>${escapeHtml(asset)}</strong>
+              <span>${escapeHtml(label || asset)}</span>
+            </div>
+          </div>
+        </td>
+        <td class="strong">${fmt(intraday.price)}</td>
+        <td>${escapeHtml(bidAsk)}</td>
+        <td>${signedFmt(flow.delta5s, 0)}</td>
+        <td>${escapeHtml(bookText)}</td>
+        <td>${escapeHtml(timesText)}</td>
+        <td>
+          <div class="source-stack">
+            ${renderSourceDot("P", item.priceRtd)}
+            ${renderSourceDot("B", item.bookRtd)}
+            ${renderSourceDot("T", item.timesRtd)}
+          </div>
+        </td>
+        <td>
+          <div class="asset-actions">
+            <button class="asset-action view" type="button" data-quotes-open="dom" data-asset="${escapeHtml(asset)}">DOM</button>
+            <button class="asset-action view" type="button" data-quotes-open="book" data-asset="${escapeHtml(asset)}">Book</button>
+            <button class="asset-action view" type="button" data-quotes-open="times" data-asset="${escapeHtml(asset)}">T&amp;T</button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join("");
 }
 
 function renderBookPanel() {
@@ -1985,6 +2151,7 @@ function showMainTab(tabName) {
   refs.terminalMain.classList.toggle("full-view", fullView);
 
   if (safe === "panorama") activateSubTab("levels");
+  else if (safe === "quotes") activateSubTab("quotes");
   else if (safe === "dom") activateSubTab("dom");
   else if (safe === "book") activateSubTab("book");
   else if (safe === "times") activateSubTab("times");
@@ -1995,6 +2162,7 @@ function showMainTab(tabName) {
   else if (safe === "history") activateSubTab("history");
   else if (safe === "diagnostics") activateSubTab("flowdebug");
 
+  if (safe === "quotes") renderQuotesPanel();
   if (safe === "dom") renderDom();
   if (safe === "book") renderBookPanel();
   if (safe === "times") renderTimesPanel();
@@ -2026,6 +2194,7 @@ function renderSelectedAsset() {
   renderMarketStrip();
   renderTopAssetSelect();
   renderAssetList();
+  renderQuotesPanel();
 }
 
 function selectAsset(asset) {
@@ -3860,6 +4029,7 @@ function applyFlowMessage(msg) {
   bucket.signals = mergeByKey(msg.activeSignals, bucket.signals, signalKey, state.flow.maxSignals);
   if (!sameAsset(asset)) {
     renderAssetList();
+    renderQuotesPanel();
     return;
   }
 
@@ -3870,6 +4040,7 @@ function applyFlowMessage(msg) {
   renderDom();
   renderMarketStrip();
   renderHistoryPanel();
+  renderQuotesPanel();
 }
 
 function applySignalMessage(msg) {
@@ -3880,6 +4051,7 @@ function applySignalMessage(msg) {
   bucket.signals = mergeByKey([signal], bucket.signals, signalKey, state.flow.maxSignals);
   if (!sameAsset(asset)) {
     renderAssetList();
+    renderQuotesPanel();
     return;
   }
 
@@ -3889,6 +4061,7 @@ function applySignalMessage(msg) {
   renderDom();
   renderAlerts();
   renderMarketStrip();
+  renderQuotesPanel();
 }
 
 function applySignalsMessage(msg) {
@@ -3902,6 +4075,7 @@ function applySignalsMessage(msg) {
   renderDom();
   renderAlerts();
   renderMarketStrip();
+  renderQuotesPanel();
 }
 
 async function loadInitialFlow() {
@@ -4533,6 +4707,7 @@ function applyLiveSnapshot(msg) {
 
   if (!sameAsset(asset)) {
     renderAssetList();
+    renderQuotesPanel();
     return;
   }
 
@@ -4555,6 +4730,7 @@ function applyLiveSnapshot(msg) {
   renderMarketStrip();
   renderRisk();
   renderHistoryPanel();
+  renderQuotesPanel();
   scheduleLiveRecalc();
 }
 
@@ -4562,6 +4738,7 @@ function applyBookDepthMessage(msg) {
   if (!msg || msg.type !== "bookDepth") return;
   const asset = normalizeAsset(msg.asset);
   state.rtd.bookDepthByAsset[asset] = msg;
+  renderQuotesPanel();
   if (sameAsset(asset)) {
     renderDom(state.rtd.lastSnapshot);
     renderBookPanel();
@@ -4595,6 +4772,7 @@ function applyTimesTradesMessage(msg) {
   bucket.trades = Array.isArray(msg.trades)
     ? msg.trades.map(normalizeTimesTrade).filter(trade => Number.isFinite(trade.price)).slice(0, state.flow.maxTrades)
     : [];
+  renderQuotesPanel();
   if (sameAsset(asset)) {
     syncSelectedFlow();
     renderDomTape();
@@ -4710,6 +4888,7 @@ function applyCsvContent(text, fileName, encoding, targets = {}) {
   recalc();
   renderMarketStrip();
   renderHistoryPanel();
+  renderQuotesPanel();
   return { ok: true, parsed };
 }
 
@@ -4770,6 +4949,7 @@ async function saveDraftHistory(asset = selectedAsset()) {
     item.history = msg.history;
     populateAssetForm(item);
     renderAssetScreenList();
+    renderQuotesPanel();
   }
   state.assetEditor.draftCsvText = null;
   state.assetEditor.draftCsvName = null;
@@ -4782,12 +4962,12 @@ async function loadSavedAssetHistory(asset = selectedAsset()) {
     if (!res.ok) return;
     const msg = await res.json();
     if (!msg.csvText || !sameAsset(msg.asset, asset)) return;
-    applyCsvContent(msg.csvText, msg.history?.fileName || "history.csv", "utf-8", {
+    applyCsvContent(msg.csvText, historyFileName(msg.history) || "history.csv", "utf-8", {
       statusEl: refs.assetHistoryStatus,
       fileNameEl: refs.assetHistoryFileName,
       pillEl: refs.filePill,
     });
-    refs.assetHistoryName.textContent = msg.history?.fileName || "history.csv";
+    refs.assetHistoryName.textContent = historyFileName(msg.history) || "history.csv";
   } catch (_) {}
 }
 
@@ -4804,6 +4984,13 @@ refs.mainTabs.addEventListener("click", ev => {
 
 refs.topAssetSelect.addEventListener("change", ev => {
   selectAsset(ev.target.value);
+});
+
+refs.quotesBody.addEventListener("click", ev => {
+  const action = ev.target.closest("[data-quotes-open]");
+  if (!action) return;
+  selectAsset(action.dataset.asset);
+  showMainTab(action.dataset.quotesOpen);
 });
 
 refs.alertAdd.addEventListener("click", addPriceAlert);
@@ -5092,6 +5279,7 @@ renderSignals();
 renderFlowDebug();
 renderTopAssetSelect();
 renderMarketStrip();
+renderQuotesPanel();
 renderBookPanel();
 renderTimesPanel();
 renderAlerts();

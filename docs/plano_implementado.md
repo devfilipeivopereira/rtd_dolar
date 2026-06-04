@@ -14,7 +14,8 @@
 - Servidor local `HttpListener` com `/`, `/health`, `/snapshot`, `/flow`, `/signals`, `/assets`, `/assets/toggle`, `/assets/channels`, `/assets/delete`, `/assets/history` e `/ws`.
 - WebSocket com broadcast de snapshots, status, flow, signals, `bookDepth` e `timesTrades`.
 - SQLite auxiliar para snapshots de 1 segundo e consolidado por minuto.
-- HTML do `dolar-points` importado e adaptado com menu superior `Ativos`, `Grafico`, `DOM`, `Book`, `T&T`, `Fluxo`, `Setups`, `Alertas`, `Risco`, `Historico` e `Sistema`.
+- HTML do `dolar-points` importado e adaptado com menu superior agrupado em `Cadastro`, `Mercado`, `Fluxo` e `Controle`.
+- Tela `Cotacoes` como watchlist operacional entre o cadastro de ativos e as telas de analise.
 - Faixa superior operacional com ativo selecionado, ultimo preco, bid/ask, Book, Times, delta e CSV.
 - Coalescing auxiliar para `bookDepth` e `timesTrades`, reduzindo repintura sem bloquear snapshots de preco.
 
@@ -27,7 +28,8 @@
 5. Cadastrar ativo em `Ativos` e carregar CSV historico.
 6. Confirmar que os campos intraday sao preenchidos por RTD.
 7. Adicionar outro ativo em `Ativos`, testar `Ver`, `Ligado`, `Desligado`, fontes e `Excluir`.
-8. Abrir `Book`, `T&T`, `Alertas`, `Risco`, `Historico` e `Sistema`.
+8. Abrir `Cotacoes` e testar os atalhos para `Grafico`, `DOM`, `Book` e `T&T`.
+9. Abrir `Book`, `T&T`, `Alertas`, `Risco`, `Historico` e `Sistema`.
 
 ## Build validado
 

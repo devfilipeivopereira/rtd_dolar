@@ -43,6 +43,7 @@ O historico diario continua sendo carregado por CSV no navegador. O RTD preenche
 O menu superior separa as telas por funcionalidade e a faixa superior mostra ativo selecionado, ultimo preco, bid/ask, status de Book, status de Times, delta e CSV:
 
 - `Ativos`: cadastro, CSV historico, ligar/desligar e excluir;
+- `Cotacoes`: watchlist operacional com todos os ativos cadastrados, ultimo preco, bid/ask, delta, Book, Times e atalhos;
 - `Grafico`: grafico, niveis, abertura, POC, variacao, profile e backtest;
 - `DOM`: escada de preco e pontos principais;
 - `Book`: book de ofertas RTD em tabela de compra e venda;
@@ -85,8 +86,9 @@ Use o MSBuild do Visual Studio 2022/Build Tools. O MSBuild antigo de `C:\Windows
 5. Cadastre o codigo de preco, por exemplo `WDON26_G_0`.
 6. Configure `BOOK0` e `T&T0`, ou os topicos equivalentes do Profit.
 7. Carregue o CSV historico do ativo.
-8. Clique em `Salvar` e depois em `Ver`.
-9. Deixe o modo `RTD Live` ativo para preencher o intraday automaticamente.
+8. Clique em `Salvar`.
+9. Abra `Cotacoes` para monitorar os ativos cadastrados e entrar em `Grafico`, `DOM`, `Book` ou `T&T`.
+10. Deixe o modo `RTD Live` ativo para preencher o intraday automaticamente.
 
 Para uma prova minima sem dashboard:
 
@@ -166,5 +168,6 @@ logs/                   logs em runtime
 5. Manual: desligar `RTD Live` e editar os campos manualmente.
 6. Multiativo: adicionar um novo ativo em `Ativos`, ligar/desligar, trocar fontes, excluir e confirmar `/assets`.
 7. Book/T&T: confirmar mensagens `bookDepth` e `timesTrades` no WebSocket quando `BOOK0` e `T&T0` estiverem ligados.
-8. Abas operacionais: confirmar `Book`, `T&T`, `Alertas`, `Risco`, `Historico` e `Sistema` sem erro no navegador.
-9. SQLite: confirmar criacao de `data/marketdata.sqlite` quando o provider for restaurado pelo NuGet.
+8. Cotacoes: confirmar que a watchlist mostra todos os ativos e que os botoes abrem `Grafico`, `DOM`, `Book` e `T&T`.
+9. Abas operacionais: confirmar `Book`, `T&T`, `Alertas`, `Risco`, `Historico` e `Sistema` sem erro no navegador.
+10. SQLite: confirmar criacao de `data/marketdata.sqlite` quando o provider for restaurado pelo NuGet.
