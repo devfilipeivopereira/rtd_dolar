@@ -142,6 +142,7 @@ Sem CSV, a aba DOM ainda pode mostrar ticks RTD, bid/ask e tape. Pontos como POC
 - Campos intraday devem ser preenchidos a cada snapshot; o lote curto configuravel deve renderizar principalmente a aba ativa para manter a UI responsiva com RTD intenso.
 - `GET /bootstrap` deve consolidar health, assets, snapshot, flow e signals para acelerar abertura/reconexao, com fallback no frontend para `/flow`, `/signals` e `/assets`.
 - `/health.webSocket` deve expor clientes conectados, broadcasts, mensagens alvo, falhas e ultimo broadcast; `Conexoes` e `Sistema` devem mostrar esses contadores.
+- `/health.process` deve expor PID, uptime, memoria, GC e threads; `Conexoes` e `Sistema` devem mostrar uptime, memoria e threads.
 - `Latencia WS` deve ser tratada como diagnostico backend local -> navegador, e `Render UI` como custo de desenho da tela ativa; nenhuma delas mede latencia de bolsa ou Profit.
 - `Painel` deve mostrar `Score Quant`, `Indicadores Quant`, `Base Quant` e `Evidencias Quant`, combinando CSV estatistico, RTD de preco e fluxo/T&T quando disponiveis.
 - Sem uma das fontes principais, ou com feed atrasado/parado, a `Base Quant` deve explicitar a falta/idade e o score nao deve parecer uma confirmacao forte.
@@ -269,6 +270,22 @@ WebSocket health OK
 ```
 
 Esse check falha se `/health` perder `webSocket`, clientes, broadcasts, mensagens alvo, falhas, ultimo broadcast ou se `Conexoes`/`Sistema` deixarem de exibir esses contadores.
+
+## Process QA
+
+Para validar que o coletor continua expondo saude leve do processo local:
+
+```text
+node tools/validate-process-health.js
+```
+
+Resultado esperado:
+
+```text
+Process health OK
+```
+
+Esse check falha se `/health` perder `process`, PID, uptime, memoria, GC, threads ou se `Conexoes`/`Sistema` deixarem de mostrar esses dados.
 
 ## Navegacao
 

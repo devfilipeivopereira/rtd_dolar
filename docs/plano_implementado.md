@@ -28,7 +28,7 @@
 - Paleta `Ctrl+K` para buscar grupos, telas e ativos cadastrados, com `Proximo passo`, status operacional, atalhos e feed/fontes por ativo.
 - Faixa superior de contexto com ativo selecionado, ultimo preco, bid/ask, Book, Times, delta e CSV.
 - `Score Quant` no `Painel`, com `Indicadores Quant`, `Base Quant` e `Evidencias Quant` combinando CSV estatistico, RTD de preco, fluxo derivado/T&T, confluencia e backtest proxy.
-- Telemetria no frontend com latencia WebSocket local, mensagens por segundo, render da UI, reconexoes, contadores por tipo de mensagem e contadores backend de WebSocket.
+- Telemetria no frontend com latencia WebSocket local, mensagens por segundo, render da UI, reconexoes, contadores por tipo de mensagem, contadores backend de WebSocket e saude do processo local.
 - Roteiro de analise no `Painel`, com `Proximo passo` dinamico e etapas clicaveis para Ativo, RTD preco, CSV, Book/T&T, Fluxo e Score.
 - Coalescing auxiliar para `bookDepth` e `timesTrades`, reduzindo repintura sem bloquear snapshots de preco.
 - Scheduler de render no navegador orientado pela aba ativa, com fila por motivo/ativo, filtro de relevancia por tela, padrao de 120 ms no preset `Equilibrado`, presets de desempenho pela UI e inputs de preco imediatos.
@@ -43,6 +43,7 @@
 - Validador `tools/validate-feed-freshness.js` para preservar idade de feed, status `Ao vivo`/`Atrasado`/`Parado` e diagnostico de freshness.
 - Validador `tools/validate-bootstrap-loading.js` para preservar `/bootstrap` e fallback de carregamento inicial.
 - Validador `tools/validate-websocket-health.js` para preservar clientes, broadcasts e falhas do WebSocket em `/health`.
+- Validador `tools/validate-process-health.js` para preservar uptime, memoria, GC e threads do processo local em `/health`.
 
 ## Fluxo de validacao
 
@@ -72,13 +73,15 @@
 24. Rodar `node tools/validate-feed-freshness.js`.
 25. Rodar `node tools/validate-bootstrap-loading.js`.
 26. Rodar `node tools/validate-websocket-health.js`.
-27. Confirmar `GET /bootstrap` retornando health, assets, snapshot, flow e signals.
-28. Confirmar `/health.webSocket` com clientes, broadcasts e falhas.
-29. Confirmar `Score Quant`, `Indicadores Quant`, `Base Quant` e `Evidencias Quant` no `Painel`.
-30. Confirmar o roteiro de analise com `Proximo passo` e atalhos para Ativos, Conexoes, Fluxo, Radar e Mesa.
-31. Confirmar `Render motivos`, `Render ativos` e contadores backend de WebSocket no `Sistema`.
-32. Confirmar `Feed`, `Idade backend`, `Feed selecionado` e Feed por ativo em tempo real.
-33. Confirmar que `Score Quant` e `Radar` reduzem confianca quando o feed fica `Atrasado` ou `Parado`.
+27. Rodar `node tools/validate-process-health.js`.
+28. Confirmar `GET /bootstrap` retornando health, assets, snapshot, flow e signals.
+29. Confirmar `/health.webSocket` com clientes, broadcasts e falhas.
+30. Confirmar `/health.process` com uptime, memoria e threads.
+31. Confirmar `Score Quant`, `Indicadores Quant`, `Base Quant` e `Evidencias Quant` no `Painel`.
+32. Confirmar o roteiro de analise com `Proximo passo` e atalhos para Ativos, Conexoes, Fluxo, Radar e Mesa.
+33. Confirmar `Render motivos`, `Render ativos`, contadores backend de WebSocket e saude do processo no `Sistema`.
+34. Confirmar `Feed`, `Idade backend`, `Feed selecionado` e Feed por ativo em tempo real.
+35. Confirmar que `Score Quant` e `Radar` reduzem confianca quando o feed fica `Atrasado` ou `Parado`.
 
 ## Build validado
 

@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -16,6 +17,7 @@ namespace ColetorProfitRTD
     internal static class Program
     {
         private static readonly ManualResetEventSlim Quit = new ManualResetEventSlim(false);
+        private static readonly DateTimeOffset StartedAt = DateTimeOffset.Now;
 
         [STAThread]
         private static void Main(string[] args)
@@ -215,8 +217,28 @@ namespace ColetorProfitRTD
                 ["lastError"] = lastError == null ? null : lastError.Message,
                 ["assets"] = rtdClient.AssetStates(),
                 ["flow"] = flowProcessor.Health(),
-                ["webSocket"] = hub.Health()
+                ["webSocket"] = hub.Health(),
+                ["process"] = BuildProcessHealth()
             };
+        }
+
+        private static Dictionary<string, object> BuildProcessHealth()
+        {
+            DateTimeOffset now = DateTimeOffset.Now;
+
+            using (Process process = Process.GetCurrentProcess())
+            {
+                return new Dictionary<string, object>
+                {
+                    ["processId"] = process.Id,
+                    ["startedAt"] = StartedAt.ToString("o"),
+                    ["uptimeMs"] = Math.Round((now - StartedAt).TotalMilliseconds),
+                    ["workingSetMb"] = Math.Round(process.WorkingSet64 / 1048576.0, 1),
+                    ["privateMemoryMb"] = Math.Round(process.PrivateMemorySize64 / 1048576.0, 1),
+                    ["gcMemoryMb"] = Math.Round(GC.GetTotalMemory(false) / 1048576.0, 1),
+                    ["threadCount"] = process.Threads.Count
+                };
+            }
         }
 
         private static Dictionary<string, object> BuildAssets(RtdClient rtdClient)

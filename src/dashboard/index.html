@@ -4010,11 +4010,15 @@ function renderConnections() {
 
   const flow = health.flow || {};
   const backendWs = health.webSocket || {};
+  const processInfo = health.process || {};
   refs.connSummary.innerHTML = [
     ["WebSocket", socketStateText()],
     ["WS clientes", fmt(liveNumber(backendWs.clients), 0)],
     ["WS broadcasts", fmt(liveNumber(backendWs.broadcasts), 0)],
     ["WS falhas", fmt(liveNumber(backendWs.failedSends), 0)],
+    ["Processo", `${health.processArchitecture || "--"} | PID ${fmt(liveNumber(processInfo.processId), 0)}`],
+    ["Uptime app", fmtMs(processInfo.uptimeMs)],
+    ["Memoria app", `${fmt(liveNumber(processInfo.workingSetMb), 1)} MB`],
     ["URL", rtdWebSocketUrl()],
     ["ProgID", health.progId || "RTDTrading.RTDServer"],
     ["Ativo padrao", health.asset || selectedAsset()],
@@ -6860,6 +6864,7 @@ function renderFlowDebug() {
   const m = state.flow.metrics || {};
   const msg = state.flow.lastMessage || {};
   const backendWs = state.health.last?.webSocket || {};
+  const processInfo = state.health.last?.process || {};
   const depth = liveBookDepthForAsset();
   const times = state.rtd.timesTradesByAsset[selectedAsset()];
   const counts = state.telemetry.counts || {};
@@ -6880,6 +6885,9 @@ function renderFlowDebug() {
     ["Render ativos", (state.render.lastAssets || []).slice(0, 4).join(" / ") || "--"],
     ["Ultima mensagem", lastMessage],
     ["Reconexoes", fmt(state.telemetry.reconnects, 0)],
+    ["Processo local", `PID ${fmt(liveNumber(processInfo.processId), 0)} | ${fmtMs(processInfo.uptimeMs)}`],
+    ["Memoria local", `${fmt(liveNumber(processInfo.workingSetMb), 1)} MB | GC ${fmt(liveNumber(processInfo.gcMemoryMb), 1)} MB`],
+    ["Threads local", fmt(liveNumber(processInfo.threadCount), 0)],
     ["WS clientes backend", fmt(liveNumber(backendWs.clients), 0)],
     ["WS broadcasts backend", fmt(liveNumber(backendWs.broadcasts), 0)],
     ["WS falhas backend", fmt(liveNumber(backendWs.failedSends), 0)],
