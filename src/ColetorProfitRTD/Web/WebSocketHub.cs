@@ -15,6 +15,10 @@ namespace ColetorProfitRTD.Web
         private readonly List<WebSocket> _clients = new List<WebSocket>();
         private readonly Logger _log;
         private readonly Func<string> _initialMessageFactory;
+        private long _broadcasts;
+        private long _targetMessages;
+        private long _failedSends;
+        private DateTimeOffset? _lastBroadcastAt;
 
         public WebSocketHub(Logger log, Func<string> initialMessageFactory)
         {
@@ -53,9 +57,27 @@ namespace ColetorProfitRTD.Web
             lock (_lock)
             {
                 clients = _clients.ToList();
+                _broadcasts++;
+                _targetMessages += clients.Count;
+                _lastBroadcastAt = DateTimeOffset.Now;
             }
 
             return Task.WhenAll(clients.Select(x => SendOrRemoveAsync(x, message)));
+        }
+
+        public Dictionary<string, object> Health()
+        {
+            lock (_lock)
+            {
+                return new Dictionary<string, object>
+                {
+                    ["clients"] = _clients.Count(x => x.State == WebSocketState.Open),
+                    ["broadcasts"] = _broadcasts,
+                    ["targetMessages"] = _targetMessages,
+                    ["failedSends"] = _failedSends,
+                    ["lastBroadcastAt"] = _lastBroadcastAt.HasValue ? _lastBroadcastAt.Value.ToString("o") : null
+                };
+            }
         }
 
         private async Task SendOrRemoveAsync(WebSocket socket, string message)
@@ -66,6 +88,11 @@ namespace ColetorProfitRTD.Web
             }
             catch
             {
+                lock (_lock)
+                {
+                    _failedSends++;
+                }
+
                 Remove(socket);
             }
         }

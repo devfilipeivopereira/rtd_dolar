@@ -115,12 +115,12 @@ namespace ColetorProfitRTD
                 config.Web.HttpPort,
                 staticRoot,
                 config.Web.WebSocketPath,
-                () => BuildHealth(config, rtdClient, flowProcessor),
+                () => BuildHealth(config, rtdClient, flowProcessor, hub),
                 () => rtdClient.CurrentSnapshot.ToLiveMessage(),
                 () => flowProcessor.CurrentFlowMessage(),
                 () => flowProcessor.CurrentSignalsMessage(),
                 () => BuildAssets(rtdClient),
-                () => BuildBootstrap(config, rtdClient, flowProcessor),
+                () => BuildBootstrap(config, rtdClient, flowProcessor, hub),
                 body => SaveAsset(rtdClient, body),
                 body => ToggleAsset(rtdClient, body),
                 body => DeleteAsset(rtdClient, flowProcessor, body),
@@ -197,7 +197,7 @@ namespace ColetorProfitRTD
             }
         }
 
-        private static Dictionary<string, object> BuildHealth(AppConfig config, RtdClient rtdClient, FlowProcessor flowProcessor)
+        private static Dictionary<string, object> BuildHealth(AppConfig config, RtdClient rtdClient, FlowProcessor flowProcessor, WebSocketHub hub)
         {
             MarketSnapshot snapshot = rtdClient.CurrentSnapshot;
             Exception lastError = rtdClient.LastError;
@@ -214,7 +214,8 @@ namespace ColetorProfitRTD
                 ["lastUpdateAgeMs"] = Math.Round(lastUpdateAgeMs),
                 ["lastError"] = lastError == null ? null : lastError.Message,
                 ["assets"] = rtdClient.AssetStates(),
-                ["flow"] = flowProcessor.Health()
+                ["flow"] = flowProcessor.Health(),
+                ["webSocket"] = hub.Health()
             };
         }
 
@@ -248,12 +249,12 @@ namespace ColetorProfitRTD
             };
         }
 
-        private static Dictionary<string, object> BuildBootstrap(AppConfig config, RtdClient rtdClient, FlowProcessor flowProcessor)
+        private static Dictionary<string, object> BuildBootstrap(AppConfig config, RtdClient rtdClient, FlowProcessor flowProcessor, WebSocketHub hub)
         {
             return new Dictionary<string, object>
             {
                 ["type"] = "bootstrap",
-                ["health"] = BuildHealth(config, rtdClient, flowProcessor),
+                ["health"] = BuildHealth(config, rtdClient, flowProcessor, hub),
                 ["assets"] = BuildAssets(rtdClient),
                 ["snapshot"] = rtdClient.CurrentSnapshot.ToLiveMessage(),
                 ["flow"] = flowProcessor.CurrentFlowMessage(),
