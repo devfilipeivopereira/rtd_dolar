@@ -28,6 +28,7 @@
 - Faixa superior de contexto com ativo selecionado, ultimo preco, bid/ask, Book, Times, delta e CSV.
 - `Score Quant` no `Painel`, com `Indicadores Quant`, `Base Quant` e `Evidencias Quant` combinando CSV estatistico, RTD de preco, fluxo derivado/T&T, confluencia e backtest proxy.
 - Telemetria no frontend com latencia WebSocket local, mensagens por segundo, render da UI, reconexoes e contadores por tipo de mensagem.
+- Roteiro de analise no `Painel`, com `Proximo passo` dinamico e etapas clicaveis para Ativo, RTD preco, CSV, Book/T&T, Fluxo e Score.
 - Coalescing auxiliar para `bookDepth` e `timesTrades`, reduzindo repintura sem bloquear snapshots de preco.
 - Scheduler de render no navegador orientado pela aba ativa, com padrao de 120 ms no preset `Equilibrado`, presets de desempenho pela UI e inputs de preco imediatos.
 - Validador `tools/validate-dashboard-design.js` para preservar tokens Industrial, mono, plano e sem sombras/gradientes.
@@ -59,6 +60,7 @@
 21. Rodar `node tools/validate-product-language.js`.
 22. Rodar `node tools/validate-quant-surface.js`.
 23. Confirmar `Score Quant`, `Indicadores Quant`, `Base Quant` e `Evidencias Quant` no `Painel`.
+24. Confirmar o roteiro de analise com `Proximo passo` e atalhos para Ativos, Conexoes, Fluxo, Radar e Mesa.
 
 ## Build validado
 

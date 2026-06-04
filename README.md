@@ -70,6 +70,8 @@ A hotbar lembra a ultima tela usada dentro de cada grupo e ainda abre telas freq
 
 A hotbar tambem mostra a trilha `Grupo / Tela` e um resumo curto da tela ativa, para reduzir perda de contexto durante a troca rapida de modulos.
 
+O `Painel` tambem mostra um roteiro de analise com `Proximo passo` e etapas `Ativo`, `RTD preco`, `CSV`, `Book/T&T`, `Fluxo` e `Score`. Cada etapa usa o estado real do ativo selecionado e abre a tela correta por clique, reduzindo a confusao entre cadastro, diagnostico e leitura de mercado.
+
 `Ctrl+K` abre a paleta de busca para localizar telas e ativos cadastrados.
 
 A aba `DOM` mostra:
@@ -212,4 +214,5 @@ logs/                   logs em runtime
 22. Linguagem de produto: rodar `node tools/validate-product-language.js` e confirmar `Product language OK`.
 23. Quant QA: rodar `node tools/validate-quant-surface.js` e confirmar `Quant surface OK`.
 24. Score Quant: confirmar no `Painel` que `Score Quant`, `Indicadores Quant`, `Base Quant` e `Evidencias Quant` aparecem; sem CSV, RTD ou fluxo, o score deve ficar penalizado ou aguardando dados.
-25. SQLite: confirmar criacao de `data/marketdata.sqlite` quando o provider for restaurado pelo NuGet.
+25. Roteiro: confirmar que `Proximo passo` muda entre Ativos, Conexoes, Fluxo, Radar e Mesa conforme faltam dados ou conforme o score fica utilizavel.
+26. SQLite: confirmar criacao de `data/marketdata.sqlite` quando o provider for restaurado pelo NuGet.

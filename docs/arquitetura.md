@@ -99,6 +99,8 @@ A paleta `Ctrl+K` busca telas e ativos cadastrados. Quando o item escolhido e um
 
 A tela `Painel` e a entrada de analise. Ela resume RTD, ativo selecionado, ultimo preco, leitura rapida de contexto, fluxo, nivel proximo, radar e feed, alem de checklist de prontidao, atalhos para as telas principais, setups recentes, oportunidades e alertas.
 
+Logo abaixo dos cards de contexto, o `Painel` mostra um roteiro de analise com `Proximo passo` e etapas clicaveis: `Ativo`, `RTD preco`, `CSV`, `Book/T&T`, `Fluxo` e `Score`. A decisao e baseada no estado real do ativo selecionado. Sem cadastro, abre `Ativos`; sem preco, abre `Conexoes`; sem CSV, volta para `Ativos`; sem fluxo, abre `Fluxo`; com score utilizavel, abre `Radar`; caso contrario, abre `Mesa`.
+
 A tela `Radar` ranqueia oportunidades observacionais por setups, niveis, proximidade, delta e imbalance. Tambem mostra ativos em atencao para troca rapida de contexto.
 
 A tela `Monitor` e a mesa de acompanhamento ao vivo. Ela junta watchlist compacta, estado do ativo selecionado, setups ativos, tape, oportunidades e alertas sem editar cadastro nem parametros.

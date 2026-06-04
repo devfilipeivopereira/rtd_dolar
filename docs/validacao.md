@@ -45,6 +45,7 @@ Resultado esperado:
 25. Confirmar que `Latencia WS`, `Msg/s` e `Render UI` aparecem na faixa superior e no `Sistema` quando chegam mensagens do WebSocket.
 26. Confirmar no `Painel` que `Score Quant`, `Indicadores Quant`, `Base Quant` e `Evidencias Quant` aparecem.
 27. Confirmar que o `Score Quant` fica aguardando ou penalizado quando faltar CSV, preco RTD ou fluxo/T&T.
+28. Confirmar no `Painel` que o roteiro mostra `Proximo passo` e etapas `Ativo`, `RTD preco`, `CSV`, `Book/T&T`, `Fluxo` e `Score`.
 
 ## Endpoints
 
@@ -135,6 +136,7 @@ Sem CSV, a aba DOM ainda pode mostrar ticks RTD, bid/ask e tape. Pontos como POC
 - `Latencia WS` deve ser tratada como diagnostico backend local -> navegador, e `Render UI` como custo de desenho da tela ativa; nenhuma delas mede latencia de bolsa ou Profit.
 - `Painel` deve mostrar `Score Quant`, `Indicadores Quant`, `Base Quant` e `Evidencias Quant`, combinando CSV estatistico, RTD de preco e fluxo/T&T quando disponiveis.
 - Sem uma das fontes principais, a `Base Quant` deve explicitar a falta e o score nao deve parecer uma confirmacao forte.
+- O roteiro do `Painel` deve indicar o proximo passo real e abrir a tela correta: `Ativos`, `Conexoes`, `Fluxo`, `Radar` ou `Mesa`.
 
 ## SQLite
 

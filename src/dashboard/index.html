@@ -476,6 +476,23 @@ tr:hover td{background:#ffffff05}
 .source-dot.off{border-color:#555d69;color:#738091;background:#0e1318}
 .dashboard-grid{display:grid;grid-template-columns:minmax(360px,.9fr) minmax(0,1.4fr);gap:14px}
 .dashboard-actions{display:grid;grid-template-columns:repeat(3,minmax(150px,1fr));gap:8px}
+.analysis-workflow{
+  display:grid;grid-template-columns:minmax(220px,.7fr) minmax(0,1.3fr);gap:8px;align-items:stretch;
+  border:1px solid var(--line);background:#0B0C0A;margin:0 0 14px;padding:8px;
+}
+.workflow-next,.workflow-step{
+  border:1px solid var(--line);background:#10141a;color:var(--txt);font-family:var(--mono);text-align:left;
+}
+.workflow-next{display:flex;flex-direction:column;gap:7px;justify-content:center;min-height:64px;padding:10px 11px;border-color:#285d80;background:#10202b}
+.workflow-next span,.workflow-step span{font-size:9px;color:var(--soft);font-weight:900;text-transform:uppercase;letter-spacing:.08em}
+.workflow-next strong{font-size:13px;color:#9bd7ff;text-transform:uppercase}
+.workflow-next em,.workflow-step em{font-style:normal;color:var(--muted);font-size:10px;line-height:1.25}
+.workflow-steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:6px}
+.workflow-step{display:flex;flex-direction:column;gap:5px;justify-content:center;min-height:64px;padding:8px 9px}
+.workflow-step strong{font-size:11px;color:var(--txt);text-transform:uppercase}
+.workflow-step.ok{border-color:#1f7a66;background:#0d261f}
+.workflow-step.warn{border-color:#7a5f1f;background:#28210d}
+.workflow-step.missing{border-color:#7a2b2b;background:#2b1111}
 .context-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:0 0 14px}
 .context-card{border:1px solid var(--line);background:#10141a;padding:9px 10px;min-width:0}
 .context-card span{display:block;color:var(--soft);font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
@@ -580,7 +597,7 @@ tr:hover td{background:#ffffff05}
   .module-hotbar{flex-wrap:wrap}
   .hotbar-context{order:-1;flex:1 0 100%;max-width:none}
   .field-grid{grid-template-columns:1fr}
-  .market-table-grid,.times-grid,.alert-grid,.risk-grid,.order-grid,.history-grid,.dashboard-grid,.monitor-grid,.monitor-bottom,.connections-grid,.radar-grid,.preset-row{grid-template-columns:1fr}
+  .market-table-grid,.times-grid,.alert-grid,.risk-grid,.order-grid,.history-grid,.dashboard-grid,.analysis-workflow,.monitor-grid,.monitor-bottom,.connections-grid,.radar-grid,.preset-row{grid-template-columns:1fr}
   .dashboard-actions{grid-template-columns:1fr 1fr}
   .risk-result{grid-template-columns:1fr 1fr}
   .cards{grid-template-columns:1fr 1fr}
@@ -938,6 +955,7 @@ tr:hover td{background:#ffffff05}
             <div class="live-kv"><span>Estado</span><strong id="dashboard-state">--</strong></div>
           </div>
           <div class="context-grid" id="dashboard-context"></div>
+          <div class="analysis-workflow" id="dashboard-workflow"></div>
           <div class="dashboard-grid">
             <div class="panel">
               <div class="panel-head"><div class="panel-title">Checklist de analise</div></div>
@@ -2199,6 +2217,7 @@ const refs = {
   dashboardLast: document.getElementById("dashboard-last"),
   dashboardState: document.getElementById("dashboard-state"),
   dashboardContext: document.getElementById("dashboard-context"),
+  dashboardWorkflow: document.getElementById("dashboard-workflow"),
   dashboardReadiness: document.getElementById("dashboard-readiness"),
   dashboardSignals: document.getElementById("dashboard-signals"),
   dashboardActionsList: document.getElementById("dashboard-actions-list"),
@@ -2902,6 +2921,101 @@ function readinessRow(label, detail, ok, warn = false) {
   `;
 }
 
+function workflowState(ok, warn = false) {
+  return ok ? "ok" : warn ? "warn" : "missing";
+}
+
+function workflowStateLabel(stateName) {
+  if (stateName === "ok") return "OK";
+  if (stateName === "warn") return "Ajustar";
+  return "Pendente";
+}
+
+function dashboardNextStep(ctx) {
+  if (!ctx.config) {
+    return { label: "Cadastrar ativo", detail: "Abrir Ativos e configurar Preco, Book, T&T e CSV.", tab: "assets" };
+  }
+  if (!ctx.config.enabled) {
+    return { label: "Ligar ativo", detail: "Ativar o cadastro para receber RTD.", tab: "assets" };
+  }
+  if (!ctx.priceOk) {
+    return { label: "Confirmar RTD", detail: "Ver fonte de preco, Profit e WebSocket.", tab: "connections" };
+  }
+  if (!ctx.csvOk) {
+    return { label: "Carregar CSV", detail: "Adicionar historico para estatistica e niveis.", tab: "assets" };
+  }
+  if (!ctx.hasFlow) {
+    return { label: "Confirmar fluxo", detail: "Abrir Fluxo e validar delta, imbalance e tape.", tab: "flow" };
+  }
+  if (Number.isFinite(ctx.quant.score) && ctx.quant.score >= 62) {
+    return { label: "Abrir Radar", detail: "Ver candidatos ranqueados e evidencias.", tab: "radar" };
+  }
+  return { label: "Abrir Mesa", detail: "Cruzar DOM, Book, T&T e pontos principais.", tab: "desk" };
+}
+
+function workflowStep(item) {
+  return `
+    <button class="workflow-step ${escapeHtml(item.state)}" type="button" data-dashboard-open="${escapeHtml(item.tab)}">
+      <span>${escapeHtml(workflowStateLabel(item.state))}</span>
+      <strong>${escapeHtml(item.label)}</strong>
+      <em>${escapeHtml(item.detail)}</em>
+    </button>
+  `;
+}
+
+function renderDashboardWorkflow(ctx) {
+  if (!refs.dashboardWorkflow) return;
+  const next = dashboardNextStep(ctx);
+  const scoreText = Number.isFinite(ctx.quant.score) ? `${fmt(ctx.quant.score, 0)} ${ctx.quant.confidence.label}` : "aguardando";
+  const steps = [
+    {
+      label: "Ativo",
+      detail: ctx.config ? (ctx.config.enabled ? "ligado" : "desligado") : "nao cadastrado",
+      tab: "assets",
+      state: workflowState(!!ctx.config && !!ctx.config.enabled, !!ctx.config),
+    },
+    {
+      label: "RTD preco",
+      detail: ctx.priceOk ? "snapshot recebido" : "sem preco ao vivo",
+      tab: "connections",
+      state: workflowState(ctx.priceOk, sourceIsOk(ctx.config?.priceRtd)),
+    },
+    {
+      label: "CSV",
+      detail: ctx.csvOk ? "historico disponivel" : "necessario para niveis",
+      tab: "assets",
+      state: workflowState(ctx.csvOk),
+    },
+    {
+      label: "Book/T&T",
+      detail: ctx.bookOk || ctx.timesOk ? `${ctx.bookOk ? "Book" : ""}${ctx.bookOk && ctx.timesOk ? " + " : ""}${ctx.timesOk ? "T&T" : ""}` : "fontes desligadas",
+      tab: "assets",
+      state: workflowState(ctx.bookOk && ctx.timesOk, ctx.bookOk || ctx.timesOk),
+    },
+    {
+      label: "Fluxo",
+      detail: ctx.hasFlow ? "delta e imbalance ativos" : "aguardando flow",
+      tab: "flow",
+      state: workflowState(ctx.hasFlow, ctx.bookOk || ctx.timesOk),
+    },
+    {
+      label: "Score",
+      detail: scoreText,
+      tab: "dashboard",
+      state: workflowState(Number.isFinite(ctx.quant.score) && ctx.quant.score >= 62, Number.isFinite(ctx.quant.score)),
+    },
+  ];
+
+  refs.dashboardWorkflow.innerHTML = `
+    <button class="workflow-next" type="button" data-dashboard-open="${escapeHtml(next.tab)}">
+      <span>Proximo passo</span>
+      <strong>${escapeHtml(next.label)}</strong>
+      <em>${escapeHtml(next.detail)}</em>
+    </button>
+    <div class="workflow-steps">${steps.map(workflowStep).join("")}</div>
+  `;
+}
+
 function contextCard(label, value, detail, tone = "") {
   return `
     <div class="context-card ${escapeHtml(tone)}">
@@ -3127,6 +3241,8 @@ function renderDashboard() {
   refs.dashboardState.textContent = priceOk ? "preco ativo" : config?.enabled ? "aguardando preco" : "ativo desligado";
   renderDashboardContext(snapshot, flow);
   const quant = quantReversalAssessment(snapshot, flow);
+  const hasFlow = !!flow.lastMessage || Number.isFinite(liveNumber(flow.metrics?.delta5s));
+  renderDashboardWorkflow({ config, priceOk, csvOk, bookOk, timesOk, hasFlow, quant });
 
   refs.dashboardReadiness.innerHTML = [
     readinessRow("Ativo", config ? (config.enabled ? "ligado" : "desligado") : "nao cadastrado", !!config && !!config.enabled),

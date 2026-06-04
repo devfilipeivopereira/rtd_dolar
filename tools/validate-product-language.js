@@ -22,6 +22,7 @@ const requiredInDashboard = [
   ["Radar", /\bRadar\b/],
   ["Oportunidades", /\bOportunidades\b/],
   ["Analise group", /\bAnalise\b/],
+  ["Roteiro de analise", /\bProximo passo\b/],
 ];
 
 const failures = [];
