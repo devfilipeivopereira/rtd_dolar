@@ -178,6 +178,15 @@ input.live-fed{border-color:#1f8a70;outline:2px solid #123125;outline-offset:-2p
 .asset-card-title{font-size:11px;color:var(--muted);font-weight:900;text-transform:uppercase;letter-spacing:.08em}
 .asset-status-row{display:flex;gap:6px;flex-wrap:wrap}
 .asset-actions-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px}
+.preset-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:12px}
+.preset-button{
+  min-height:64px;border:1px solid var(--line);background:#0B0C0A;color:var(--muted);
+  padding:8px 10px;text-align:left;font-family:var(--mono);
+}
+.preset-button strong{display:block;color:var(--txt);font-size:11px;text-transform:uppercase;letter-spacing:.04em}
+.preset-button span{display:block;color:var(--soft);font-size:9px;line-height:1.35;margin-top:5px}
+.preset-button.active{border-color:#1f8a70;background:#092217}
+.preset-button.active strong{color:#b9ffe9}
 .btn-secondary{
   height:36px;border:1px solid var(--line);background:#10141a;color:var(--muted);padding:0 11px;
   font-size:11px;font-weight:900;text-transform:uppercase;
@@ -550,7 +559,7 @@ tr:hover td{background:#ffffff05}
   .brand-title,.brand-sub{white-space:normal}
   .top-meta{justify-content:flex-start}
   .field-grid{grid-template-columns:1fr}
-  .market-table-grid,.times-grid,.alert-grid,.risk-grid,.order-grid,.history-grid,.dashboard-grid,.monitor-grid,.monitor-bottom,.connections-grid,.radar-grid{grid-template-columns:1fr}
+  .market-table-grid,.times-grid,.alert-grid,.risk-grid,.order-grid,.history-grid,.dashboard-grid,.monitor-grid,.monitor-bottom,.connections-grid,.radar-grid,.preset-row{grid-template-columns:1fr}
   .dashboard-actions{grid-template-columns:1fr 1fr}
   .risk-result{grid-template-columns:1fr 1fr}
   .cards{grid-template-columns:1fr 1fr}
@@ -1455,6 +1464,11 @@ tr:hover td{background:#ffffff05}
                 <span class="tag amber">local</span>
               </div>
               <div class="panel-body">
+                <div class="preset-row" id="settings-preset-row" aria-label="Preset de desempenho">
+                  <button class="preset-button" type="button" data-settings-preset="fast"><strong>Rapido</strong><span>Menos DOM e memoria, melhor para RTD intenso.</span></button>
+                  <button class="preset-button" type="button" data-settings-preset="balanced"><strong>Equilibrado</strong><span>Padrao para analise ao vivo com fluidez.</span></button>
+                  <button class="preset-button" type="button" data-settings-preset="detailed"><strong>Detalhado</strong><span>Mais niveis e memoria, maior custo visual.</span></button>
+                </div>
                 <div class="field-grid">
                   <div class="field">
                     <label for="settings-tick-size">Tamanho do tick</label>
@@ -1837,12 +1851,37 @@ function saveOrderPlans() {
   } catch (_) {}
 }
 
+const PERFORMANCE_PRESETS = {
+  fast: {
+    label: "Rapido",
+    domVisibleTicks: 120,
+    liveIntervalMs: 75,
+    maxTrades: 80,
+    maxSignals: 50,
+  },
+  balanced: {
+    label: "Equilibrado",
+    domVisibleTicks: 200,
+    liveIntervalMs: 120,
+    maxTrades: 120,
+    maxSignals: 80,
+  },
+  detailed: {
+    label: "Detalhado",
+    domVisibleTicks: 320,
+    liveIntervalMs: 180,
+    maxTrades: 220,
+    maxSignals: 140,
+  },
+};
+
 const DEFAULT_UI_SETTINGS = {
+  renderPreset: "balanced",
   tickSize: 0.5,
-  domVisibleTicks: 200,
-  liveIntervalMs: 120,
-  maxTrades: 120,
-  maxSignals: 80,
+  domVisibleTicks: PERFORMANCE_PRESETS.balanced.domVisibleTicks,
+  liveIntervalMs: PERFORMANCE_PRESETS.balanced.liveIntervalMs,
+  maxTrades: PERFORMANCE_PRESETS.balanced.maxTrades,
+  maxSignals: PERFORMANCE_PRESETS.balanced.maxSignals,
   defaultPointValue: null,
 };
 
@@ -1852,10 +1891,21 @@ function finiteSetting(value, fallback, min, max) {
   return Math.min(max, Math.max(min, n));
 }
 
+function detectPerformancePreset(settings) {
+  const source = settings && typeof settings === "object" ? settings : {};
+  const match = Object.entries(PERFORMANCE_PRESETS).find(([, preset]) =>
+    Math.round(Number(source.domVisibleTicks)) === preset.domVisibleTicks &&
+    Math.round(Number(source.liveIntervalMs)) === preset.liveIntervalMs &&
+    Math.round(Number(source.maxTrades)) === preset.maxTrades &&
+    Math.round(Number(source.maxSignals)) === preset.maxSignals
+  );
+  return match ? match[0] : "custom";
+}
+
 function sanitizeUiSettings(raw) {
   const source = raw && typeof raw === "object" ? raw : {};
   const pointValue = Number(source.defaultPointValue);
-  return {
+  const settings = {
     tickSize: finiteSetting(source.tickSize, DEFAULT_UI_SETTINGS.tickSize, 0.01, 100),
     domVisibleTicks: Math.round(finiteSetting(source.domVisibleTicks, DEFAULT_UI_SETTINGS.domVisibleTicks, 40, 600)),
     liveIntervalMs: Math.round(finiteSetting(source.liveIntervalMs, DEFAULT_UI_SETTINGS.liveIntervalMs, 33, 1000)),
@@ -1863,6 +1913,10 @@ function sanitizeUiSettings(raw) {
     maxSignals: Math.round(finiteSetting(source.maxSignals, DEFAULT_UI_SETTINGS.maxSignals, 10, 300)),
     defaultPointValue: Number.isFinite(pointValue) && pointValue > 0 ? pointValue : null,
   };
+  const detectedPreset = detectPerformancePreset(settings);
+  const requestedPreset = PERFORMANCE_PRESETS[source.renderPreset] ? source.renderPreset : detectedPreset;
+  settings.renderPreset = detectedPreset === requestedPreset ? requestedPreset : detectedPreset;
+  return settings;
 }
 
 function loadUiSettings() {
@@ -2220,6 +2274,7 @@ const refs = {
   riskPointValue: document.getElementById("risk-point-value"),
   riskSide: document.getElementById("risk-side"),
   riskResult: document.getElementById("risk-result"),
+  settingsPresetButtons: Array.from(document.querySelectorAll("[data-settings-preset]")),
   settingsTickSize: document.getElementById("settings-tick-size"),
   settingsDomTicks: document.getElementById("settings-dom-ticks"),
   settingsRenderMs: document.getElementById("settings-render-ms"),
@@ -3401,6 +3456,7 @@ function renderRisk() {
 function populateSettingsForm() {
   const settings = state.ui.settings;
   if (!refs.settingsTickSize) return;
+  updateSettingsPresetButtons(settings.renderPreset);
   refs.settingsTickSize.value = settings.tickSize;
   refs.settingsDomTicks.value = settings.domVisibleTicks;
   refs.settingsRenderMs.value = settings.liveIntervalMs;
@@ -3410,13 +3466,36 @@ function populateSettingsForm() {
 }
 
 function collectSettingsForm() {
-  return sanitizeUiSettings({
+  const settings = sanitizeUiSettings({
     tickSize: refs.settingsTickSize?.value,
     domVisibleTicks: refs.settingsDomTicks?.value,
     liveIntervalMs: refs.settingsRenderMs?.value,
     maxTrades: refs.settingsMaxTrades?.value,
     maxSignals: refs.settingsMaxSignals?.value,
     defaultPointValue: refs.settingsPointValue?.value,
+  });
+  settings.renderPreset = detectPerformancePreset(settings);
+  return settings;
+}
+
+function updateSettingsPresetButtons(presetId) {
+  refs.settingsPresetButtons.forEach(button => {
+    const active = button.dataset.settingsPreset === presetId;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-pressed", active ? "true" : "false");
+  });
+}
+
+function applyPerformancePreset(presetId) {
+  const preset = PERFORMANCE_PRESETS[presetId];
+  if (!preset) return;
+  applyUiSettings({
+    ...state.ui.settings,
+    renderPreset: presetId,
+    domVisibleTicks: preset.domVisibleTicks,
+    liveIntervalMs: preset.liveIntervalMs,
+    maxTrades: preset.maxTrades,
+    maxSignals: preset.maxSignals,
   });
 }
 
@@ -3456,7 +3535,10 @@ function applyUiSettings(settings, options = {}) {
 function renderSettings() {
   if (!refs.settingsSummary) return;
   const settings = state.ui.settings;
+  const preset = PERFORMANCE_PRESETS[settings.renderPreset];
+  const presetLabel = preset ? preset.label : "Personalizado";
   refs.settingsSummary.innerHTML = [
+    ["Preset", presetLabel],
     ["Tick", fmt(settings.tickSize)],
     ["DOM", `${fmt(settings.domVisibleTicks, 0)} niveis`],
     ["Render", `${fmt(settings.liveIntervalMs, 0)} ms`],
@@ -3466,6 +3548,9 @@ function renderSettings() {
   ].map(([k, v]) => `<div class="live-kv"><span>${escapeHtml(k)}</span><strong>${escapeHtml(v)}</strong></div>`).join("");
 
   const notes = [
+    preset
+      ? `Preset ${preset.label}: DOM ${preset.domVisibleTicks}, render ${preset.liveIntervalMs} ms, trades ${preset.maxTrades}.`
+      : "Preset personalizado: os campos numericos foram ajustados manualmente.",
     `DOM monta ${settings.domVisibleTicks} niveis em torno do ultimo preco do ativo selecionado.`,
     `Render live consolida atualizacoes a cada ${settings.liveIntervalMs} ms para preservar fluidez.`,
     "Atalhos: Alt+1 Monitor, Alt+2 DOM, Alt+3 Book, Alt+4 T&T, Alt+5 Fluxo.",
@@ -7124,6 +7209,9 @@ refs.alertsList.addEventListener("click", ev => {
 });
 refs.riskSide.addEventListener("change", renderRisk);
 
+refs.settingsPresetButtons.forEach(button => {
+  button.addEventListener("click", () => applyPerformancePreset(button.dataset.settingsPreset));
+});
 refs.settingsSave.addEventListener("click", () => {
   applyUiSettings(collectSettingsForm());
 });
@@ -7133,7 +7221,10 @@ refs.settingsReset.addEventListener("click", () => {
 [refs.settingsTickSize, refs.settingsDomTicks, refs.settingsRenderMs, refs.settingsMaxTrades, refs.settingsMaxSignals, refs.settingsPointValue].forEach(input => {
   input.addEventListener("input", () => {
     const preview = collectSettingsForm();
+    const preset = PERFORMANCE_PRESETS[preview.renderPreset];
+    updateSettingsPresetButtons(preview.renderPreset);
     refs.settingsSummary.innerHTML = [
+      ["Preset", preset ? preset.label : "Personalizado"],
       ["Tick", fmt(preview.tickSize)],
       ["DOM", `${fmt(preview.domVisibleTicks, 0)} niveis`],
       ["Render", `${fmt(preview.liveIntervalMs, 0)} ms`],

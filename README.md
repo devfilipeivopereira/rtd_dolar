@@ -58,7 +58,7 @@ O menu superior agora separa o terminal em grupos de analise: `Inicio`, `Cadastr
 - `Alertas`: alertas locais de preco por ativo;
 - `Risco`: calculadora local de stop, alvo e tamanho simulado;
 - `Historico`: resumo do CSV e ticks em memoria;
-- `Ajustes`: parametros locais de tick, DOM, renderizacao, memoria de tape/sinais e valor por ponto;
+- `Ajustes`: presets `Rapido`, `Equilibrado` e `Detalhado`, parametros locais de tick, DOM, renderizacao, memoria de tape/sinais e valor por ponto;
 - `Conexoes`: estado do coletor, Profit RTD, WebSocket, `/health` e fontes por ativo;
 - `Sistema`: RTD, WebSocket, telemetria de mensagens e debug de fluxo.
 
@@ -103,7 +103,7 @@ Use o MSBuild do Visual Studio 2022/Build Tools. O MSBuild antigo de `C:\Windows
 11. Abra `Mesa` para analisar DOM, book, tape, fluxo, setups e risco simulado em uma tela integrada.
 12. Abra `Monitor` para acompanhar watchlist, setups, tape, oportunidades e alertas do ativo selecionado.
 13. Abra `Cotacoes` para ver todos os ativos cadastrados e entrar em `Grafico`, `DOM`, `Book`, `T&T` ou `Oportunidades`.
-14. Abra `Ajustes` se quiser mudar niveis do DOM, cadencia de renderizacao ou valor por ponto padrao.
+14. Abra `Ajustes` se quiser alternar entre `Rapido`, `Equilibrado` e `Detalhado`, ou mudar niveis do DOM, cadencia de renderizacao e valor por ponto padrao.
 15. Abra `Conexoes` para confirmar coletor, Profit RTD, WebSocket, arquitetura e fontes por ativo.
 16. Deixe o modo `RTD Live` ativo para preencher o intraday automaticamente.
 17. Confira `Latencia WS` e `Msg/s` na faixa superior ou em `Sistema` para diagnosticar atraso entre backend local e navegador.
@@ -197,7 +197,7 @@ logs/                   logs em runtime
 13. Oportunidades: salvar uma ideia observacional e confirmar status `monitorando`, `observado`, `alvo` ou `stop` conforme o preco.
 14. Abas de analise: confirmar `Book`, `T&T`, `Alertas`, `Risco`, `Historico`, `Ajustes`, `Conexoes` e `Sistema` sem erro no navegador.
 15. Conexoes: confirmar polling de `/health`, arquitetura x64/x86, Profit RTD, WebSocket e status `Preco`, `Book`, `Times` por ativo.
-16. Ajustes: alterar niveis do DOM e intervalo de renderizacao, salvar, recarregar a pagina e confirmar persistencia local.
+16. Ajustes: alternar presets `Rapido`, `Equilibrado` e `Detalhado`; depois alterar niveis do DOM e intervalo de renderizacao, salvar, recarregar a pagina e confirmar persistencia local.
 17. Navegacao: confirmar grupos superiores, hotbar contextual, memoria da ultima tela por grupo e atalhos `Alt+1` a `Alt+9`, sem disparar quando o foco esta em campos de texto.
 18. Paleta: confirmar `Ctrl+K`, busca de telas, busca de ativos, setas, `Enter` e `Esc`.
 19. Performance: confirmar que DOM, Mesa, Painel, Monitor e Cotacoes seguem responsivos com RTD ativo; campos intraday devem atualizar imediatamente.

@@ -21,14 +21,14 @@
 - Tela `Mesa` como cockpit de analise com DOM compacto, book resumido, tape, fluxo, setups e niveis proximos.
 - Tela `Cotacoes` como watchlist de mercado entre o cadastro de ativos e as telas de analise.
 - Tela `Oportunidades` para ideias observacionais com preco de interesse, stop, alvo, risco simulado e status por toque de preco.
-- Tela `Ajustes` para parametros locais de tick, DOM, renderizacao, memoria de tape/sinais e valor por ponto.
+- Tela `Ajustes` com presets `Rapido`, `Equilibrado` e `Detalhado`, alem de parametros locais de tick, DOM, renderizacao, memoria de tape/sinais e valor por ponto.
 - Tela `Conexoes` para polling de `/health`, estado do coletor, Profit RTD, WebSocket e fontes por ativo.
 - Hotbar de analise contextual por grupo, com memoria da ultima tela usada e atalhos `Alt+1` a `Alt+9` para telas de uso frequente.
 - Paleta `Ctrl+K` para buscar telas e ativos cadastrados.
 - Faixa superior de contexto com ativo selecionado, ultimo preco, bid/ask, Book, Times, delta e CSV.
 - Telemetria WebSocket no frontend com latencia local, mensagens por segundo, reconexoes e contadores por tipo de mensagem.
 - Coalescing auxiliar para `bookDepth` e `timesTrades`, reduzindo repintura sem bloquear snapshots de preco.
-- Scheduler de render no navegador para agrupar DOM, Painel, Cotacoes e Historico, com padrao de 120 ms e ajuste pela UI, mantendo inputs de preco imediatos.
+- Scheduler de render no navegador para agrupar DOM, Painel, Cotacoes e Historico, com padrao de 120 ms no preset `Equilibrado`, presets de desempenho pela UI e inputs de preco imediatos.
 - Validador `tools/validate-dashboard-design.js` para preservar tokens Industrial, mono, plano e sem sombras/gradientes.
 - Validador `tools/validate-product-language.js` para preservar o foco em analise/oportunidades e bloquear linguagem de envio de operacoes.
 
@@ -48,12 +48,13 @@
 12. Abrir `Cotacoes` e testar os atalhos para `Grafico`, `DOM`, `Book`, `T&T` e `Oportunidades`.
 13. Salvar uma oportunidade observacional e confirmar que ela permanece local, sem envio ao Profit.
 14. Abrir `Book`, `T&T`, `Alertas`, `Risco`, `Historico`, `Ajustes`, `Conexoes` e `Sistema`.
-15. Confirmar `Conexoes` com `/health`, arquitetura, Profit RTD, WebSocket e fontes por ativo.
-16. Confirmar grupos superiores, hotbar contextual, memoria da ultima tela por grupo e atalhos `Alt+1` a `Alt+9`.
-17. Confirmar paleta `Ctrl+K` para telas e ativos.
-18. Confirmar `Latencia WS`, `Msg/s` e contadores no `Sistema`.
-19. Rodar `node tools/validate-dashboard-design.js`.
-20. Rodar `node tools/validate-product-language.js`.
+15. Em `Ajustes`, alternar `Rapido`, `Equilibrado` e `Detalhado` e confirmar DOM/render/memoria no resumo.
+16. Confirmar `Conexoes` com `/health`, arquitetura, Profit RTD, WebSocket e fontes por ativo.
+17. Confirmar grupos superiores, hotbar contextual, memoria da ultima tela por grupo e atalhos `Alt+1` a `Alt+9`.
+18. Confirmar paleta `Ctrl+K` para telas e ativos.
+19. Confirmar `Latencia WS`, `Msg/s` e contadores no `Sistema`.
+20. Rodar `node tools/validate-dashboard-design.js`.
+21. Rodar `node tools/validate-product-language.js`.
 
 ## Build validado
 

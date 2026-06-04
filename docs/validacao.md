@@ -38,7 +38,7 @@ Resultado esperado:
 18. Abrir `Oportunidades`, salvar uma ideia observacional e confirmar que ela permanece local.
 19. Abrir `Alertas`, `Risco`, `Historico`, `Ajustes`, `Conexoes` e `Sistema` e confirmar que cada tela mostra apenas sua funcionalidade.
 20. Em `Conexoes`, confirmar polling de `/health`, arquitetura, Profit RTD, WebSocket e fontes `Preco`, `Book` e `Times` por ativo.
-21. Em `Ajustes`, mudar niveis do DOM e intervalo de renderizacao, salvar, recarregar a pagina e confirmar que os valores persistem.
+21. Em `Ajustes`, alternar presets `Rapido`, `Equilibrado` e `Detalhado`; depois mudar niveis do DOM e intervalo de renderizacao, salvar, recarregar a pagina e confirmar que os valores persistem.
 22. Confirmar hotbar por clique e atalhos `Alt+1` a `Alt+9`.
 23. Confirmar que os atalhos nao disparam quando o foco esta em campos de texto, select ou textarea.
 24. Confirmar `Ctrl+K`, busca de telas e ativos, navegacao por setas, `Enter` para abrir e `Esc` para fechar.
@@ -124,7 +124,7 @@ Sem CSV, a aba DOM ainda pode mostrar ticks RTD, bid/ask e tape. Pontos como POC
 - `Cotacoes` deve separar monitoramento de cadastro: a tela mostra status e atalhos, mas a edicao continua em `Ativos`.
 - `Mesa` deve concentrar DOM compacto, book resumido, tape, fluxo, setups, niveis proximos e acoes de analise.
 - `Oportunidades` deve salvar ideias em localStorage, calcular R/R e mudar status com preco RTD sem envio ao Profit.
-- `Ajustes` deve persistir em `wdo-ui-settings` e aplicar tamanho do tick, niveis do DOM, intervalo de renderizacao, limite de trades/sinais e valor por ponto padrao.
+- `Ajustes` deve persistir em `wdo-ui-settings` e aplicar presets de desempenho, tamanho do tick, niveis do DOM, intervalo de renderizacao, limite de trades/sinais e valor por ponto padrao.
 - `Conexoes` deve consultar `/health` periodicamente e separar status do feed local do debug de fluxo.
 - A hotbar deve espelhar a aba ativa e permitir troca rapida para Monitor, DOM, Book, T&T, Fluxo, Oportunidades, Ativos, Conexoes e Sistema.
 - A paleta `Ctrl+K` deve buscar telas e ativos cadastrados sem depender de recarregar a pagina.
