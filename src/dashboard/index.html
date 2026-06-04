@@ -434,6 +434,15 @@ tr:hover td{background:#ffffff05}
 .radar-score{display:inline-flex;align-items:center;justify-content:flex-end;min-width:54px;font-weight:900;color:var(--txt)}
 .radar-reasons{display:flex;gap:4px;justify-content:flex-end;flex-wrap:wrap}
 .radar-reason{display:inline-flex;align-items:center;min-height:20px;padding:0 5px;border:1px solid var(--line);background:#0B0C0A;color:var(--muted);font-size:9px;font-weight:900}
+.radar-assets{display:flex;flex-direction:column;gap:6px;max-height:340px;overflow:auto}
+.radar-asset-row{
+  display:grid;grid-template-columns:minmax(86px,1fr) 54px 62px auto;gap:7px;align-items:center;
+  min-height:32px;border:1px solid var(--line);background:#10141a;padding:5px 7px;font-size:10px;
+}
+.radar-asset-row.selected{border-color:#1f8a70;background:#123125}
+.radar-asset-row strong{font-size:11px;color:var(--txt);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.radar-asset-row span{color:var(--muted);text-align:right}
+.radar-asset-actions{display:flex;gap:4px;justify-content:flex-end}
 .quotes-board{border:1px solid var(--line);background:var(--panel);min-height:calc(100vh - 154px)}
 .quotes-table td,.quotes-table th{text-align:right;white-space:nowrap}
 .quotes-table td:first-child,.quotes-table th:first-child{text-align:left}
@@ -966,10 +975,21 @@ tr:hover td{background:#ffffff05}
                 </table>
               </div>
             </div>
-            <div class="panel">
-              <div class="panel-head"><div class="panel-title">Leitura do radar</div></div>
-              <div class="panel-body">
-                <div class="small-list" id="radar-kv"></div>
+            <div class="desk-stack">
+              <div class="panel">
+                <div class="panel-head"><div class="panel-title">Leitura do radar</div></div>
+                <div class="panel-body">
+                  <div class="small-list" id="radar-kv"></div>
+                </div>
+              </div>
+              <div class="panel">
+                <div class="panel-head">
+                  <div class="panel-title">Ativos em atencao</div>
+                  <span class="tag" id="radar-assets-count">0</span>
+                </div>
+                <div class="panel-body">
+                  <div class="radar-assets" id="radar-assets"></div>
+                </div>
               </div>
             </div>
           </div>
@@ -2104,6 +2124,8 @@ const refs = {
   radarQuality: document.getElementById("radar-quality"),
   radarBody: document.getElementById("radar-body"),
   radarKv: document.getElementById("radar-kv"),
+  radarAssetsCount: document.getElementById("radar-assets-count"),
+  radarAssets: document.getElementById("radar-assets"),
   monitorState: document.getElementById("monitor-state"),
   monitorLast: document.getElementById("monitor-last"),
   monitorLatency: document.getElementById("monitor-latency"),
@@ -2959,6 +2981,67 @@ function applyRadarOpportunity(index) {
   showMainTab("orders");
 }
 
+function assetRadarRows() {
+  const configured = state.rtd.assets.length ? state.rtd.assets : [{ asset: selectedAsset(), enabled: true }];
+  return configured.map(item => {
+    const asset = normalizeAsset(item.asset);
+    const snapshot = state.rtd.snapshotsByAsset[asset] || null;
+    const intraday = liveIntradayFromSnapshot(snapshot);
+    const flow = flowBucket(asset);
+    const metrics = flow.metrics || {};
+    const depth = state.rtd.bookDepthByAsset[asset];
+    const times = state.rtd.timesTradesByAsset[asset];
+    const priceOk = Number.isFinite(intraday.price);
+    const signals = (flow.signals || []).length;
+    const delta = liveNumber(metrics.delta5s);
+    const imbalance = liveNumber(metrics.topBookImbalance);
+    const ageMs = snapshot?.localTimestamp ? Math.max(0, Date.now() - Date.parse(snapshot.localTimestamp)) : NaN;
+    let score = 0;
+    if (priceOk) score += 25;
+    if (depth) score += 12;
+    if (times) score += 10;
+    score += Math.min(28, signals * 9);
+    if (Number.isFinite(delta)) score += Math.min(15, Math.abs(delta) / 8);
+    if (Number.isFinite(imbalance)) score += Math.min(10, Math.abs(imbalance) * 12);
+    if (Number.isFinite(ageMs)) score += ageMs < 2500 ? 8 : ageMs < 10000 ? 4 : 0;
+    if (item.enabled === false) score *= 0.35;
+
+    const reasons = [
+      priceOk ? "preco vivo" : "sem preco",
+      signals ? `${signals} setups` : "",
+      depth ? "book" : "",
+      times ? "tape" : "",
+    ].filter(Boolean).slice(0, 3);
+
+    return {
+      asset,
+      price: intraday.price,
+      score: clamp(score, 0, 100),
+      delta,
+      reasons,
+      enabled: item.enabled !== false,
+      selected: sameAsset(asset),
+    };
+  }).sort((a, b) => b.score - a.score || a.asset.localeCompare(b.asset));
+}
+
+function renderRadarAssets() {
+  if (!refs.radarAssets) return;
+  const rows = assetRadarRows();
+  refs.radarAssetsCount.textContent = fmt(rows.length, 0);
+  refs.radarAssets.innerHTML = rows.length ? rows.map(row => `
+    <div class="radar-asset-row ${row.selected ? "selected" : ""}">
+      <strong>${escapeHtml(row.asset)}</strong>
+      <span>${fmt(row.score, 0)}</span>
+      <span>${signedFmt(row.delta, 0)}</span>
+      <div class="radar-asset-actions">
+        <button class="asset-action view" type="button" data-radar-asset="${escapeHtml(row.asset)}">Ver</button>
+        <button class="asset-action view" type="button" data-radar-asset-desk="${escapeHtml(row.asset)}">Mesa</button>
+      </div>
+    </div>
+  `).join("") : `<div class="warn-line">Cadastre ativos para o Radar multiativo.</div>`;
+}
+
 function renderRadar(msg = state.rtd.lastSnapshot) {
   if (!refs.radarBody) return;
   const items = collectRadarOpportunities(msg);
@@ -2989,6 +3072,8 @@ function renderRadar(msg = state.rtd.lastSnapshot) {
     ["Imbalance", Number.isFinite(liveNumber(state.flow.metrics?.topBookImbalance)) ? fmt(liveNumber(state.flow.metrics?.topBookImbalance), 2) : "--"],
     ["Uso", "analise observacional"],
   ].map(([k, v]) => `<div class="kv"><span>${escapeHtml(k)}</span><span>${escapeHtml(v)}</span></div>`).join("");
+
+  renderRadarAssets();
 }
 
 function renderBookPanel() {
@@ -5867,6 +5952,7 @@ function applyFlowMessage(msg) {
   bucket.signals = mergeByKey(msg.activeSignals, bucket.signals, signalKey, state.flow.maxSignals);
   if (!sameAsset(asset)) {
     renderAssetList();
+    renderRadarAssets();
     scheduleLiveRender();
     return;
   }
@@ -5889,6 +5975,7 @@ function applySignalMessage(msg) {
   bucket.signals = mergeByKey([signal], bucket.signals, signalKey, state.flow.maxSignals);
   if (!sameAsset(asset)) {
     renderAssetList();
+    renderRadarAssets();
     scheduleLiveRender();
     return;
   }
@@ -6563,6 +6650,7 @@ function applyLiveSnapshot(msg) {
 
   if (!sameAsset(asset)) {
     renderAssetList();
+    renderRadarAssets();
     scheduleLiveRender();
     return;
   }
@@ -6597,6 +6685,7 @@ function applyBookDepthMessage(msg) {
   renderDashboard();
   renderMonitor();
   renderQuotesPanel();
+  renderRadarAssets();
   if (sameAsset(asset)) {
     renderDom(state.rtd.lastSnapshot);
     renderDesk(state.rtd.lastSnapshot);
@@ -6634,6 +6723,7 @@ function applyTimesTradesMessage(msg) {
   renderDashboard();
   renderMonitor();
   renderQuotesPanel();
+  renderRadarAssets();
   if (sameAsset(asset)) {
     syncSelectedFlow();
     renderDomTape();
@@ -6964,8 +7054,21 @@ document.getElementById("panel-dashboard").addEventListener("click", ev => {
 
 document.getElementById("panel-radar").addEventListener("click", ev => {
   const action = ev.target.closest("[data-radar-observe]");
-  if (!action) return;
-  applyRadarOpportunity(Number(action.dataset.radarObserve));
+  if (action) {
+    applyRadarOpportunity(Number(action.dataset.radarObserve));
+    return;
+  }
+  const asset = ev.target.closest("[data-radar-asset]");
+  if (asset) {
+    selectAsset(asset.dataset.radarAsset);
+    showMainTab("radar");
+    return;
+  }
+  const desk = ev.target.closest("[data-radar-asset-desk]");
+  if (desk) {
+    selectAsset(desk.dataset.radarAssetDesk);
+    showMainTab("desk");
+  }
 });
 
 refs.deskPanel.addEventListener("click", ev => {

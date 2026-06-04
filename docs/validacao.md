@@ -25,7 +25,7 @@ Resultado esperado:
 5. Abrir `Ativos`, cadastrar o ativo e carregar o CSV historico.
 6. Confirmar status `RTD Conectado`.
 7. Abrir `Painel` e confirmar checklist, atalhos, setups, oportunidades e alertas.
-8. Abrir `Radar` e confirmar candidatos por setup/nivel, score, evidencias e acao `Observar`.
+8. Abrir `Radar` e confirmar candidatos por setup/nivel, score, evidencias, ranking multiativo e acoes `Observar`, `Ver` e `Mesa`.
 9. Abrir `Mesa` e confirmar DOM compacto, book resumido, tape, fluxo, setups, niveis proximos e acoes de analise.
 10. Abrir `Monitor` e confirmar watchlist compacta, estado do ativo, setups, tape, oportunidades e alertas.
 11. Confirmar que os botoes de `Monitor` abrem `DOM`, `Book` e `Oportunidades` do ativo correto.
@@ -119,7 +119,7 @@ Sem CSV, a aba DOM ainda pode mostrar ticks RTD, bid/ask e tape. Pontos como POC
 - CSV salvo deve voltar por `GET /assets/history?asset=...` depois de recarregar a pagina.
 - A faixa superior deve trocar junto com o ativo selecionado e mostrar ultimo preco, bid/ask, Book, Times, delta, latencia WebSocket local, mensagens por segundo e CSV.
 - `Painel` deve ser a entrada operacional e refletir o ativo selecionado sem misturar dados de outro ativo.
-- `Radar` deve listar oportunidades observacionais por setup/nivel, com score, distancia, evidencias e botao `Observar`.
+- `Radar` deve listar oportunidades observacionais por setup/nivel, com score, distancia, evidencias e botao `Observar`, alem de ranking multiativo com `Ver` e `Mesa`.
 - `Monitor` deve ser a mesa de acompanhamento ao vivo: watchlist compacta, estado do ativo, setups, tape, oportunidades e alertas, sem campos de cadastro.
 - `Cotacoes` deve separar monitoramento de cadastro: a tela mostra status e atalhos, mas a edicao continua em `Ativos`.
 - `Mesa` deve concentrar DOM compacto, book resumido, tape, fluxo, setups, niveis proximos e acoes de analise.

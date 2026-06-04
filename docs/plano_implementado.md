@@ -16,7 +16,7 @@
 - SQLite auxiliar para snapshots de 1 segundo e consolidado por minuto.
 - HTML do `dolar-points` importado e adaptado com menu superior agrupado em `Inicio`, `Cadastro`, `Mercado`, `Fluxo`, `Analise` e `Sistema`.
 - Tela `Painel` como entrada operacional com checklist, atalhos, setups, oportunidades e alertas.
-- Tela `Radar` para oportunidades observacionais ranqueadas por setups, niveis, proximidade, delta e imbalance.
+- Tela `Radar` para oportunidades observacionais ranqueadas por setups, niveis, proximidade, delta e imbalance, com ranking multiativo.
 - Tela `Monitor` como mesa ao vivo com watchlist compacta, estado do ativo, setups, tape, oportunidades e alertas.
 - Tela `Mesa` como cockpit de analise com DOM compacto, book resumido, tape, fluxo, setups e niveis proximos.
 - Tela `Cotacoes` como watchlist operacional entre o cadastro de ativos e as telas de analise.
@@ -41,7 +41,7 @@
 6. Confirmar que os campos intraday sao preenchidos por RTD.
 7. Adicionar outro ativo em `Ativos`, testar `Ver`, `Ligado`, `Desligado`, fontes e `Excluir`.
 8. Abrir `Painel` e confirmar checklist, atalhos, setups, oportunidades e alertas.
-9. Abrir `Radar` e confirmar candidatos por setup/nivel, score, evidencias e acao `Observar`.
+9. Abrir `Radar` e confirmar candidatos por setup/nivel, score, evidencias, ranking multiativo e acoes `Observar`, `Ver` e `Mesa`.
 10. Abrir `Mesa` e confirmar DOM compacto, book resumido, tape, fluxo, setups, niveis proximos e acoes de analise.
 11. Abrir `Monitor` e confirmar watchlist compacta, estado do ativo, setups, tape, oportunidades e alertas.
 12. Abrir `Cotacoes` e testar os atalhos para `Grafico`, `DOM`, `Book`, `T&T` e `Oportunidades`.
