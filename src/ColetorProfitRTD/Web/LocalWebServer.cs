@@ -23,6 +23,8 @@ namespace ColetorProfitRTD.Web
         private readonly Func<Dictionary<string, object>, object> _assetToggleHandler;
         private readonly Func<Dictionary<string, object>, object> _assetDeleteHandler;
         private readonly Func<Dictionary<string, object>, object> _assetChannelsHandler;
+        private readonly Func<Dictionary<string, object>, object> _assetHistorySaveHandler;
+        private readonly Func<string, object> _assetHistoryLoadHandler;
         private readonly WebSocketHub _hub;
         private CancellationTokenSource _cts;
 
@@ -39,6 +41,8 @@ namespace ColetorProfitRTD.Web
             Func<Dictionary<string, object>, object> assetToggleHandler,
             Func<Dictionary<string, object>, object> assetDeleteHandler,
             Func<Dictionary<string, object>, object> assetChannelsHandler,
+            Func<Dictionary<string, object>, object> assetHistorySaveHandler,
+            Func<string, object> assetHistoryLoadHandler,
             WebSocketHub hub,
             Logger log)
         {
@@ -54,6 +58,8 @@ namespace ColetorProfitRTD.Web
             _assetToggleHandler = assetToggleHandler;
             _assetDeleteHandler = assetDeleteHandler;
             _assetChannelsHandler = assetChannelsHandler;
+            _assetHistorySaveHandler = assetHistorySaveHandler;
+            _assetHistoryLoadHandler = assetHistoryLoadHandler;
             _hub = hub;
             _log = log;
             _listener.Prefixes.Add("http://localhost:" + Port + "/");
@@ -188,6 +194,23 @@ namespace ColetorProfitRTD.Web
                     Dictionary<string, object> body = await ReadJsonBodyAsync(context);
                     await WriteJsonAsync(context, _assetChannelsHandler(body));
                     return;
+                }
+
+                if (IsPath(path, "/assets/history"))
+                {
+                    if (string.Equals(context.Request.HttpMethod, "GET", StringComparison.OrdinalIgnoreCase))
+                    {
+                        string asset = context.Request.QueryString["asset"];
+                        await WriteJsonAsync(context, _assetHistoryLoadHandler(asset));
+                        return;
+                    }
+
+                    if (string.Equals(context.Request.HttpMethod, "POST", StringComparison.OrdinalIgnoreCase))
+                    {
+                        Dictionary<string, object> body = await ReadJsonBodyAsync(context);
+                        await WriteJsonAsync(context, _assetHistorySaveHandler(body));
+                        return;
+                    }
                 }
 
                 await WriteStaticAsync(context, path);

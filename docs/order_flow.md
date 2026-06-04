@@ -2,15 +2,26 @@
 
 ## Escopo
 
-A expansao de order flow usa os campos RTD ja disponiveis no Profit:
+A expansao de order flow tem duas camadas:
+
+- metricas MVP ainda derivadas dos snapshots de preco/topo de book;
+- tape e diagnostico passam a receber `timesTrades` real quando o RTD `T&Tn` estiver cadastrado e ligado.
+
+Campos usados pelo motor derivado:
 
 - `ULT`, `QUL`, `VOL`, `QTT`, `NEG`;
 - `OCP`, `OVD`, `VOC`, `VOV`;
 - `MED` como fallback de VWAP.
 
-O MVP nao e Times & Trades completo nem book multi-nivel. As metricas e sinais sao derivados do ultimo preco, quantidade, volume acumulado e topo do book.
+As metricas e sinais do MVP continuam derivados do ultimo preco, quantidade, volume acumulado e topo do book. O book multi-nivel e o Times & Trades real ja entram no WebSocket como mensagens separadas para a UI e para evolucao futura do motor.
 
-No gerenciador de ativos, o canal `timesTrades` alimenta o tape derivado com `ULT`, `QUL`, `NEG`, `QTT` e `VOL`. O canal `book` alimenta topo de book com `OCP`, `OVD`, `VOC` e `VOV`. Esses canais podem ser ligados/desligados por ativo.
+No gerenciador de ativos:
+
+- `price` alimenta snapshots e o motor derivado;
+- `book` assina `BOOK0` por nivel e transmite `bookDepth`;
+- `timesTrades` assina `T&T0` por linha e transmite `timesTrades`.
+
+Quando `timesTrades` chega, a UI usa esse tape real. Sem ele, permanece o tape derivado.
 
 ## Fluxo
 
@@ -32,7 +43,7 @@ Com varios ativos ligados, o `FlowProcessor` mantem `SnapshotCoalescer`, `FlowEn
 ```text
 GET /flow     -> ultima mensagem flow
 GET /signals  -> sinais ativos/recentes
-WS  /ws       -> snapshot, status, flow e signal
+WS  /ws       -> snapshot, status, flow, signal, bookDepth e timesTrades
 ```
 
 ## Qualidade dos Dados
@@ -42,8 +53,8 @@ Valores possiveis:
 - `unknown`;
 - `topOfBookOnly`;
 - `derivedTape`;
-- `fullTimesAndTrades` futuro;
-- `fullDepth` futuro.
+- `fullTimesAndTrades` reservado para o motor quando T&T real for usado nos calculos;
+- `fullDepth` reservado para o motor quando book multi-nivel for usado nos calculos.
 
 Scores sao limitados por qualidade:
 
@@ -52,10 +63,10 @@ Scores sao limitados por qualidade:
 
 ## UI
 
-O dashboard tem tres abas novas:
+O dashboard usa o menu superior:
 
-- `Fluxo`: delta, cumulative delta, imbalance, OFI, microbias, VWAP e trades derivados;
+- `Fluxo`: delta, cumulative delta, imbalance, OFI, microbias, VWAP e tape real/derivado;
 - `Setups`: sinais confirmados com score, direcao, preco e motivos;
-- `Debug Fluxo`: qualidade, eventos, trades derivados, sinais e fila.
+- `Diagnostico`: qualidade, eventos, bookDepth, Times & Trades, sinais e fila.
 
 A aba `DOM` tambem marca sinais ativos como pontos de flow.

@@ -19,7 +19,8 @@ namespace ColetorProfitRTD.Rtd
 
     public static class RtdFieldCatalog
     {
-        public const string QuoteChannel = "quote";
+        public const string QuoteChannel = RtdChannel.Price;
+        public const string PriceChannel = RtdChannel.Price;
         public const string BookChannel = "book";
         public const string TimesTradesChannel = "timesTrades";
 
@@ -98,9 +99,25 @@ namespace ColetorProfitRTD.Rtd
             .Select(x => x.Code)
             .ToList();
 
+        public static readonly IReadOnlyList<string> DefaultPriceFields = new[]
+        {
+            "DAT", "HOR", "ULT", "ABE", "MAX", "MIN", "FEC", "NEG", "QTT", "VOL",
+            "OCP", "OVD", "AJU", "AJA", "103", "98", "100", "99", "67"
+        };
+
+        public static readonly IReadOnlyList<string> DefaultBookFields = new[]
+        {
+            "HORC", "ACP", "VOC", "OCP", "OVD", "VOV", "AVD", "HORV"
+        };
+
+        public static readonly IReadOnlyList<string> DefaultTimesFields = new[]
+        {
+            "DAT", "ACP", "PRE", "QUL", "AVD", "AGR"
+        };
+
         public static readonly IReadOnlyList<string> DefaultChannels = new[]
         {
-            QuoteChannel,
+            PriceChannel,
             BookChannel,
             TimesTradesChannel
         };
@@ -110,8 +127,8 @@ namespace ColetorProfitRTD.Rtd
             {
                 [QuoteChannel] = new[]
                 {
-                    "DAT", "HOR", "ULT", "ABE", "MAX", "MIN", "FEC", "VAR", "VARPTS",
-                    "MED", "AJU", "AJA", "VEN", "VAL", "CAB", "EST"
+                    "DAT", "HOR", "ULT", "ABE", "MAX", "MIN", "FEC", "NEG", "QTT", "VOL",
+                    "OCP", "OVD", "AJU", "AJA", "103", "98", "100", "99", "67"
                 },
                 [BookChannel] = new[]
                 {
@@ -132,10 +149,14 @@ namespace ColetorProfitRTD.Rtd
 
             string value = channel.Trim();
 
-            if (value.Equals("cotacao", System.StringComparison.OrdinalIgnoreCase) ||
+            if (value.Equals("preco", System.StringComparison.OrdinalIgnoreCase) ||
+                value.Equals("preço", System.StringComparison.OrdinalIgnoreCase) ||
+                value.Equals("price", System.StringComparison.OrdinalIgnoreCase) ||
+                value.Equals("cotacao", System.StringComparison.OrdinalIgnoreCase) ||
+                value.Equals("cotação", System.StringComparison.OrdinalIgnoreCase) ||
                 value.Equals("quote", System.StringComparison.OrdinalIgnoreCase))
             {
-                return QuoteChannel;
+                return PriceChannel;
             }
 
             if (value.Equals("book", System.StringComparison.OrdinalIgnoreCase) ||

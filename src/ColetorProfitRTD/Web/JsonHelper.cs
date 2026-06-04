@@ -6,7 +6,7 @@ namespace ColetorProfitRTD.Web
     {
         private static readonly JavaScriptSerializer Serializer = new JavaScriptSerializer
         {
-            MaxJsonLength = 1024 * 1024
+            MaxJsonLength = 32 * 1024 * 1024
         };
 
         public static string Serialize(object value)

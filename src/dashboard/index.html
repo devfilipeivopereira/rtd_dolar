@@ -9,7 +9,7 @@
 <style>
 *,*::before,*::after{box-sizing:border-box}
 :root{
-  --bg:#0b0d10;
+  --bg:#0B0C0A;
   --panel:#14171c;
   --panel2:#1b2027;
   --panel3:#232a33;
@@ -18,7 +18,7 @@
   --txt:#eef2f6;
   --muted:#a9b3bf;
   --soft:#738091;
-  --green:#12b886;
+  --green:#00E676;
   --cyan:#3bc9db;
   --blue:#4dabf7;
   --amber:#fab005;
@@ -26,11 +26,13 @@
   --red:#fa5252;
   --pink:#f06595;
   --violet:#9775fa;
-  --font:Inter,Segoe UI,Roboto,Arial,sans-serif;
-  --mono:"SFMono-Regular",Consolas,"Liberation Mono",monospace;
+  --font:"JetBrains Mono","IBM Plex Mono",Consolas,"Liberation Mono",monospace;
+  --mono:"JetBrains Mono","IBM Plex Mono",Consolas,"Liberation Mono",monospace;
 }
 html,body{height:100%;margin:0;background:var(--bg);color:var(--txt);font-family:var(--font)}
 body{min-height:100vh;overflow-x:hidden}
+*{font-variant-numeric:tabular-nums}
+.app *{border-radius:0!important}
 button,input,select{font:inherit}
 button{cursor:pointer}
 .app{min-height:100vh;display:flex;flex-direction:column}
@@ -47,6 +49,12 @@ button{cursor:pointer}
 }
 .brand-title{font-size:15px;font-weight:800;letter-spacing:.03em;text-transform:uppercase;white-space:nowrap}
 .brand-sub{font-size:11px;color:var(--muted);margin-top:2px;white-space:nowrap}
+.main-tabs{display:flex;align-items:center;gap:4px;min-width:0;margin:0 14px;flex:1;justify-content:center;overflow:auto}
+.main-tab{
+  height:34px;padding:0 12px;border:1px solid var(--line);background:#0B0C0A;color:var(--muted);
+  font-family:var(--mono);font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.04em;
+}
+.main-tab.active{border-color:#1f8a70;background:#092217;color:#b9ffe9}
 .top-meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
 .pill{
   display:inline-flex;align-items:center;justify-content:center;gap:7px;
@@ -105,6 +113,32 @@ input.live-fed{border-color:#1f8a70;box-shadow:0 0 0 2px #12b88618}
   display:grid;grid-template-columns:360px minmax(0,1fr);gap:0;
   min-height:calc(100vh - 64px);
 }
+.layout.full-view{grid-template-columns:1fr}
+.layout.full-view .sidebar,.layout.full-view .chart-head,.layout.full-view .chart-shell,.layout.full-view .cards,.layout.full-view .tabs{display:none}
+.layout.full-view .content{min-height:calc(100vh - 64px);padding:16px 18px 22px}
+.asset-screen{display:none;min-height:calc(100vh - 64px);padding:16px 18px 22px;background:var(--bg)}
+.asset-screen.active{display:block}
+.asset-workbench{display:grid;grid-template-columns:340px minmax(0,1fr);gap:14px}
+.asset-table{max-height:calc(100vh - 160px);overflow:auto;border:1px solid var(--line);background:var(--panel)}
+.asset-table .asset-row{border:0;border-bottom:1px solid var(--line);background:#10141a}
+.asset-table .asset-row:last-child{border-bottom:0}
+.asset-form-grid{display:grid;grid-template-columns:repeat(3,minmax(220px,1fr));gap:12px}
+.asset-form-span{grid-column:1/-1}
+.asset-card{border:1px solid var(--line);background:var(--panel);padding:12px;min-width:0}
+.asset-card-head{display:flex;align-items:center;justify-content:space-between;gap:10px;border-bottom:1px solid var(--line);padding-bottom:9px;margin-bottom:10px}
+.asset-card-title{font-size:11px;color:var(--muted);font-weight:900;text-transform:uppercase;letter-spacing:.08em}
+.asset-status-row{display:flex;gap:6px;flex-wrap:wrap}
+.asset-actions-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px}
+.btn-secondary{
+  height:36px;border:1px solid var(--line);background:#10141a;color:var(--muted);padding:0 11px;
+  font-size:11px;font-weight:900;text-transform:uppercase;
+}
+.btn-secondary.ok{border-color:#1f7a66;color:#9df2d5;background:#0d261f}
+.btn-secondary.bad{border-color:#7a2b2b;color:#ff9b9b;background:#2b1111}
+.btn-secondary.blue{border-color:#285d80;color:#9bd7ff;background:#10202b}
+.asset-field-list{display:flex;gap:5px;flex-wrap:wrap;max-height:72px;overflow:auto;border:1px solid var(--line);padding:7px;background:#0B0C0A}
+.asset-field-list .tag{height:20px}
+.legacy-config-section{display:none}
 .sidebar{
   border-right:1px solid var(--line);background:var(--panel);
   padding:18px;overflow:auto;max-height:calc(100vh - 64px);
@@ -189,6 +223,7 @@ input[type=number]:focus,input[type=text]:focus{border-color:#407ea6;box-shadow:
 .nav-btn:disabled{opacity:.35;cursor:not-allowed}
 .nav-btn.wide{width:auto;padding:0 10px}
 .tabs{display:flex;gap:6px;border-bottom:1px solid var(--line);padding:10px 18px;background:var(--panel)}
+#tabs [data-tab="dom"],#tabs [data-tab="flow"],#tabs [data-tab="signals"],#tabs [data-tab="flowdebug"]{display:none}
 .tab{
   height:34px;padding:0 12px;border:1px solid var(--line);border-radius:6px;
   color:var(--muted);background:#10141a;font-size:12px;font-weight:800;
@@ -329,6 +364,8 @@ tr:hover td{background:#ffffff05}
 @media(max-width:1180px){
   .layout{grid-template-columns:1fr}
   .sidebar{max-height:none;border-right:0;border-bottom:1px solid var(--line)}
+  .asset-workbench{grid-template-columns:1fr}
+  .asset-form-grid{grid-template-columns:1fr}
   .cards{grid-template-columns:repeat(3,1fr)}
   .panel-grid{grid-template-columns:1fr}
   .dom-grid{grid-template-columns:1fr}
@@ -336,6 +373,7 @@ tr:hover td{background:#ffffff05}
 }
 @media(max-width:700px){
   .topbar{height:auto;align-items:flex-start;padding:12px;gap:10px;flex-direction:column}
+  .main-tabs{justify-content:flex-start;margin:0;width:100%}
   .layout{min-height:calc(100vh - 96px)}
   .brand-title,.brand-sub{white-space:normal}
   .top-meta{justify-content:flex-start}
@@ -362,6 +400,14 @@ tr:hover td{background:#ffffff05}
         <div class="brand-sub">Volatilidade, volume profile proxy, value areas e confluencia</div>
       </div>
     </div>
+    <nav class="main-tabs" id="main-tabs">
+      <button class="main-tab active" data-main-tab="assets" type="button">Ativos</button>
+      <button class="main-tab" data-main-tab="panorama" type="button">Panorama</button>
+      <button class="main-tab" data-main-tab="dom" type="button">DOM</button>
+      <button class="main-tab" data-main-tab="flow" type="button">Fluxo</button>
+      <button class="main-tab" data-main-tab="signals" type="button">Setups</button>
+      <button class="main-tab" data-main-tab="diagnostics" type="button">Diagnostico</button>
+    </nav>
     <div class="top-meta">
       <span class="pill" id="file-pill">Sem CSV</span>
       <span class="pill warn" id="rtd-pill">RTD Manual</span>
@@ -370,9 +416,123 @@ tr:hover td{background:#ffffff05}
     </div>
   </header>
 
-  <main class="layout">
+  <section class="asset-screen active" id="asset-screen">
+    <div class="asset-workbench">
+      <div class="asset-table">
+        <div class="panel-head">
+          <div class="panel-title">Ativos cadastrados</div>
+          <span class="tag" id="assets-count">0</span>
+        </div>
+        <div class="asset-list" id="asset-screen-list"></div>
+      </div>
+
+      <div class="asset-card">
+        <div class="asset-card-head">
+          <div>
+            <div class="asset-card-title">Cadastro do ativo</div>
+            <div class="file-help">Configure preco, book, Times & Trades e CSV historico por ativo.</div>
+          </div>
+          <div class="asset-status-row">
+            <span class="tag" id="asset-price-ok">Preco --</span>
+            <span class="tag" id="asset-book-ok">Book --</span>
+            <span class="tag" id="asset-times-ok">Times --</span>
+            <span class="tag" id="asset-csv-ok">CSV --</span>
+          </div>
+        </div>
+
+        <div class="asset-form-grid">
+          <div class="asset-card">
+            <div class="asset-card-head">
+              <div class="asset-card-title">Ativo / Preco</div>
+              <label class="asset-chip"><input type="checkbox" id="asset-price-enabled" checked> Ligar</label>
+            </div>
+            <div class="field-grid">
+              <div class="field">
+                <label for="asset-code">Codigo do ativo</label>
+                <input type="text" id="asset-code" placeholder="WDON26_G_0" autocomplete="off">
+              </div>
+              <div class="field">
+                <label for="asset-label">Nome curto</label>
+                <input type="text" id="asset-label" placeholder="WDO">
+              </div>
+              <div class="field asset-form-span">
+                <label for="asset-price-topic">Topico RTD preco</label>
+                <input type="text" id="asset-price-topic" placeholder="WDON26_G_0" autocomplete="off">
+              </div>
+            </div>
+            <div class="asset-field-list" id="asset-price-fields"></div>
+          </div>
+
+          <div class="asset-card">
+            <div class="asset-card-head">
+              <div class="asset-card-title">Book de ofertas</div>
+              <label class="asset-chip"><input type="checkbox" id="asset-book-enabled" checked> Ligar</label>
+            </div>
+            <div class="field-grid">
+              <div class="field">
+                <label for="asset-book-topic">Topico RTD book</label>
+                <input type="text" id="asset-book-topic" placeholder="BOOK0" autocomplete="off">
+              </div>
+              <div class="field">
+                <label for="asset-book-depth">Profundidade</label>
+                <input type="number" id="asset-book-depth" min="1" max="200" step="1" value="50">
+              </div>
+            </div>
+            <div class="asset-field-list" id="asset-book-fields"></div>
+          </div>
+
+          <div class="asset-card">
+            <div class="asset-card-head">
+              <div class="asset-card-title">Times & Trades</div>
+              <label class="asset-chip"><input type="checkbox" id="asset-times-enabled" checked> Ligar</label>
+            </div>
+            <div class="field-grid">
+              <div class="field">
+                <label for="asset-times-topic">Topico RTD Times</label>
+                <input type="text" id="asset-times-topic" placeholder="T&T0" autocomplete="off">
+              </div>
+              <div class="field">
+                <label for="asset-times-rows">Linhas</label>
+                <input type="number" id="asset-times-rows" min="1" max="300" step="1" value="100">
+              </div>
+            </div>
+            <div class="asset-field-list" id="asset-times-fields"></div>
+          </div>
+
+          <div class="asset-card asset-form-span">
+            <div class="asset-card-head">
+              <div class="asset-card-title">CSV historico</div>
+              <span class="tag" id="asset-history-name">Sem CSV</span>
+            </div>
+            <div class="dropzone" id="asset-history-dropzone">
+              <input class="file-input" type="file" id="asset-history-file" accept=".csv,text/csv">
+              <div class="file-row">
+                <div class="file-icon">CSV</div>
+                <div class="file-text">
+                  <div class="file-name" id="asset-history-file-name">Selecione o CSV diario do ativo</div>
+                  <div class="file-help">O arquivo sera salvo em data/assets/{ativo}/history.csv e recarregado junto com o ativo.</div>
+                </div>
+              </div>
+              <div class="status" id="asset-history-status"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="asset-actions-bar">
+          <button class="btn-secondary ok" id="asset-save" type="button">Salvar</button>
+          <button class="btn-secondary blue" id="asset-view" type="button">Ver</button>
+          <button class="btn-secondary ok" id="asset-enable" type="button">Ligar</button>
+          <button class="btn-secondary" id="asset-disable" type="button">Desligar</button>
+          <button class="btn-secondary bad" id="asset-delete-selected" type="button">Excluir</button>
+          <span class="pill" id="asset-form-status">Pronto</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <main class="layout hidden" id="terminal-main">
     <aside class="sidebar">
-      <section class="section">
+      <section class="section legacy-config-section">
         <div class="section-title">Upload diario</div>
         <div class="dropzone" id="dropzone">
           <input class="file-input" type="file" id="csv-file" accept=".csv,text/csv">
@@ -396,7 +556,7 @@ tr:hover td{background:#ffffff05}
         </div>
       </section>
 
-      <section class="section">
+      <section class="section legacy-config-section">
         <div class="section-title">Ativos RTD</div>
         <div class="asset-compose">
           <input type="text" id="asset-input" placeholder="WDOFUT_F_0" autocomplete="off">
@@ -852,7 +1012,33 @@ function saveChartLayers() {
   } catch (_) {}
 }
 
+function loadMainTab() {
+  try {
+    const raw = globalThis.localStorage?.getItem("wdo-main-tab");
+    return ["assets", "panorama", "dom", "flow", "signals", "diagnostics"].includes(raw) ? raw : "assets";
+  } catch (_) {
+    return "assets";
+  }
+}
+
+function saveMainTab(tab) {
+  try {
+    globalThis.localStorage?.setItem("wdo-main-tab", tab);
+  } catch (_) {}
+}
+
+function loadSelectedAsset() {
+  try {
+    return normalizeAsset(globalThis.localStorage?.getItem("wdo-selected-asset") || "WDOFUT_F_0");
+  } catch (_) {
+    return "WDOFUT_F_0";
+  }
+}
+
 const state = {
+  ui: {
+    mainTab: loadMainTab(),
+  },
   bars: [],
   uploadedCount: 0,
   selectedWindow: 21,
@@ -864,10 +1050,13 @@ const state = {
     socket: null,
     reconnectTimer: null,
     recalcTimer: null,
-    selectedAsset: "WDOFUT_F_0",
+    selectedAsset: loadSelectedAsset(),
     assets: [],
     availableChannels: ["quote", "book", "timesTrades"],
+    schemas: null,
     snapshotsByAsset: {},
+    bookDepthByAsset: {},
+    timesTradesByAsset: {},
     lastSnapshot: null,
     ticksByAsset: {},
     lastPriceByAsset: {},
@@ -875,6 +1064,11 @@ const state = {
     lastPrice: null,
     tickSize: 0.5,
     domVisibleTicks: 200,
+  },
+  assetEditor: {
+    draftCsvText: null,
+    draftCsvName: null,
+    loadedHistoryAsset: null,
   },
   flow: {
     byAsset: {},
@@ -929,6 +1123,10 @@ const SOURCE_WEIGHTS = {
 const PERCENT_VARIATIONS = [3, 2.5, 2, 1.5, 1, 0.5, 0, -0.5, -1, -1.5, -2, -2.5, -3];
 
 const refs = {
+  app: document.querySelector(".app"),
+  mainTabs: document.getElementById("main-tabs"),
+  assetScreen: document.getElementById("asset-screen"),
+  terminalMain: document.getElementById("terminal-main"),
   file: document.getElementById("csv-file"),
   dropzone: document.getElementById("dropzone"),
   fileName: document.getElementById("file-name"),
@@ -941,6 +1139,36 @@ const refs = {
   assetAdd: document.getElementById("asset-add"),
   assetAddChannels: document.getElementById("asset-add-channels"),
   assetList: document.getElementById("asset-list"),
+  assetScreenList: document.getElementById("asset-screen-list"),
+  assetsCount: document.getElementById("assets-count"),
+  assetFormStatus: document.getElementById("asset-form-status"),
+  assetCode: document.getElementById("asset-code"),
+  assetLabel: document.getElementById("asset-label"),
+  assetPriceTopic: document.getElementById("asset-price-topic"),
+  assetPriceEnabled: document.getElementById("asset-price-enabled"),
+  assetBookTopic: document.getElementById("asset-book-topic"),
+  assetBookDepth: document.getElementById("asset-book-depth"),
+  assetBookEnabled: document.getElementById("asset-book-enabled"),
+  assetTimesTopic: document.getElementById("asset-times-topic"),
+  assetTimesRows: document.getElementById("asset-times-rows"),
+  assetTimesEnabled: document.getElementById("asset-times-enabled"),
+  assetPriceFields: document.getElementById("asset-price-fields"),
+  assetBookFields: document.getElementById("asset-book-fields"),
+  assetTimesFields: document.getElementById("asset-times-fields"),
+  assetPriceOk: document.getElementById("asset-price-ok"),
+  assetBookOk: document.getElementById("asset-book-ok"),
+  assetTimesOk: document.getElementById("asset-times-ok"),
+  assetCsvOk: document.getElementById("asset-csv-ok"),
+  assetHistoryName: document.getElementById("asset-history-name"),
+  assetHistoryDropzone: document.getElementById("asset-history-dropzone"),
+  assetHistoryFile: document.getElementById("asset-history-file"),
+  assetHistoryFileName: document.getElementById("asset-history-file-name"),
+  assetHistoryStatus: document.getElementById("asset-history-status"),
+  assetSave: document.getElementById("asset-save"),
+  assetView: document.getElementById("asset-view"),
+  assetEnable: document.getElementById("asset-enable"),
+  assetDisable: document.getElementById("asset-disable"),
+  assetDeleteSelected: document.getElementById("asset-delete-selected"),
   rtdAsset: document.getElementById("rtd-asset"),
   rtdLast: document.getElementById("rtd-last"),
   rtdBook: document.getElementById("rtd-book"),
@@ -1022,7 +1250,7 @@ function sameAsset(asset, target = selectedAsset()) {
 function normalizeChannel(channel) {
   const value = String(channel || "").trim();
   if (!value) return "";
-  if (["cotacao", "quote"].includes(value.toLowerCase())) return "quote";
+  if (["preco", "preço", "cotacao", "cotação", "quote", "price"].includes(value.toLowerCase())) return "price";
   if (["book", "ofertas", "bookofertas"].includes(value.toLowerCase())) return "book";
   if (["times", "trades", "timestrades", "timesandtrades"].includes(value.toLowerCase())) return "timesTrades";
   return value;
@@ -1030,7 +1258,7 @@ function normalizeChannel(channel) {
 
 function channelLabel(channel) {
   const normalized = normalizeChannel(channel);
-  if (normalized === "quote") return "Cotacao";
+  if (normalized === "price") return "Preco";
   if (normalized === "book") return "Book";
   if (normalized === "timesTrades") return "Times";
   return normalized || "Canal";
@@ -1046,7 +1274,7 @@ function normalizeChannels(channels) {
     seen.add(normalized);
     out.push(normalized);
   });
-  return out.length ? out : ["quote"];
+  return out.length ? out : ["price"];
 }
 
 function selectedAddChannels() {
@@ -1084,6 +1312,7 @@ function syncSelectedTicks() {
 function updateAssetsMessage(msg) {
   if (!msg || !Array.isArray(msg.assets)) return;
   state.rtd.assets = msg.assets;
+  state.rtd.schemas = msg.rtdSchemas || state.rtd.schemas;
   if (Array.isArray(msg.availableChannels) && msg.availableChannels.length) {
     state.rtd.availableChannels = normalizeChannels(msg.availableChannels);
   }
@@ -1094,6 +1323,13 @@ function updateAssetsMessage(msg) {
   }
 
   renderAssetList();
+  renderAssetScreenList();
+  const selected = selectedAssetConfig();
+  populateAssetForm(selected);
+  if (selected?.history?.hasCsv && state.assetEditor.loadedHistoryAsset !== selectedAsset()) {
+    state.assetEditor.loadedHistoryAsset = selectedAsset();
+    loadSavedAssetHistory(selectedAsset());
+  }
 }
 
 function renderAssetList() {
@@ -1136,6 +1372,185 @@ function renderAssetList() {
   }).join("");
 }
 
+function selectedAssetConfig() {
+  return (state.rtd.assets || []).find(item => sameAsset(item.asset)) || null;
+}
+
+function sourceIsOk(source) {
+  return !!source?.enabled && !!source?.subscribed;
+}
+
+function statusTagClass(ok, enabled) {
+  if (ok) return "tag green";
+  if (enabled) return "tag amber";
+  return "tag";
+}
+
+function renderAssetScreenList() {
+  if (!refs.assetScreenList) return;
+  const assets = state.rtd.assets || [];
+  refs.assetsCount.textContent = String(assets.length);
+
+  if (!assets.length) {
+    refs.assetScreenList.innerHTML = `<div class="warn-line">Nenhum ativo cadastrado.</div>`;
+    return;
+  }
+
+  refs.assetScreenList.innerHTML = assets.map(item => {
+    const asset = normalizeAsset(item.asset);
+    const selected = sameAsset(asset);
+    const priceOk = sourceIsOk(item.priceRtd);
+    const bookOk = sourceIsOk(item.bookRtd);
+    const timesOk = sourceIsOk(item.timesRtd);
+    const csvOk = !!item.history?.hasCsv;
+    return `
+      <div class="asset-row ${selected ? "selected" : ""}">
+        <div class="asset-name">
+          <strong>${escapeHtml(asset)}</strong>
+          <span>${escapeHtml(item.label || asset)} | ${item.enabled ? "ligado" : "desligado"}</span>
+        </div>
+        <div class="asset-row-channels">
+          <span class="${statusTagClass(priceOk, item.priceRtd?.enabled)}">Preco ${priceOk ? "OK" : item.priceRtd?.enabled ? "..." : "OFF"}</span>
+          <span class="${statusTagClass(bookOk, item.bookRtd?.enabled)}">Book ${bookOk ? "OK" : item.bookRtd?.enabled ? "..." : "OFF"}</span>
+          <span class="${statusTagClass(timesOk, item.timesRtd?.enabled)}">Times ${timesOk ? "OK" : item.timesRtd?.enabled ? "..." : "OFF"}</span>
+          <span class="${csvOk ? "tag green" : "tag"}">CSV ${csvOk ? "OK" : "--"}</span>
+        </div>
+        <div class="asset-actions">
+          <button class="asset-action view" type="button" data-asset-screen-view="${escapeHtml(asset)}">Ver</button>
+          <button class="asset-action ${item.enabled ? "on" : "off"}" type="button" data-asset-toggle="${escapeHtml(asset)}" data-enabled="${item.enabled ? "false" : "true"}">${item.enabled ? "Ligado" : "Desligado"}</button>
+          <button class="asset-action delete" type="button" data-asset-delete="${escapeHtml(asset)}">Excluir</button>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function renderFieldChips(el, fields) {
+  if (!el) return;
+  const values = Array.isArray(fields) ? fields : [];
+  el.innerHTML = values.map(field => `<span class="tag">${escapeHtml(field)}</span>`).join("");
+}
+
+function defaultSchemaFields(channel) {
+  const schema = state.rtd.schemas || {};
+  if (channel === "price") return schema.price?.defaultFields || ["DAT", "HOR", "ULT", "ABE", "MAX", "MIN", "FEC", "NEG", "QTT", "VOL", "OCP", "OVD", "AJU", "AJA", "103", "98", "100", "99", "67"];
+  if (channel === "book") return schema.book?.defaultFields || ["HORC", "ACP", "VOC", "OCP", "OVD", "VOV", "AVD", "HORV"];
+  return schema.timesTrades?.defaultFields || ["DAT", "ACP", "PRE", "QUL", "AVD", "AGR"];
+}
+
+function populateAssetForm(item = selectedAssetConfig()) {
+  const asset = item ? normalizeAsset(item.asset) : selectedAsset();
+  const price = item?.priceRtd || {};
+  const book = item?.bookRtd || {};
+  const times = item?.timesRtd || {};
+  refs.assetCode.value = asset;
+  refs.assetLabel.value = item?.label || asset;
+  refs.assetPriceTopic.value = price.topic || asset;
+  refs.assetPriceEnabled.checked = price.enabled !== false;
+  refs.assetBookTopic.value = book.topic || "BOOK0";
+  refs.assetBookDepth.value = book.depth || 50;
+  refs.assetBookEnabled.checked = book.enabled !== false;
+  refs.assetTimesTopic.value = times.topic || "T&T0";
+  refs.assetTimesRows.value = times.rows || 100;
+  refs.assetTimesEnabled.checked = times.enabled !== false;
+  refs.assetHistoryName.textContent = item?.history?.hasCsv ? item.history.fileName || "history.csv" : "Sem CSV";
+  refs.assetHistoryFileName.textContent = state.assetEditor.draftCsvName || (item?.history?.fileName ? item.history.fileName : "Selecione o CSV diario do ativo");
+  setAssetStatusTags(item);
+  renderFieldChips(refs.assetPriceFields, price.fields || defaultSchemaFields("price"));
+  renderFieldChips(refs.assetBookFields, book.fields || defaultSchemaFields("book"));
+  renderFieldChips(refs.assetTimesFields, times.fields || defaultSchemaFields("timesTrades"));
+}
+
+function setAssetStatusTags(item = selectedAssetConfig()) {
+  const priceOk = sourceIsOk(item?.priceRtd);
+  const bookOk = sourceIsOk(item?.bookRtd);
+  const timesOk = sourceIsOk(item?.timesRtd);
+  const csvOk = !!item?.history?.hasCsv;
+  refs.assetPriceOk.className = statusTagClass(priceOk, item?.priceRtd?.enabled);
+  refs.assetBookOk.className = statusTagClass(bookOk, item?.bookRtd?.enabled);
+  refs.assetTimesOk.className = statusTagClass(timesOk, item?.timesRtd?.enabled);
+  refs.assetCsvOk.className = csvOk ? "tag green" : "tag";
+  refs.assetPriceOk.textContent = `Preco ${priceOk ? "OK" : item?.priceRtd?.enabled ? "..." : "--"}`;
+  refs.assetBookOk.textContent = `Book ${bookOk ? "OK" : item?.bookRtd?.enabled ? "..." : "--"}`;
+  refs.assetTimesOk.textContent = `Times ${timesOk ? "OK" : item?.timesRtd?.enabled ? "..." : "--"}`;
+  refs.assetCsvOk.textContent = `CSV ${csvOk ? "OK" : "--"}`;
+}
+
+function assetFormPayload(enabledOverride = null) {
+  const asset = normalizeAsset(refs.assetCode.value || refs.assetPriceTopic.value || selectedAsset());
+  return {
+    asset,
+    label: refs.assetLabel.value || asset,
+    enabled: enabledOverride ?? (selectedAssetConfig()?.enabled ?? true),
+    priceRtd: {
+      channel: "price",
+      enabled: refs.assetPriceEnabled.checked,
+      topic: normalizeAsset(refs.assetPriceTopic.value || asset),
+      fields: defaultSchemaFields("price"),
+    },
+    bookRtd: {
+      channel: "book",
+      enabled: refs.assetBookEnabled.checked,
+      topic: normalizeAsset(refs.assetBookTopic.value || "BOOK0"),
+      depth: clamp(Number(refs.assetBookDepth.value) || 50, 1, 200),
+      fields: defaultSchemaFields("book"),
+    },
+    timesRtd: {
+      channel: "timesTrades",
+      enabled: refs.assetTimesEnabled.checked,
+      topic: normalizeAsset(refs.assetTimesTopic.value || "T&T0"),
+      rows: clamp(Number(refs.assetTimesRows.value) || 100, 1, 300),
+      fields: defaultSchemaFields("timesTrades"),
+    },
+  };
+}
+
+function setAssetFormStatus(type, text) {
+  setPill(refs.assetFormStatus, type, text);
+}
+
+function activateSubTab(tabName) {
+  const tab = document.querySelector(`[data-tab="${tabName}"]`);
+  const panel = document.getElementById(`panel-${tabName}`);
+  if (!panel) return;
+  document.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t === tab));
+  document.querySelectorAll(".tab-panel").forEach(item => item.classList.add("hidden"));
+  panel.classList.remove("hidden");
+}
+
+function showMainTab(tabName) {
+  const safe = ["assets", "panorama", "dom", "flow", "signals", "diagnostics"].includes(tabName) ? tabName : "assets";
+  state.ui.mainTab = safe;
+  saveMainTab(safe);
+  refs.mainTabs.querySelectorAll("[data-main-tab]").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.mainTab === safe);
+  });
+
+  const assetsMode = safe === "assets";
+  refs.assetScreen.classList.toggle("active", assetsMode);
+  refs.terminalMain.classList.toggle("hidden", assetsMode);
+
+  if (assetsMode) {
+    populateAssetForm(selectedAssetConfig());
+    renderAssetScreenList();
+    return;
+  }
+
+  const fullView = safe !== "panorama";
+  refs.terminalMain.classList.toggle("full-view", fullView);
+
+  if (safe === "panorama") activateSubTab("levels");
+  else if (safe === "dom") activateSubTab("dom");
+  else if (safe === "flow") activateSubTab("flow");
+  else if (safe === "signals") activateSubTab("signals");
+  else if (safe === "diagnostics") activateSubTab("flowdebug");
+
+  if (safe === "dom") renderDom();
+  if (safe === "flow") renderFlow();
+  if (safe === "signals") renderSignals();
+  if (safe === "diagnostics") renderFlowDebug();
+}
+
 function renderSelectedAsset() {
   const asset = selectedAsset();
   const snapshot = state.rtd.snapshotsByAsset[asset] || null;
@@ -1152,6 +1567,14 @@ function renderSelectedAsset() {
 
 function selectAsset(asset) {
   state.rtd.selectedAsset = normalizeAsset(asset);
+  try {
+    globalThis.localStorage?.setItem("wdo-selected-asset", state.rtd.selectedAsset);
+  } catch (_) {}
+  populateAssetForm(selectedAssetConfig());
+  if (state.assetEditor.loadedHistoryAsset !== state.rtd.selectedAsset) {
+    state.assetEditor.loadedHistoryAsset = state.rtd.selectedAsset;
+    loadSavedAssetHistory(state.rtd.selectedAsset);
+  }
   renderSelectedAsset();
   if (state.rtd.lastSnapshot) {
     const intraday = state.rtd.lastSnapshot.intraday || {};
@@ -2541,6 +2964,17 @@ function liveBookFromSnapshot(msg) {
   };
 }
 
+function liveBookDepthForAsset(asset = selectedAsset()) {
+  return state.rtd.bookDepthByAsset[normalizeAsset(asset)] || null;
+}
+
+function bookDepthAtPrice(price, side, step = state.rtd.tickSize) {
+  const depth = liveBookDepthForAsset();
+  const rows = side === "bid" ? depth?.bids : depth?.asks;
+  if (!Array.isArray(rows)) return null;
+  return rows.find(row => sameTick(liveNumber(row.price), price, step)) || null;
+}
+
 function currentDomPrice(msg) {
   const livePrice = liveIntradayFromSnapshot(msg).price;
   if (Number.isFinite(livePrice)) return livePrice;
@@ -2870,17 +3304,21 @@ function renderDomLadder(msg) {
     const isLast = sameTick(price, rowPrice, step);
     const isBid = sameTick(book.bid, rowPrice, step);
     const isAsk = sameTick(book.ask, rowPrice, step);
+    const depthBid = bookDepthAtPrice(rowPrice, "bid", step);
+    const depthAsk = bookDepthAtPrice(rowPrice, "ask", step);
+    const bidQty = liveNumber(depthBid?.qty);
+    const askQty = liveNumber(depthAsk?.qty);
     const classes = ["dom-row"];
     if (marks.length) classes.push("near");
     if (isLast) classes.push("last", lastDir);
-    if (isBid) classes.push("bid-level");
-    if (isAsk) classes.push("ask-level");
+    if (isBid || depthBid) classes.push("bid-level");
+    if (isAsk || depthAsk) classes.push("ask-level");
 
     rows.push(`
       <div class="${classes.join(" ")}"${isLast ? " data-current=\"true\"" : ""}>
-        <div class="dom-cell dom-ask">${isAsk && Number.isFinite(book.askVolume) ? fmt(book.askVolume, 0) : ""}</div>
+        <div class="dom-cell dom-ask">${Number.isFinite(askQty) ? fmt(askQty, 0) : isAsk && Number.isFinite(book.askVolume) ? fmt(book.askVolume, 0) : ""}</div>
         <div class="dom-cell dom-price">${fmt(rowPrice)}</div>
-        <div class="dom-cell dom-bid">${isBid && Number.isFinite(book.bidVolume) ? fmt(book.bidVolume, 0) : ""}</div>
+        <div class="dom-cell dom-bid">${Number.isFinite(bidQty) ? fmt(bidQty, 0) : isBid && Number.isFinite(book.bidVolume) ? fmt(book.bidVolume, 0) : ""}</div>
         <div class="dom-cell dom-marks">
           ${marks.map(level => {
             const label = level.label || level.type || "Nivel";
@@ -2952,7 +3390,9 @@ function applyFlowMessage(msg) {
   const bucket = flowBucket(asset);
   bucket.lastMessage = msg;
   bucket.metrics = msg.metrics || {};
-  bucket.trades = mergeByKey(msg.recentTrades, bucket.trades, tradeKey, state.flow.maxTrades);
+  if (!state.rtd.timesTradesByAsset[asset]) {
+    bucket.trades = mergeByKey(msg.recentTrades, bucket.trades, tradeKey, state.flow.maxTrades);
+  }
   bucket.signals = mergeByKey(msg.activeSignals, bucket.signals, signalKey, state.flow.maxSignals);
   if (!sameAsset(asset)) {
     renderAssetList();
@@ -3038,7 +3478,7 @@ function renderFlow() {
 function renderFlowTrades() {
   if (!refs.flowTrades) return;
   if (!state.flow.trades.length) {
-    refs.flowTrades.innerHTML = `<div class="warn-line">Aguardando trades derivados do RTD.</div>`;
+    refs.flowTrades.innerHTML = `<div class="warn-line">Aguardando Times & Trades ou trades derivados do RTD.</div>`;
     return;
   }
 
@@ -3050,7 +3490,7 @@ function renderFlowTrades() {
         <span>${escapeHtml(trade.time || "--")}</span>
         <strong>${fmt(liveNumber(trade.price))}</strong>
         <span>${fmt(liveNumber(trade.qty), 0)}</span>
-        <span>${escapeHtml(side)} ${trade.derived ? "der" : ""}</span>
+        <span>${escapeHtml(side)} ${trade.derived ? "der" : "real"}</span>
       </div>
     `;
   }).join("");
@@ -3084,10 +3524,14 @@ function renderFlowDebug() {
   if (!refs.flowDebugKv) return;
   const m = state.flow.metrics || {};
   const msg = state.flow.lastMessage || {};
+  const depth = liveBookDepthForAsset();
+  const times = state.rtd.timesTradesByAsset[selectedAsset()];
   const rows = [
     ["Qualidade", msg.dataQuality || "unknown"],
     ["Eventos", fmt(liveNumber(m.eventsProcessed), 0)],
     ["Trades derivados", fmt(liveNumber(m.tradesDerived), 0)],
+    ["Book niveis", depth ? `${(depth.bids || []).length} compra / ${(depth.asks || []).length} venda` : "--"],
+    ["Times linhas", times ? fmt((times.trades || []).length, 0) : "--"],
     ["Sinais gerados", fmt(liveNumber(m.signalsGenerated), 0)],
     ["Fila", fmt(liveNumber(m.queueSize), 0)],
     ["Ultimo flow", msg.localTimestamp || "--"],
@@ -3640,6 +4084,49 @@ function applyLiveSnapshot(msg) {
   scheduleLiveRecalc();
 }
 
+function applyBookDepthMessage(msg) {
+  if (!msg || msg.type !== "bookDepth") return;
+  const asset = normalizeAsset(msg.asset);
+  state.rtd.bookDepthByAsset[asset] = msg;
+  if (sameAsset(asset)) {
+    renderDom(state.rtd.lastSnapshot);
+    renderFlowDebug();
+  }
+}
+
+function normalizeTimesTrade(row) {
+  const aggressor = String(row.aggressor || "").toLowerCase();
+  const side = aggressor.includes("compra") || aggressor.includes("buy")
+    ? "buy"
+    : aggressor.includes("venda") || aggressor.includes("sell")
+      ? "sell"
+      : "unknown";
+  return {
+    ...row,
+    side,
+    derived: false,
+    time: row.time || "--",
+    price: liveNumber(row.price),
+    qty: liveNumber(row.qty),
+  };
+}
+
+function applyTimesTradesMessage(msg) {
+  if (!msg || msg.type !== "timesTrades") return;
+  const asset = normalizeAsset(msg.asset);
+  state.rtd.timesTradesByAsset[asset] = msg;
+  const bucket = flowBucket(asset);
+  bucket.trades = Array.isArray(msg.trades)
+    ? msg.trades.map(normalizeTimesTrade).filter(trade => Number.isFinite(trade.price)).slice(0, state.flow.maxTrades)
+    : [];
+  if (sameAsset(asset)) {
+    syncSelectedFlow();
+    renderDomTape();
+    renderFlowTrades();
+    renderFlowDebug();
+  }
+}
+
 function rtdWebSocketUrl() {
   if (location.protocol === "http:" || location.protocol === "https:") {
     const scheme = location.protocol === "https:" ? "wss" : "ws";
@@ -3674,6 +4161,10 @@ function connectRtdLive() {
 
     if (msg.type === "snapshot") {
       applyLiveSnapshot(msg);
+    } else if (msg.type === "bookDepth") {
+      applyBookDepthMessage(msg);
+    } else if (msg.type === "timesTrades") {
+      applyTimesTradesMessage(msg);
     } else if (msg.type === "flow") {
       applyFlowMessage(msg);
     } else if (msg.type === "signal") {
@@ -3710,20 +4201,20 @@ function disconnectRtdLive() {
   setRtdStatus("warn", "Manual");
 }
 
-async function handleFile(file) {
-  if (!file) return;
-  refs.fileName.textContent = file.name;
-  const buffer = await file.arrayBuffer();
-  const decoded = decodeCsv(buffer);
-  const parsed = parseDailyCsv(decoded.text);
+function applyCsvContent(text, fileName, encoding, targets = {}) {
+  const statusEl = targets.statusEl || refs.fileStatus;
+  const fileNameEl = targets.fileNameEl || refs.fileName;
+  const pillEl = targets.pillEl || refs.filePill;
+  if (fileNameEl) fileNameEl.textContent = fileName;
+  const parsed = parseDailyCsv(text);
   if (!parsed.ok) {
     state.bars = [];
     state.uploadedCount = 0;
     state.latest = null;
     updateReady();
-    showStatus(refs.fileStatus, "bad", parsed.message);
-    setPill(refs.filePill, "bad", "CSV invalido");
-    return;
+    if (statusEl) showStatus(statusEl, "bad", parsed.message);
+    if (pillEl) setPill(pillEl, "bad", "CSV invalido");
+    return { ok: false, parsed };
   }
   const activeBars = parsed.bars.slice(-63);
   state.uploadedCount = parsed.bars.length;
@@ -3732,13 +4223,162 @@ async function handleFile(file) {
   autoFillIntraday(state.latest);
   if (state.rtd.enabled && state.rtd.lastSnapshot) applyLiveSnapshot(state.rtd.lastSnapshot);
   const ativo = state.latest.ativo || "WDO";
-  const message = `${parsed.bars.length} pregoes carregados | usando ultimos ${activeBars.length}: ${brDate(activeBars[0].date)} a ${brDate(state.latest.date)} | ${decoded.encoding}`;
-  showStatus(refs.fileStatus, activeBars.length >= 63 ? "ok" : "warn", message);
-  setPill(refs.filePill, "ok", `${ativo} ${activeBars.length}d ativos`);
+  const message = `${parsed.bars.length} pregoes carregados | usando ultimos ${activeBars.length}: ${brDate(activeBars[0].date)} a ${brDate(state.latest.date)} | ${encoding}`;
+  if (statusEl) showStatus(statusEl, activeBars.length >= 63 ? "ok" : "warn", message);
+  if (pillEl) setPill(pillEl, "ok", `${ativo} ${activeBars.length}d ativos`);
   setPill(refs.datePill, "", brDate(state.latest.date));
   updateReady();
   recalc();
+  return { ok: true, parsed };
 }
+
+async function handleFile(file, targets = {}) {
+  if (!file) return null;
+  const buffer = await file.arrayBuffer();
+  const decoded = decodeCsv(buffer);
+  const result = applyCsvContent(decoded.text, file.name, decoded.encoding, targets);
+  if (result?.ok && targets.keepDraft) {
+    state.assetEditor.draftCsvText = decoded.text;
+    state.assetEditor.draftCsvName = file.name;
+  }
+  return { ...result, text: decoded.text, fileName: file.name };
+}
+
+async function saveAssetForm(enabledOverride = null) {
+  const payload = assetFormPayload(enabledOverride);
+  if (!payload.asset) return;
+
+  try {
+    setAssetFormStatus("warn", "Salvando");
+    const res = await fetch("/assets", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    const msg = await res.json();
+    updateAssetsMessage(msg);
+    selectAsset(payload.asset);
+
+    if (state.assetEditor.draftCsvText) {
+      await saveDraftHistory(payload.asset);
+    }
+
+    setAssetFormStatus("ok", "Salvo");
+  } catch (err) {
+    setAssetFormStatus("bad", "Falha salvar");
+  }
+}
+
+async function saveDraftHistory(asset = selectedAsset()) {
+  if (!state.assetEditor.draftCsvText) return;
+
+  const res = await fetch("/assets/history", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      asset,
+      fileName: state.assetEditor.draftCsvName || "history.csv",
+      csvText: state.assetEditor.draftCsvText,
+    }),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  const msg = await res.json();
+  const item = selectedAssetConfig();
+  if (item && sameAsset(msg.asset)) {
+    item.history = msg.history;
+    populateAssetForm(item);
+    renderAssetScreenList();
+  }
+  state.assetEditor.draftCsvText = null;
+  state.assetEditor.draftCsvName = null;
+  state.assetEditor.loadedHistoryAsset = normalizeAsset(asset);
+}
+
+async function loadSavedAssetHistory(asset = selectedAsset()) {
+  try {
+    const res = await fetch(`/assets/history?asset=${encodeURIComponent(asset)}`);
+    if (!res.ok) return;
+    const msg = await res.json();
+    if (!msg.csvText || !sameAsset(msg.asset, asset)) return;
+    applyCsvContent(msg.csvText, msg.history?.fileName || "history.csv", "utf-8", {
+      statusEl: refs.assetHistoryStatus,
+      fileNameEl: refs.assetHistoryFileName,
+      pillEl: refs.filePill,
+    });
+    refs.assetHistoryName.textContent = msg.history?.fileName || "history.csv";
+  } catch (_) {}
+}
+
+async function deleteSelectedAsset() {
+  await deleteAsset(selectedAsset());
+  populateAssetForm(selectedAssetConfig());
+}
+
+refs.mainTabs.addEventListener("click", ev => {
+  const tab = ev.target.closest("[data-main-tab]");
+  if (!tab) return;
+  showMainTab(tab.dataset.mainTab);
+});
+
+refs.assetSave.addEventListener("click", () => saveAssetForm());
+refs.assetView.addEventListener("click", () => {
+  const payload = assetFormPayload();
+  selectAsset(payload.asset);
+  showMainTab("panorama");
+});
+refs.assetEnable.addEventListener("click", () => saveAssetForm(true));
+refs.assetDisable.addEventListener("click", () => saveAssetForm(false));
+refs.assetDeleteSelected.addEventListener("click", deleteSelectedAsset);
+
+refs.assetScreenList.addEventListener("click", ev => {
+  const view = ev.target.closest("[data-asset-screen-view]");
+  if (view) {
+    selectAsset(view.dataset.assetScreenView);
+    populateAssetForm(selectedAssetConfig());
+    return;
+  }
+
+  const toggle = ev.target.closest("[data-asset-toggle]");
+  if (toggle) {
+    toggleAsset(toggle.dataset.assetToggle, toggle.dataset.enabled === "true");
+    return;
+  }
+
+  const remove = ev.target.closest("[data-asset-delete]");
+  if (remove) {
+    deleteAsset(remove.dataset.assetDelete);
+  }
+});
+
+refs.assetCode.addEventListener("input", () => {
+  const value = normalizeAsset(refs.assetCode.value);
+  if (!refs.assetPriceTopic.value || sameAsset(refs.assetPriceTopic.value, selectedAsset())) {
+    refs.assetPriceTopic.value = value;
+  }
+});
+
+refs.assetHistoryFile.addEventListener("change", ev => handleFile(ev.target.files[0], {
+  statusEl: refs.assetHistoryStatus,
+  fileNameEl: refs.assetHistoryFileName,
+  pillEl: refs.filePill,
+  keepDraft: true,
+}));
+
+["dragenter", "dragover"].forEach(evt => refs.assetHistoryDropzone.addEventListener(evt, ev => {
+  ev.preventDefault();
+  refs.assetHistoryDropzone.classList.add("drag");
+}));
+["dragleave", "drop"].forEach(evt => refs.assetHistoryDropzone.addEventListener(evt, ev => {
+  ev.preventDefault();
+  refs.assetHistoryDropzone.classList.remove("drag");
+}));
+refs.assetHistoryDropzone.addEventListener("drop", ev => handleFile(ev.dataTransfer.files[0], {
+  statusEl: refs.assetHistoryStatus,
+  fileNameEl: refs.assetHistoryFileName,
+  pillEl: refs.filePill,
+  keepDraft: true,
+}));
 
 refs.file.addEventListener("change", ev => handleFile(ev.target.files[0]));
 ["dragenter", "dragover"].forEach(evt => refs.dropzone.addEventListener(evt, ev => {
@@ -3927,9 +4567,7 @@ refs.canvas.addEventListener("pointermove", ev => {
 document.getElementById("tabs").addEventListener("click", ev => {
   const tab = ev.target.closest("[data-tab]");
   if (!tab) return;
-  document.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t === tab));
-  document.querySelectorAll(".tab-panel").forEach(panel => panel.classList.add("hidden"));
-  document.getElementById(`panel-${tab.dataset.tab}`).classList.remove("hidden");
+  activateSubTab(tab.dataset.tab);
 });
 
 setPill(refs.datePill, "", new Date().toLocaleDateString("pt-BR"));
@@ -3948,6 +4586,7 @@ renderDom();
 renderFlow();
 renderSignals();
 renderFlowDebug();
+showMainTab(state.ui.mainTab);
 loadAssets();
 connectRtdLive();
 </script>

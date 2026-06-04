@@ -25,11 +25,11 @@ Profit Pro conectado
 
 O coletor pode assinar varios ativos RTD ao mesmo tempo. No dashboard, a secao `Ativos RTD` permite adicionar um simbolo, escolher qual ativo a tela esta exibindo, ligar/desligar, excluir e escolher quais canais RTD ficam ativos para cada simbolo:
 
-- `Cotacao`: preco, abertura, maxima, minima, media/VWAP proxy e metadados;
-- `Book`: oferta de compra/venda, volume na melhor compra/venda e volume projetado;
-- `Times`: ultimo preco, quantidade do ultimo negocio, negocios, quantidade e volume.
+- `Preco`: ativo do Profit, campos de preco/indicadores e intraday;
+- `Book`: topico de book como `BOOK0`, com profundidade padrao de 50 niveis;
+- `Times`: topico Times & Trades como `T&T0`, com janela padrao de 100 linhas.
 
-Nesta fase, `Book` e `Times` usam os campos RTD disponiveis no Profit (`OCP`, `OVD`, `VOC`, `VOV`, `QUL`, `NEG`, `QTT`, `VOL`). Isso alimenta topo de book e tape derivado. Book multi-nivel e Times & Trades completo podem ser conectados depois se o Profit expuser formulas/servidores RTD especificos.
+O cadastro operacional fica na aba principal `Ativos`. O app salva a configuracao em `data/assets/assets.json` e o CSV historico em `data/assets/{ativo}/history.csv`.
 
 O historico diario continua sendo carregado por CSV no navegador. O RTD preenche os campos intraday usados pelo motor quant:
 
@@ -40,7 +40,16 @@ O historico diario continua sendo carregado por CSV no navegador. O RTD preenche
 - VWAP/ancora opcional: `MED`
 - Volume acumulado: `VOL`
 
-A primeira aba principal do dashboard e `DOM`. Ela mostra:
+O menu superior separa as telas por funcionalidade:
+
+- `Ativos`: cadastro, CSV historico, ligar/desligar e excluir;
+- `Panorama`: grafico, niveis, abertura, POC, variacao, profile e backtest;
+- `DOM`: escada de preco e pontos principais;
+- `Fluxo`: delta, book, tape e metricas de order flow;
+- `Setups`: sinais ativos e recentes;
+- `Diagnostico`: RTD, WebSocket e debug de fluxo.
+
+A aba `DOM` mostra:
 
 - escada de preco em ticks de 0,5 ponto ao redor do ultimo preco;
 - tape recente com movimento tick a tick;
@@ -67,9 +76,12 @@ Use o MSBuild do Visual Studio 2022/Build Tools. O MSBuild antigo de `C:\Windows
 1. Abra o Profit Pro e deixe conectado.
 2. Execute `ColetorProfitRTD.exe`.
 3. Abra `http://localhost:5000`.
-4. Carregue o CSV diario no HTML.
-5. Deixe o modo `RTD Live` ativo para preencher o intraday automaticamente.
-6. Em `Ativos RTD`, adicione novos simbolos, clique em `Ver` para selecionar o ativo da tela, use `Ligado/Desligado` para controlar a assinatura RTD daquele ativo, marque/desmarque canais e use `Excluir` para remover um RTD da lista.
+4. Abra `Ativos`.
+5. Cadastre o codigo de preco, por exemplo `WDON26_G_0`.
+6. Configure `BOOK0` e `T&T0`, ou os topicos equivalentes do Profit.
+7. Carregue o CSV historico do ativo.
+8. Clique em `Salvar` e depois em `Ver`.
+9. Deixe o modo `RTD Live` ativo para preencher o intraday automaticamente.
 
 Para uma prova minima sem dashboard:
 
@@ -91,6 +103,8 @@ POST /assets
 POST /assets/toggle
 POST /assets/channels
 POST /assets/delete
+POST /assets/history
+GET /assets/history?asset=WDON26_G_0
 DELETE /assets
 WS  /ws
 ```
@@ -99,14 +113,16 @@ WS  /ws
 
 Edite `src/ColetorProfitRTD/appsettings.json`:
 
-- `Rtd.Asset`: ativo RTD, padrao `WDOFUT_F_0`
-- `Rtd.Assets`: ativos cadastrados ao iniciar o aplicativo
+- `Rtd.Asset`: ativo RTD padrao usado como semente quando ainda nao existe `data/assets/assets.json`
+- `Rtd.Assets`: ativos cadastrados ao primeiro iniciar
 - `Rtd.ActiveAssets`: ativos que ja iniciam ligados
-- `Rtd.AssetChannels`: canais habilitados por ativo
-- `Rtd.ChannelFields`: campos RTD usados em cada canal
-- `Rtd.Fields`: campos assinados no RTD
+- `Rtd.AssetChannels`: canais habilitados na importacao inicial
+- `Rtd.ChannelFields`: compatibilidade com o modo simples antigo
+- `Rtd.Fields`: compatibilidade com o modo simples antigo
 - `Web.HttpPort`: porta HTTP/WebSocket
 - `Storage.Enabled`: liga/desliga SQLite auxiliar
+
+Depois que a tela `Ativos` salva a primeira configuracao, o runtime passa a usar `data/assets/assets.json`.
 
 Exemplo para iniciar com dois ativos cadastrados, mas apenas WDO ligado:
 
@@ -116,8 +132,8 @@ Exemplo para iniciar com dois ativos cadastrados, mas apenas WDO ligado:
   "Assets": ["WDOFUT_F_0", "WINFUT_F_0"],
   "ActiveAssets": ["WDOFUT_F_0"],
   "AssetChannels": {
-    "WDOFUT_F_0": ["quote", "book", "timesTrades"],
-    "WINFUT_F_0": ["quote", "book"]
+    "WDOFUT_F_0": ["price", "book", "timesTrades"],
+    "WINFUT_F_0": ["price", "book"]
   }
 }
 ```
@@ -143,5 +159,6 @@ logs/                   logs em runtime
 3. x64/x86: testar ambas se o COM nao registrar na primeira arquitetura.
 4. CSV + RTD: carregar CSV e confirmar que o RTD atualiza os campos intraday.
 5. Manual: desligar `RTD Live` e editar os campos manualmente.
-6. Multiativo: adicionar um novo ativo em `Ativos RTD`, ligar/desligar, trocar canais, excluir e confirmar `/assets`.
-7. SQLite: confirmar criacao de `data/marketdata.sqlite` quando o provider for restaurado pelo NuGet.
+6. Multiativo: adicionar um novo ativo em `Ativos`, ligar/desligar, trocar fontes, excluir e confirmar `/assets`.
+7. Book/T&T: confirmar mensagens `bookDepth` e `timesTrades` no WebSocket quando `BOOK0` e `T&T0` estiverem ligados.
+8. SQLite: confirmar criacao de `data/marketdata.sqlite` quando o provider for restaurado pelo NuGet.

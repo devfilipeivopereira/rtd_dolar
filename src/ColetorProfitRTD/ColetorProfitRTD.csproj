@@ -99,6 +99,8 @@
     <Compile Include="MarketData\ValueParser.cs" />
     <Compile Include="Rtd\IRtdServer.cs" />
     <Compile Include="Rtd\IRtdUpdateEvent.cs" />
+    <Compile Include="Rtd\AssetConfig.cs" />
+    <Compile Include="Rtd\AssetRegistry.cs" />
     <Compile Include="Rtd\RtdClient.cs" />
     <Compile Include="Rtd\RtdFieldCatalog.cs" />
     <Compile Include="Rtd\RtdTopic.cs" />
@@ -115,6 +117,10 @@
     </None>
     <None Include="..\dashboard\index.html">
       <Link>dashboard\index.html</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\dashboard\favicon.svg">
+      <Link>dashboard\favicon.svg</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

@@ -1,10 +1,16 @@
 # Campos RTD
 
-## Campos assinados por padrao
+## Fontes RTD assinadas por padrao
 
-Estes campos estao em `src/ColetorProfitRTD/appsettings.json` e sao suficientes para o MVP:
+O cadastro atual e feito na tela `Ativos` e salvo em `data/assets/assets.json`. Cada ativo pode ter tres fontes:
 
-O conjunto de campos assinado depende dos canais habilitados para cada ativo em `Rtd.AssetChannels` ou pelo controle `Ativos RTD` do dashboard.
+- `Preco`: topico do ativo, por exemplo `WDON26_G_0`;
+- `Book`: topico de book, por exemplo `BOOK0`;
+- `Times & Trades`: topico de negocios, por exemplo `T&T0`.
+
+`appsettings.json` continua existindo como semente inicial e compatibilidade.
+
+## Preco e indicadores
 
 | Codigo | Uso |
 |---|---|
@@ -15,26 +21,74 @@ O conjunto de campos assinado depende dos canais habilitados para cada ativo em 
 | MAX | Maxima parcial |
 | MIN | Minima parcial |
 | FEC | Fechamento anterior |
-| VAR | Variacao percentual |
-| VARPTS | Variacao em pontos |
-| MED | Media, usada como proxy opcional de VWAP/ancora |
 | NEG | Negocios |
-| QUL | Quantidade do ultimo negocio |
 | QTT | Quantidade |
 | VOL | Volume acumulado |
 | OCP | Oferta de compra |
 | OVD | Oferta de venda |
-| VOC | Volume oferta compra |
-| VOV | Volume oferta venda |
 | AJU | Ajuste |
 | AJA | Ajuste anterior |
-| VPJ | Volume projetado |
-| VEN | Vencimento |
-| VAL | Validade |
-| CAB | Contratos abertos |
-| EST | Estado atual |
+| 103 | TR - Saldo acumulado de agressao |
+| 98 | TR - Volume de agressao compra |
+| 100 | TR - Volume de agressao saldo |
+| 99 | TR - Volume de agressao venda |
+| 67 | VWAP |
 
-## Formula RTD
+## Book de ofertas
+
+Formula especial:
+
+```text
+=RTD("rtdtrading.rtdserver";; "BOOK0"; "INFO"; "ATV")
+=RTD("rtdtrading.rtdserver";; "BOOK0"; "INFO"; "TAB")
+```
+
+Por nivel, de `0` a `49` por padrao:
+
+```text
+=RTD("rtdtrading.rtdserver";; "BOOK0"; "OCP"; 0)
+```
+
+Campos:
+
+| Codigo | Uso |
+|---|---|
+| HORC | Hora da compra |
+| ACP | Agente comprador |
+| VOC | Quantidade na compra |
+| OCP | Preco de compra |
+| OVD | Preco de venda |
+| VOV | Quantidade na venda |
+| AVD | Agente vendedor |
+| HORV | Hora da venda |
+
+## Times & Trades
+
+Formula especial:
+
+```text
+=RTD("rtdtrading.rtdserver";; "T&T0"; "INFO"; "ATV")
+=RTD("rtdtrading.rtdserver";; "T&T0"; "INFO"; "TAB")
+```
+
+Por linha, de `0` a `99` por padrao:
+
+```text
+=RTD("rtdtrading.rtdserver";; "T&T0"; "PRE"; 0)
+```
+
+Campos:
+
+| Codigo | Uso |
+|---|---|
+| DAT | Data/hora da linha |
+| ACP | Compradora |
+| PRE | Preco |
+| QUL | Quantidade |
+| AVD | Vendedora |
+| AGR | Agressor |
+
+## Formula RTD simples de preco
 
 Formato usado pelo Profit:
 
@@ -42,7 +96,7 @@ Formato usado pelo Profit:
 =RTD("RTDTrading.RTDServer";; "WDOFUT_F_0"; "ULT")
 ```
 
-No app:
+No app, a tela `Ativos` monta esta chamada sem colagem livre de formula:
 
 - servidor COM: `RTDTrading.RTDServer`;
 - ativo: `WDOFUT_F_0`, `WINFUT_F_0` ou outro simbolo aceito pelo Profit;
@@ -68,10 +122,8 @@ Os canais atuais agrupam os campos assim:
 
 | Canal | Campos | Uso |
 |---|---|---|
-| `quote` | `DAT`, `HOR`, `ULT`, `ABE`, `MAX`, `MIN`, `FEC`, `VAR`, `VARPTS`, `MED`, `AJU`, `AJA`, `VEN`, `VAL`, `CAB`, `EST` | cotacao e intraday principal |
-| `book` | `OCP`, `OVD`, `VOC`, `VOV`, `VPJ` | topo de book e volume projetado |
-| `timesTrades` | `DAT`, `HOR`, `ULT`, `QUL`, `NEG`, `QTT`, `VOL` | ultimo negocio e tape derivado |
+| `price` | `DAT`, `HOR`, `ULT`, `ABE`, `MAX`, `MIN`, `FEC`, `NEG`, `QTT`, `VOL`, `OCP`, `OVD`, `AJU`, `AJA`, `103`, `98`, `100`, `99`, `67` | preco, intraday e indicadores |
+| `book` | `INFO/ATV`, `INFO/TAB`, `HORC`, `ACP`, `VOC`, `OCP`, `OVD`, `VOV`, `AVD`, `HORV` por nivel | book multi-nivel |
+| `timesTrades` | `INFO/ATV`, `INFO/TAB`, `DAT`, `ACP`, `PRE`, `QUL`, `AVD`, `AGR` por linha | Times & Trades real |
 
-O mapeamento fica em `Rtd.ChannelFields`. Quando um canal e alterado no dashboard, o app desassina e reassina o ativo com a nova uniao de campos.
-
-Observacao: `book` e `timesTrades` ainda usam campos RTD do `RTDTrading.RTDServer`. Eles nao representam book multi-nivel nem Times & Trades completo ate que os RTDs especificos sejam adicionados.
+Quando uma fonte e alterada na tela `Ativos`, o app desassina e reassina o ativo com os topicos novos.

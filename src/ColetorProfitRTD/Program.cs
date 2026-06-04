@@ -36,7 +36,12 @@ namespace ColetorProfitRTD
             string staticRoot = ResolveStaticRoot(config.Web.StaticFilesPath);
             log.Info("Dashboard: " + staticRoot);
 
-            var rtdClient = new RtdClient(config.Rtd, log);
+            string assetsRoot = ResolveWritableDirectory("data/assets");
+            var assetRegistry = new AssetRegistry(assetsRoot, config.Rtd, log);
+            assetRegistry.Initialize();
+            log.Info("Ativos: " + assetsRoot);
+
+            var rtdClient = new RtdClient(config.Rtd, assetRegistry, log);
             var flowProcessor = new FlowProcessor(config.Flow, log);
             var store = new SqliteSnapshotStore(config.Storage, log);
 
@@ -62,6 +67,18 @@ namespace ColetorProfitRTD
                 string json = JsonHelper.Serialize(snapshot.ToLiveMessage());
                 Task.Run(() => hub.BroadcastAsync(json));
                 flowProcessor.Post(snapshot);
+            };
+
+            rtdClient.BookDepthReceived += message =>
+            {
+                string json = JsonHelper.Serialize(message);
+                Task.Run(() => hub.BroadcastAsync(json));
+            };
+
+            rtdClient.TimesTradesReceived += message =>
+            {
+                string json = JsonHelper.Serialize(message);
+                Task.Run(() => hub.BroadcastAsync(json));
             };
 
             flowProcessor.FlowUpdated += (message, metrics) =>
@@ -103,10 +120,12 @@ namespace ColetorProfitRTD
                 () => flowProcessor.CurrentFlowMessage(),
                 () => flowProcessor.CurrentSignalsMessage(),
                 () => BuildAssets(rtdClient),
-                body => AddAsset(rtdClient, body),
+                body => SaveAsset(rtdClient, body),
                 body => ToggleAsset(rtdClient, body),
                 body => DeleteAsset(rtdClient, flowProcessor, body),
                 body => UpdateAssetChannels(rtdClient, body),
+                body => SaveAssetHistory(assetRegistry, body),
+                asset => LoadAssetHistory(assetRegistry, asset),
                 hub,
                 log))
             {
@@ -203,16 +222,32 @@ namespace ColetorProfitRTD
                 ["type"] = "assets",
                 ["assets"] = rtdClient.AssetStates(),
                 ["availableChannels"] = RtdFieldCatalog.DefaultChannels.ToList(),
+                ["rtdSchemas"] = new Dictionary<string, object>
+                {
+                    ["price"] = new Dictionary<string, object>
+                    {
+                        ["defaultFields"] = RtdFieldCatalog.DefaultPriceFields.ToList()
+                    },
+                    ["book"] = new Dictionary<string, object>
+                    {
+                        ["defaultTopic"] = "BOOK0",
+                        ["defaultDepth"] = 50,
+                        ["defaultFields"] = RtdFieldCatalog.DefaultBookFields.ToList()
+                    },
+                    ["timesTrades"] = new Dictionary<string, object>
+                    {
+                        ["defaultTopic"] = "T&T0",
+                        ["defaultRows"] = 100,
+                        ["defaultFields"] = RtdFieldCatalog.DefaultTimesFields.ToList()
+                    }
+                },
                 ["localTimestamp"] = DateTimeOffset.Now.ToString("o")
             };
         }
 
-        private static Dictionary<string, object> AddAsset(RtdClient rtdClient, Dictionary<string, object> body)
+        private static Dictionary<string, object> SaveAsset(RtdClient rtdClient, Dictionary<string, object> body)
         {
-            string asset = GetString(body, "asset");
-            bool enabled = GetBool(body, "enabled", true);
-            List<string> channels = GetStringList(body, "channels");
-            Dictionary<string, object> state = rtdClient.AddAsset(asset, enabled, channels);
+            Dictionary<string, object> state = rtdClient.SaveAsset(body);
 
             return new Dictionary<string, object>
             {
@@ -259,9 +294,7 @@ namespace ColetorProfitRTD
 
         private static Dictionary<string, object> ToggleAsset(RtdClient rtdClient, Dictionary<string, object> body)
         {
-            string asset = GetString(body, "asset");
-            bool enabled = GetBool(body, "enabled", true);
-            Dictionary<string, object> state = rtdClient.SetAssetEnabled(asset, enabled);
+            Dictionary<string, object> state = rtdClient.ToggleAsset(body);
 
             return new Dictionary<string, object>
             {
@@ -271,6 +304,27 @@ namespace ColetorProfitRTD
                 ["availableChannels"] = RtdFieldCatalog.DefaultChannels.ToList(),
                 ["localTimestamp"] = DateTimeOffset.Now.ToString("o")
             };
+        }
+
+        private static Dictionary<string, object> SaveAssetHistory(AssetRegistry assetRegistry, Dictionary<string, object> body)
+        {
+            Dictionary<string, object> saved = assetRegistry.SaveHistory(body);
+
+            return new Dictionary<string, object>
+            {
+                ["type"] = "assetHistory",
+                ["asset"] = saved["asset"],
+                ["history"] = saved["history"],
+                ["localTimestamp"] = DateTimeOffset.Now.ToString("o")
+            };
+        }
+
+        private static Dictionary<string, object> LoadAssetHistory(AssetRegistry assetRegistry, string asset)
+        {
+            Dictionary<string, object> history = assetRegistry.LoadHistory(asset);
+            history["type"] = "assetHistory";
+            history["localTimestamp"] = DateTimeOffset.Now.ToString("o");
+            return history;
         }
 
         private static string GetString(Dictionary<string, object> body, string key)
@@ -386,6 +440,30 @@ namespace ColetorProfitRTD
             }
 
             return Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, path));
+        }
+
+        private static string ResolveWritableDirectory(string configuredPath)
+        {
+            string path = configuredPath ?? "data";
+
+            if (Path.IsPathRooted(path))
+            {
+                Directory.CreateDirectory(path);
+                return path;
+            }
+
+            string cwdPath = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), path));
+            string cwdParent = Path.GetDirectoryName(cwdPath);
+
+            if (!string.IsNullOrWhiteSpace(cwdParent) && Directory.Exists(cwdParent))
+            {
+                Directory.CreateDirectory(cwdPath);
+                return cwdPath;
+            }
+
+            string outputPath = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, path));
+            Directory.CreateDirectory(outputPath);
+            return outputPath;
         }
     }
 
