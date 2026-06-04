@@ -63,7 +63,7 @@ button{cursor:pointer}
 .main-tab.active{border-color:#1f8a70;background:#092217;color:#b9ffe9}
 .top-meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
 .market-strip{
-  min-height:48px;display:grid;grid-template-columns:minmax(210px,.9fr) repeat(6,minmax(120px,1fr));
+  min-height:48px;display:grid;grid-template-columns:minmax(210px,.9fr) repeat(8,minmax(120px,1fr));
   gap:0;border-bottom:1px solid var(--line);background:#080908;position:sticky;top:64px;z-index:19;
 }
 .terminal-metric{
@@ -81,8 +81,10 @@ button{cursor:pointer}
   width:100%;height:28px;border:1px solid var(--line);background:#10141a;color:var(--txt);
   font-family:var(--mono);font-size:12px;font-weight:900;outline:none;
 }
-.module-hotbar{display:none;align-items:center;gap:4px;border-bottom:1px solid var(--line);background:#11161c;padding:6px 10px;overflow:auto}
+.module-hotbar{display:flex;align-items:center;gap:4px;border-bottom:1px solid var(--line);background:#11161c;padding:6px 10px;overflow:auto;position:sticky;top:112px;z-index:18}
 .module-hotbar .main-tab{height:30px;font-size:10px}
+.module-hotbar .main-tab.active{border-color:#1f8a70;background:#092217;color:#b9ffe9}
+.hotkey{display:inline-flex;align-items:center;justify-content:center;min-height:18px;margin-right:6px;padding:0 5px;border:1px solid #39424f;background:#0B0C0A;color:#9aa7b5;font-size:9px;font-weight:900}
 .pill{
   display:inline-flex;align-items:center;justify-content:center;gap:7px;
   height:30px;padding:0 10px;border:1px solid var(--line);border-radius:6px;
@@ -459,7 +461,7 @@ tr:hover td{background:#ffffff05}
 @media(max-width:1180px){
   .layout{grid-template-columns:1fr}
   .market-strip{top:0;position:relative;grid-template-columns:repeat(2,minmax(0,1fr))}
-  .module-hotbar{display:flex}
+  .module-hotbar{top:0;position:relative}
   .main-tabs{justify-content:flex-start}
   .sidebar{max-height:none;border-right:0;border-bottom:1px solid var(--line)}
   .asset-workbench{grid-template-columns:1fr}
@@ -559,6 +561,18 @@ tr:hover td{background:#ffffff05}
     <div class="terminal-metric"><span>Msg/s</span><strong id="top-rate">--</strong></div>
     <div class="terminal-metric"><span>CSV</span><strong id="top-csv">--</strong></div>
   </section>
+
+  <nav class="module-hotbar" id="module-hotbar">
+    <button class="main-tab" data-hot-tab="monitor" type="button"><span class="hotkey">Alt+1</span>Monitor</button>
+    <button class="main-tab" data-hot-tab="dom" type="button"><span class="hotkey">Alt+2</span>DOM</button>
+    <button class="main-tab" data-hot-tab="book" type="button"><span class="hotkey">Alt+3</span>Book</button>
+    <button class="main-tab" data-hot-tab="times" type="button"><span class="hotkey">Alt+4</span>T&amp;T</button>
+    <button class="main-tab" data-hot-tab="flow" type="button"><span class="hotkey">Alt+5</span>Fluxo</button>
+    <button class="main-tab" data-hot-tab="orders" type="button"><span class="hotkey">Alt+6</span>Boleta</button>
+    <button class="main-tab" data-hot-tab="assets" type="button"><span class="hotkey">Alt+7</span>Ativos</button>
+    <button class="main-tab" data-hot-tab="connections" type="button"><span class="hotkey">Alt+8</span>Conexoes</button>
+    <button class="main-tab" data-hot-tab="diagnostics" type="button"><span class="hotkey">Alt+9</span>Sistema</button>
+  </nav>
 
   <section class="asset-screen active" id="asset-screen">
     <div class="asset-workbench">
@@ -1702,6 +1716,17 @@ function saveUiSettings(settings) {
 }
 
 const MAIN_TABS = ["dashboard", "monitor", "assets", "quotes", "panorama", "dom", "book", "times", "flow", "signals", "orders", "alerts", "risk", "history", "settings", "connections", "diagnostics"];
+const HOTKEY_TABS = {
+  "1": "monitor",
+  "2": "dom",
+  "3": "book",
+  "4": "times",
+  "5": "flow",
+  "6": "orders",
+  "7": "assets",
+  "8": "connections",
+  "9": "diagnostics",
+};
 
 const state = {
   ui: {
@@ -1822,6 +1847,7 @@ const PERCENT_VARIATIONS = [3, 2.5, 2, 1.5, 1, 0.5, 0, -0.5, -1, -1.5, -2, -2.5,
 const refs = {
   app: document.querySelector(".app"),
   mainTabs: document.getElementById("main-tabs"),
+  moduleHotbar: document.getElementById("module-hotbar"),
   assetScreen: document.getElementById("asset-screen"),
   terminalMain: document.getElementById("terminal-main"),
   topAssetSelect: document.getElementById("top-asset-select"),
@@ -2997,6 +3023,8 @@ function renderSettings() {
   const notes = [
     `DOM monta ${settings.domVisibleTicks} niveis em torno do ultimo preco do ativo selecionado.`,
     `Render live consolida atualizacoes a cada ${settings.liveIntervalMs} ms para preservar fluidez.`,
+    "Atalhos: Alt+1 Monitor, Alt+2 DOM, Alt+3 Book, Alt+4 T&T, Alt+5 Fluxo.",
+    "Atalhos: Alt+6 Boleta, Alt+7 Ativos, Alt+8 Conexoes, Alt+9 Sistema.",
     Number.isFinite(settings.defaultPointValue)
       ? "Valor por ponto aplicado em Boleta e Risco quando os campos estiverem vazios."
       : "Valor por ponto permanece manual em Boleta e Risco.",
@@ -3149,6 +3177,9 @@ function showMainTab(tabName) {
   saveMainTab(safe);
   refs.mainTabs.querySelectorAll("[data-main-tab]").forEach(btn => {
     btn.classList.toggle("active", btn.dataset.mainTab === safe);
+  });
+  refs.moduleHotbar.querySelectorAll("[data-hot-tab]").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.hotTab === safe);
   });
 
   const assetsMode = safe === "assets";
@@ -6119,6 +6150,23 @@ refs.mainTabs.addEventListener("click", ev => {
   const tab = ev.target.closest("[data-main-tab]");
   if (!tab) return;
   showMainTab(tab.dataset.mainTab);
+});
+
+refs.moduleHotbar.addEventListener("click", ev => {
+  const tab = ev.target.closest("[data-hot-tab]");
+  if (!tab) return;
+  showMainTab(tab.dataset.hotTab);
+});
+
+document.addEventListener("keydown", ev => {
+  if (!ev.altKey || ev.ctrlKey || ev.metaKey || ev.shiftKey) return;
+  const target = ev.target;
+  const isTyping = target?.matches?.("input, textarea, select") || target?.isContentEditable;
+  if (isTyping) return;
+  const tab = HOTKEY_TABS[ev.key];
+  if (!tab) return;
+  ev.preventDefault();
+  showMainTab(tab);
 });
 
 refs.topAssetSelect.addEventListener("change", ev => {

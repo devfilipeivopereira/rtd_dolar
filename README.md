@@ -60,6 +60,8 @@ O menu superior separa as telas por funcionalidade e a faixa superior mostra ati
 - `Conexoes`: estado do coletor, Profit RTD, WebSocket, `/health` e fontes por ativo;
 - `Sistema`: RTD, WebSocket, telemetria de mensagens e debug de fluxo.
 
+A hotbar abaixo da faixa superior abre telas com clique ou teclado: `Alt+1` Monitor, `Alt+2` DOM, `Alt+3` Book, `Alt+4` T&T, `Alt+5` Fluxo, `Alt+6` Boleta, `Alt+7` Ativos, `Alt+8` Conexoes e `Alt+9` Sistema.
+
 A aba `DOM` mostra:
 
 - escada de preco em ticks de 0,5 ponto ao redor do ultimo preco;
@@ -99,6 +101,7 @@ Use o MSBuild do Visual Studio 2022/Build Tools. O MSBuild antigo de `C:\Windows
 13. Abra `Conexoes` para confirmar coletor, Profit RTD, WebSocket, arquitetura e fontes por ativo.
 14. Deixe o modo `RTD Live` ativo para preencher o intraday automaticamente.
 15. Confira `Latencia WS` e `Msg/s` na faixa superior ou em `Sistema` para diagnosticar atraso entre backend local e navegador.
+16. Use a hotbar ou `Alt+1` a `Alt+9` para alternar as telas principais rapidamente.
 
 A `Boleta` e apenas um plano local/simulado. O aplicativo nao envia ordens para o Profit.
 
@@ -187,6 +190,7 @@ logs/                   logs em runtime
 12. Abas operacionais: confirmar `Book`, `T&T`, `Alertas`, `Risco`, `Historico`, `Ajustes`, `Conexoes` e `Sistema` sem erro no navegador.
 13. Conexoes: confirmar polling de `/health`, arquitetura x64/x86, Profit RTD, WebSocket e status `Preco`, `Book`, `Times` por ativo.
 14. Ajustes: alterar niveis do DOM e intervalo de renderizacao, salvar, recarregar a pagina e confirmar persistencia local.
-15. Performance: confirmar que DOM, Painel, Monitor e Cotacoes seguem responsivos com RTD ativo; campos intraday devem atualizar imediatamente.
-16. Telemetria: confirmar que `Latencia WS` e `Msg/s` mudam quando chegam mensagens WebSocket. Essa leitura mede o trecho backend local -> navegador, nao latencia de bolsa ou execucao.
-17. SQLite: confirmar criacao de `data/marketdata.sqlite` quando o provider for restaurado pelo NuGet.
+15. Hotbar: confirmar clique e atalhos `Alt+1` a `Alt+9`, sem disparar quando o foco esta em campos de texto.
+16. Performance: confirmar que DOM, Painel, Monitor e Cotacoes seguem responsivos com RTD ativo; campos intraday devem atualizar imediatamente.
+17. Telemetria: confirmar que `Latencia WS` e `Msg/s` mudam quando chegam mensagens WebSocket. Essa leitura mede o trecho backend local -> navegador, nao latencia de bolsa ou execucao.
+18. SQLite: confirmar criacao de `data/marketdata.sqlite` quando o provider for restaurado pelo NuGet.

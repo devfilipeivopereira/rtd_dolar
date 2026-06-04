@@ -87,4 +87,6 @@ O dashboard usa o menu superior:
 - `Conexoes`: health do coletor, RTD e fontes por ativo;
 - `Sistema`: qualidade, eventos, bookDepth, Times & Trades, sinais e fila.
 
+A hotbar operacional abre as telas mais usadas com `Alt+1` a `Alt+9`, mantendo `Monitor`, `DOM`, `Book`, `T&T`, `Fluxo`, `Boleta`, `Ativos`, `Conexoes` e `Sistema` a um comando.
+
 A aba `DOM` tambem marca sinais ativos como pontos de flow.

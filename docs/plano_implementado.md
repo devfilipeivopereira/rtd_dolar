@@ -21,6 +21,7 @@
 - Tela `Boleta` para planos locais de entrada, stop, alvo, risco e status por toque de preco, sem envio de ordens.
 - Tela `Ajustes` para parametros locais de tick, DOM, renderizacao, memoria de tape/sinais e valor por ponto.
 - Tela `Conexoes` para polling de `/health`, estado do coletor, Profit RTD, WebSocket e fontes por ativo.
+- Hotbar operacional com atalhos `Alt+1` a `Alt+9` para telas de uso frequente.
 - Faixa superior operacional com ativo selecionado, ultimo preco, bid/ask, Book, Times, delta e CSV.
 - Telemetria WebSocket no frontend com latencia local, mensagens por segundo, reconexoes e contadores por tipo de mensagem.
 - Coalescing auxiliar para `bookDepth` e `timesTrades`, reduzindo repintura sem bloquear snapshots de preco.
@@ -41,7 +42,8 @@
 11. Salvar um plano local na `Boleta` e confirmar que nenhum endpoint de ordem e chamado.
 12. Abrir `Book`, `T&T`, `Alertas`, `Risco`, `Historico`, `Ajustes`, `Conexoes` e `Sistema`.
 13. Confirmar `Conexoes` com `/health`, arquitetura, Profit RTD, WebSocket e fontes por ativo.
-14. Confirmar `Latencia WS`, `Msg/s` e contadores no `Sistema`.
+14. Confirmar hotbar por clique e atalhos `Alt+1` a `Alt+9`.
+15. Confirmar `Latencia WS`, `Msg/s` e contadores no `Sistema`.
 
 ## Build validado
 
