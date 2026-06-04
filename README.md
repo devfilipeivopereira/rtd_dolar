@@ -42,7 +42,7 @@ O historico diario continua sendo carregado por CSV no navegador. O RTD preenche
 
 O menu superior agora separa o terminal em grupos de analise: `Inicio`, `Cadastro`, `Mercado`, `Fluxo`, `Analise` e `Sistema`. A hotbar contextual abaixo mostra apenas as telas do grupo ativo, enquanto a faixa superior mantem ativo selecionado, ultimo preco, bid/ask, status de Book, status de Times, delta, latencia WebSocket local, mensagens por segundo e CSV:
 
-- `Painel`: entrada de analise com checklist, atalhos, setups, oportunidades e alertas;
+- `Painel`: entrada de analise com leitura rapida de contexto, checklist, atalhos, setups, oportunidades e alertas;
 - `Radar`: oportunidades observacionais ranqueadas por setup, nivel, proximidade, delta e imbalance, com ranking multiativo;
 - `Monitor`: mesa ao vivo com watchlist compacta, estado do ativo, setups, tape, oportunidades e alertas;
 - `Mesa`: cockpit de analise com DOM compacto, book resumido, tape, fluxo, setups e risco simulado;
@@ -98,7 +98,7 @@ Use o MSBuild do Visual Studio 2022/Build Tools. O MSBuild antigo de `C:\Windows
 6. Configure `BOOK0` e `T&T0`, ou os topicos equivalentes do Profit.
 7. Carregue o CSV historico do ativo.
 8. Clique em `Salvar`.
-9. Abra `Painel` para ver checklist de analise, atalhos, setups, oportunidades e alertas.
+9. Abra `Painel` para ver contexto, fluxo, nivel proximo, radar, feed, checklist, atalhos, setups, oportunidades e alertas.
 10. Abra `Radar` para ver oportunidades observacionais ranqueadas por contexto e ativos em atencao.
 11. Abra `Mesa` para analisar DOM, book, tape, fluxo, setups e risco simulado em uma tela integrada.
 12. Abra `Monitor` para acompanhar watchlist, setups, tape, oportunidades e alertas do ativo selecionado.
@@ -189,7 +189,7 @@ logs/                   logs em runtime
 5. Manual: desligar `RTD Live` e editar os campos manualmente.
 6. Multiativo: adicionar um novo ativo em `Ativos`, ligar/desligar, trocar fontes, excluir e confirmar `/assets`.
 7. Book/T&T: confirmar mensagens `bookDepth` e `timesTrades` no WebSocket quando `BOOK0` e `T&T0` estiverem ligados.
-8. Painel: confirmar checklist, atalhos, setups, oportunidades e alertas do ativo selecionado.
+8. Painel: confirmar leitura rapida de contexto, checklist, atalhos, setups, oportunidades e alertas do ativo selecionado.
 9. Radar: confirmar candidatos por setup/nivel, score, evidencias, ranking multiativo e atalhos `Observar`, `Ver` e `Mesa`.
 10. Mesa: confirmar DOM compacto, book resumido, tape, fluxo, setups, niveis proximos e botoes para `Oportunidades`, `Risco`, `Alertas` e `Grafico`.
 11. Monitor: confirmar watchlist compacta, estado do ativo, setups, tape, oportunidades e alertas.

@@ -63,7 +63,7 @@ O CSV diario continua sendo a fonte do historico 21/45/63. O RTD preenche o intr
 
 O menu superior separa:
 
-- `Painel`: checklist de analise, atalhos e resumo do ativo selecionado;
+- `Painel`: leitura rapida de contexto, checklist de analise, atalhos e resumo do ativo selecionado;
 - `Radar`: oportunidades observacionais por ativo e ranking multiativo;
 - `Monitor`: mesa ao vivo com watchlist compacta, estado do ativo, setups, tape, oportunidades e alertas;
 - `Mesa`: cockpit de analise com DOM compacto, book resumido, tape, fluxo, setups e niveis proximos;
@@ -89,7 +89,7 @@ A hotbar de analise fica abaixo da faixa superior e abre telas de uso frequente 
 
 A paleta `Ctrl+K` busca telas e ativos cadastrados. Quando o item escolhido e um ativo, a UI seleciona o ativo e abre `Monitor`.
 
-A tela `Painel` e a entrada de analise. Ela resume RTD, ativo selecionado, ultimo preco, checklist de prontidao, atalhos para as telas principais, setups recentes, oportunidades e alertas.
+A tela `Painel` e a entrada de analise. Ela resume RTD, ativo selecionado, ultimo preco, leitura rapida de contexto, fluxo, nivel proximo, radar e feed, alem de checklist de prontidao, atalhos para as telas principais, setups recentes, oportunidades e alertas.
 
 A tela `Radar` ranqueia oportunidades observacionais por setups, niveis, proximidade, delta e imbalance. Tambem mostra ativos em atencao para troca rapida de contexto.
 

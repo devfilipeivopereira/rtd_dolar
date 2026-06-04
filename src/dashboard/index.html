@@ -470,6 +470,19 @@ tr:hover td{background:#ffffff05}
 .source-dot.off{border-color:#555d69;color:#738091;background:#0e1318}
 .dashboard-grid{display:grid;grid-template-columns:minmax(360px,.9fr) minmax(0,1.4fr);gap:14px}
 .dashboard-actions{display:grid;grid-template-columns:repeat(3,minmax(150px,1fr));gap:8px}
+.context-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:0 0 14px}
+.context-card{border:1px solid var(--line);background:#10141a;padding:9px 10px;min-width:0}
+.context-card span{display:block;color:var(--soft);font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+.context-card strong{display:block;color:var(--txt);font-family:var(--mono);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.context-card em{display:block;color:var(--muted);font-style:normal;font-size:10px;margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.context-card.green{border-color:#1f7a66;background:#0d261f}
+.context-card.green strong{color:#9df2d5}
+.context-card.red{border-color:#7a2b2b;background:#2b1111}
+.context-card.red strong{color:#ffb1b1}
+.context-card.amber{border-color:#7a5f1f;background:#28210d}
+.context-card.amber strong{color:#ffd66b}
+.context-card.blue{border-color:#285d80;background:#10202b}
+.context-card.blue strong{color:#9bd7ff}
 .monitor-grid{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(300px,.8fr);gap:14px}
 .monitor-bottom{display:grid;grid-template-columns:minmax(260px,.9fr) minmax(0,1.1fr) minmax(260px,.9fr);gap:14px;margin-top:14px}
 .monitor-table td,.monitor-table th{text-align:right;white-space:nowrap}
@@ -915,6 +928,7 @@ tr:hover td{background:#ffffff05}
             <div class="live-kv"><span>Ultimo</span><strong id="dashboard-last">--</strong></div>
             <div class="live-kv"><span>Estado</span><strong id="dashboard-state">--</strong></div>
           </div>
+          <div class="context-grid" id="dashboard-context"></div>
           <div class="dashboard-grid">
             <div class="panel">
               <div class="panel-head"><div class="panel-title">Checklist de analise</div></div>
@@ -2169,6 +2183,7 @@ const refs = {
   dashboardAsset: document.getElementById("dashboard-asset"),
   dashboardLast: document.getElementById("dashboard-last"),
   dashboardState: document.getElementById("dashboard-state"),
+  dashboardContext: document.getElementById("dashboard-context"),
   dashboardReadiness: document.getElementById("dashboard-readiness"),
   dashboardSignals: document.getElementById("dashboard-signals"),
   dashboardActionsList: document.getElementById("dashboard-actions-list"),
@@ -2870,6 +2885,104 @@ function readinessRow(label, detail, ok, warn = false) {
   `;
 }
 
+function contextCard(label, value, detail, tone = "") {
+  return `
+    <div class="context-card ${escapeHtml(tone)}">
+      <span>${escapeHtml(label)}</span>
+      <strong title="${escapeHtml(value)}">${escapeHtml(value)}</strong>
+      <em title="${escapeHtml(detail)}">${escapeHtml(detail)}</em>
+    </div>
+  `;
+}
+
+function priceContext(snapshot) {
+  const intraday = liveIntradayFromSnapshot(snapshot);
+  const price = intraday.price;
+  const step = state.rtd.tickSize || 0.5;
+  const anchor = Number.isFinite(intraday.vwap) ? intraday.vwap : intraday.open;
+  const anchorLabel = Number.isFinite(intraday.vwap) ? "VWAP" : "abertura";
+  if (!Number.isFinite(price) || !Number.isFinite(anchor)) {
+    return { value: "Aguardando", detail: "sem preco/ancora", tone: "amber" };
+  }
+  const dist = price - anchor;
+  if (Math.abs(dist) <= step) return { value: `No ${anchorLabel}`, detail: `${fmt(price)} vs ${fmt(anchor)}`, tone: "amber" };
+  return {
+    value: dist > 0 ? `Acima ${anchorLabel}` : `Abaixo ${anchorLabel}`,
+    detail: `${dist > 0 ? "+" : ""}${fmt(dist)} pts`,
+    tone: dist > 0 ? "green" : "red",
+  };
+}
+
+function flowContext(metrics = {}) {
+  const delta = liveNumber(metrics.delta5s);
+  const imbalance = liveNumber(metrics.topBookImbalance);
+  const ofi = liveNumber(metrics.orderFlowImbalance);
+  if (!Number.isFinite(delta) && !Number.isFinite(imbalance) && !Number.isFinite(ofi)) {
+    return { value: "Sem fluxo", detail: "aguardando flow", tone: "amber" };
+  }
+  const score = (Number.isFinite(delta) ? Math.sign(delta) : 0)
+    + (Number.isFinite(imbalance) ? Math.sign(imbalance) : 0)
+    + (Number.isFinite(ofi) ? Math.sign(ofi) : 0);
+  if (score >= 2) return { value: "Fluxo comprador", detail: `Delta ${signedFmt(delta, 0)}`, tone: "green" };
+  if (score <= -2) return { value: "Fluxo vendedor", detail: `Delta ${signedFmt(delta, 0)}`, tone: "red" };
+  return { value: "Fluxo misto", detail: `Delta ${signedFmt(delta, 0)}`, tone: "amber" };
+}
+
+function nearestLevelContext(snapshot) {
+  const price = currentDomPrice(snapshot);
+  const step = state.rtd.tickSize || 0.5;
+  if (!Number.isFinite(price)) return { value: "Sem preco", detail: "aguardando RTD", tone: "amber" };
+  const nearest = collectDomLevels(snapshot)
+    .filter(level => Number.isFinite(level.price))
+    .sort((a, b) => Math.abs(a.price - price) - Math.abs(b.price - price) || domLevelScore(b) - domLevelScore(a))[0];
+  if (!nearest) return { value: "Sem nivel", detail: "carregar CSV", tone: "amber" };
+  const distTicks = Math.abs(nearest.price - price) / step;
+  const cls = domLevelTypeClass(nearest);
+  const tone = cls === "sup" ? "green" : cls === "res" ? "red" : distTicks <= 8 ? "amber" : "blue";
+  return {
+    value: trimText(domLevelLabel(nearest), 28),
+    detail: `${fmt(nearest.price)} | ${fmt(distTicks, 0)} ticks`,
+    tone,
+  };
+}
+
+function radarContext(snapshot) {
+  const best = collectRadarOpportunities(snapshot)[0];
+  if (!best) return { value: "Sem candidato", detail: "aguardando contexto", tone: "amber" };
+  const score = liveNumber(best.score);
+  const tone = score >= 70 ? "green" : score >= 50 ? "blue" : "amber";
+  return {
+    value: `${opportunityDirectionLabel(best.direction)} ${fmt(score, 0)}`,
+    detail: trimText(best.label || best.source || "Radar", 32),
+    tone,
+  };
+}
+
+function feedContext() {
+  const lag = liveNumber(state.telemetry.lastLagMs);
+  const rate = wsMessageRate();
+  if (!state.rtd.enabled) return { value: "Manual", detail: "RTD desligado", tone: "amber" };
+  if (!Number.isFinite(lag)) return { value: "Conectando", detail: "sem telemetria", tone: "amber" };
+  const tone = lag > 1200 ? "red" : lag > 500 ? "amber" : "green";
+  return { value: fmtMs(lag), detail: `${fmt(rate, 1)} msg/s`, tone };
+}
+
+function renderDashboardContext(snapshot, flow) {
+  if (!refs.dashboardContext) return;
+  const price = priceContext(snapshot);
+  const flowRead = flowContext(flow.metrics || {});
+  const level = nearestLevelContext(snapshot);
+  const radar = radarContext(snapshot);
+  const feed = feedContext();
+  refs.dashboardContext.innerHTML = [
+    contextCard("Contexto", price.value, price.detail, price.tone),
+    contextCard("Fluxo", flowRead.value, flowRead.detail, flowRead.tone),
+    contextCard("Nivel proximo", level.value, level.detail, level.tone),
+    contextCard("Radar", radar.value, radar.detail, radar.tone),
+    contextCard("Feed", feed.value, feed.detail, feed.tone),
+  ].join("");
+}
+
 function renderDashboard() {
   if (!refs.dashboardReadiness) return;
   const asset = selectedAsset();
@@ -2892,6 +3005,7 @@ function renderDashboard() {
   refs.dashboardAsset.textContent = asset;
   refs.dashboardLast.textContent = fmt(intraday.price);
   refs.dashboardState.textContent = priceOk ? "preco ativo" : config?.enabled ? "aguardando preco" : "ativo desligado";
+  renderDashboardContext(snapshot, flow);
 
   refs.dashboardReadiness.innerHTML = [
     readinessRow("Ativo", config ? (config.enabled ? "ligado" : "desligado") : "nao cadastrado", !!config && !!config.enabled),
