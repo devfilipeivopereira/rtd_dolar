@@ -19,6 +19,7 @@ namespace ColetorProfitRTD.Web
         private readonly Func<object> _flowFactory;
         private readonly Func<object> _signalsFactory;
         private readonly Func<object> _assetsFactory;
+        private readonly Func<object> _bootstrapFactory;
         private readonly Func<Dictionary<string, object>, object> _assetAddHandler;
         private readonly Func<Dictionary<string, object>, object> _assetToggleHandler;
         private readonly Func<Dictionary<string, object>, object> _assetDeleteHandler;
@@ -37,6 +38,7 @@ namespace ColetorProfitRTD.Web
             Func<object> flowFactory,
             Func<object> signalsFactory,
             Func<object> assetsFactory,
+            Func<object> bootstrapFactory,
             Func<Dictionary<string, object>, object> assetAddHandler,
             Func<Dictionary<string, object>, object> assetToggleHandler,
             Func<Dictionary<string, object>, object> assetDeleteHandler,
@@ -54,6 +56,7 @@ namespace ColetorProfitRTD.Web
             _flowFactory = flowFactory;
             _signalsFactory = signalsFactory;
             _assetsFactory = assetsFactory;
+            _bootstrapFactory = bootstrapFactory;
             _assetAddHandler = assetAddHandler;
             _assetToggleHandler = assetToggleHandler;
             _assetDeleteHandler = assetDeleteHandler;
@@ -149,6 +152,12 @@ namespace ColetorProfitRTD.Web
                 if (IsPath(path, "/signals"))
                 {
                     await WriteJsonAsync(context, _signalsFactory());
+                    return;
+                }
+
+                if (IsPath(path, "/bootstrap"))
+                {
+                    await WriteJsonAsync(context, _bootstrapFactory());
                     return;
                 }
 

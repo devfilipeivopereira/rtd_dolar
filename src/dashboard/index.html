@@ -6738,7 +6738,34 @@ function applySignalsMessage(msg) {
   renderLiveAssetChange(selectedAsset(), state.rtd.lastSnapshot, "signal");
 }
 
-async function loadInitialFlow() {
+function applyBootstrapMessage(msg) {
+  if (!msg || msg.type !== "bootstrap") return false;
+  if (msg.health) {
+    state.health.last = msg.health;
+    state.health.checkedAt = Date.now();
+  }
+  if (msg.assets) updateAssetsMessage(msg.assets);
+  if (msg.snapshot?.type === "snapshot") applyLiveSnapshot(msg.snapshot);
+  if (msg.flow) applyFlowMessage(msg.flow);
+  if (msg.signals) applySignalsMessage(msg.signals);
+  renderMarketStrip();
+  renderConnections();
+  renderFlowDebug();
+  return true;
+}
+
+async function loadBootstrap() {
+  try {
+    const res = await fetch("/bootstrap");
+    if (!res.ok) return false;
+    return applyBootstrapMessage(await res.json());
+  } catch (_) {
+    return false;
+  }
+}
+
+async function loadInitialState() {
+  if (await loadBootstrap()) return;
   try {
     const [flowRes, signalsRes] = await Promise.all([
       fetch("/flow"),
@@ -7477,7 +7504,7 @@ function connectRtdLive() {
     renderMarketStrip();
     renderConnections();
     renderFlowDebug();
-    loadInitialFlow();
+    loadInitialState();
   });
 
   socket.addEventListener("message", ev => {
@@ -8152,7 +8179,7 @@ renderAlerts();
 renderRisk();
 renderHistoryPanel();
 showMainTab(state.ui.mainTab);
-loadAssets();
+loadInitialState();
 startHealthPolling();
 connectRtdLive();
 </script>

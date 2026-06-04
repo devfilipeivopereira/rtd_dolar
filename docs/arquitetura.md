@@ -19,7 +19,7 @@ O backend fica em `src/ColetorProfitRTD`.
 
 - `Rtd/`: interfaces COM, catalogo de campos e cliente RTD.
 - `MarketData/`: parsing pt-BR e snapshots consolidados por ativo.
-- `Web/`: `HttpListener`, arquivos estaticos, `/health`, `/snapshot`, `/flow`, `/signals`, `/assets` e `/ws`.
+- `Web/`: `HttpListener`, arquivos estaticos, `/health`, `/bootstrap`, `/snapshot`, `/flow`, `/signals`, `/assets` e `/ws`.
 - `Storage/`: SQLite auxiliar para snapshots e buckets por minuto.
 - `Flow/`: order flow derivado por ativo, com delta, VWAP, profile intraday e sinais.
 
@@ -137,6 +137,8 @@ As mensagens auxiliares de profundidade sao coalescidas no cliente RTD para redu
 No navegador, campos criticos de preco e inputs intraday sao preenchidos a cada snapshot. Renderizacoes densas usam scheduler curto, com padrao de 120 ms no preset `Equilibrado` e ajuste pela aba `Ajustes`. O batch ao vivo renderiza a aba ativa e evita repintar telas invisiveis como DOM, Mesa, Painel, Monitor, Cotacoes e Historico no mesmo pulso.
 
 O scheduler do navegador agora acumula motivos de render (`snapshot`, `book`, `times`, `flow`, `signal`, `status`, `ui`) e ativos impactados. Antes de redesenhar, ele verifica se o evento afeta a tela ativa. Por exemplo, uma mensagem `flow` nao repinta a tela `Book`, e uma mensagem `book` nao repinta a tela `T&T`. Telas de contexto amplo como `Painel`, `Mesa`, `Monitor`, `Radar`, `Cotacoes`, `Conexoes` e `Sistema` continuam recebendo todos os motivos relevantes.
+
+Na abertura e na reconexao do WebSocket, o navegador tenta `GET /bootstrap`. Esse endpoint devolve em uma unica resposta local: health, assets, snapshot atual, flow atual e signals recentes. Se falhar, o dashboard usa os endpoints antigos `/flow`, `/signals` e `/assets`, mantendo compatibilidade.
 
 O backend inclui `lastUpdateAgeMs` em `/health` e tambem envia `lastUpdate`, `lastUpdateAgeMs`, `lastPrice`, `hasPrice` e `feedStatus` em cada ativo de `/assets`. No navegador, a faixa superior calcula a idade do snapshot do ativo selecionado e classifica o feed como `Ao vivo`, `Atrasado`, `Parado`, `Sem preco` ou `Manual`. `Cotacoes` e `Conexoes` repetem essa leitura por ativo. O polling de `/health` tambem aciona um render `status`, para que a UI indique feed parado mesmo quando nenhuma nova mensagem chega pelo WebSocket. A mesma freshness alimenta o `Score Quant` e o `Radar`, evitando score alto baseado em preco congelado.
 

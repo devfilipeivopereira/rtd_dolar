@@ -11,7 +11,7 @@
 - Exclusao de RTD por ativo e controle de fontes `price`, `book` e `timesTrades`.
 - Catalogo RTD com os campos colados pelo usuario.
 - Snapshot consolidado com `rtd`, `intraday` e `book`.
-- Servidor local `HttpListener` com `/`, `/health`, `/snapshot`, `/flow`, `/signals`, `/assets`, `/assets/toggle`, `/assets/channels`, `/assets/delete`, `/assets/history` e `/ws`.
+- Servidor local `HttpListener` com `/`, `/health`, `/bootstrap`, `/snapshot`, `/flow`, `/signals`, `/assets`, `/assets/toggle`, `/assets/channels`, `/assets/delete`, `/assets/history` e `/ws`.
 - WebSocket com broadcast de snapshots, status, flow, signals, `bookDepth` e `timesTrades`.
 - SQLite auxiliar para snapshots de 1 segundo e consolidado por minuto.
 - HTML do `dolar-points` importado e adaptado com menu superior agrupado em `Inicio`, `Cadastro`, `Mercado`, `Fluxo`, `Analise` e `Sistema`.
@@ -32,6 +32,7 @@
 - Roteiro de analise no `Painel`, com `Proximo passo` dinamico e etapas clicaveis para Ativo, RTD preco, CSV, Book/T&T, Fluxo e Score.
 - Coalescing auxiliar para `bookDepth` e `timesTrades`, reduzindo repintura sem bloquear snapshots de preco.
 - Scheduler de render no navegador orientado pela aba ativa, com fila por motivo/ativo, filtro de relevancia por tela, padrao de 120 ms no preset `Equilibrado`, presets de desempenho pela UI e inputs de preco imediatos.
+- Bootstrap HTTP consolidado para abertura/reconexao, carregando health, assets, snapshot, flow e signals em uma unica resposta local, com fallback para endpoints antigos.
 - Deteccao de feed parado com `lastUpdateAgeMs` no `/health`, metrica `Feed` na faixa superior e diagnostico `Idade backend` / `Feed selecionado` em `Conexoes`.
 - Freshness por ativo em `/assets`, `Cotacoes` e `Conexoes`, com `feedStatus`, `lastUpdateAgeMs`, `lastPrice` e `hasPrice`.
 - Penalizacao de freshness no `Score Quant`, no `Radar` e no ranking multiativo, para rebaixar feed atrasado/parado e expor a evidencia ao usuario.
@@ -40,6 +41,7 @@
 - Validador `tools/validate-quant-surface.js` para preservar estimadores, indicadores, radar, score quant e evidencias visiveis.
 - Validador `tools/validate-live-render-scheduler.js` para preservar coalescing de render, motivos, ativos e filtro por aba ativa.
 - Validador `tools/validate-feed-freshness.js` para preservar idade de feed, status `Ao vivo`/`Atrasado`/`Parado` e diagnostico de freshness.
+- Validador `tools/validate-bootstrap-loading.js` para preservar `/bootstrap` e fallback de carregamento inicial.
 
 ## Fluxo de validacao
 
@@ -67,11 +69,13 @@
 22. Rodar `node tools/validate-quant-surface.js`.
 23. Rodar `node tools/validate-live-render-scheduler.js`.
 24. Rodar `node tools/validate-feed-freshness.js`.
-25. Confirmar `Score Quant`, `Indicadores Quant`, `Base Quant` e `Evidencias Quant` no `Painel`.
-26. Confirmar o roteiro de analise com `Proximo passo` e atalhos para Ativos, Conexoes, Fluxo, Radar e Mesa.
-27. Confirmar `Render motivos` e `Render ativos` no `Sistema`.
-28. Confirmar `Feed`, `Idade backend`, `Feed selecionado` e Feed por ativo em tempo real.
-29. Confirmar que `Score Quant` e `Radar` reduzem confianca quando o feed fica `Atrasado` ou `Parado`.
+25. Rodar `node tools/validate-bootstrap-loading.js`.
+26. Confirmar `GET /bootstrap` retornando health, assets, snapshot, flow e signals.
+27. Confirmar `Score Quant`, `Indicadores Quant`, `Base Quant` e `Evidencias Quant` no `Painel`.
+28. Confirmar o roteiro de analise com `Proximo passo` e atalhos para Ativos, Conexoes, Fluxo, Radar e Mesa.
+29. Confirmar `Render motivos` e `Render ativos` no `Sistema`.
+30. Confirmar `Feed`, `Idade backend`, `Feed selecionado` e Feed por ativo em tempo real.
+31. Confirmar que `Score Quant` e `Radar` reduzem confianca quando o feed fica `Atrasado` ou `Parado`.
 
 ## Build validado
 

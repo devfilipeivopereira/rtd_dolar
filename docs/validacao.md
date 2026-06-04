@@ -56,6 +56,7 @@ Resultado esperado:
 
 ```text
 GET http://localhost:5000/health
+GET http://localhost:5000/bootstrap
 GET http://localhost:5000/snapshot
 GET http://localhost:5000/flow
 GET http://localhost:5000/signals
@@ -139,6 +140,7 @@ Sem CSV, a aba DOM ainda pode mostrar ticks RTD, bid/ask e tape. Pontos como POC
 - A paleta `Ctrl+K` deve buscar grupos, telas e ativos cadastrados sem depender de recarregar a pagina, mostrando `Proximo passo`, status operacional, atalhos e feed/fontes dos ativos.
 - `Book` e `T&T` devem atualizar sem travar a pagina mesmo com muitos campos RTD, respeitando coalescing do backend.
 - Campos intraday devem ser preenchidos a cada snapshot; o lote curto configuravel deve renderizar principalmente a aba ativa para manter a UI responsiva com RTD intenso.
+- `GET /bootstrap` deve consolidar health, assets, snapshot, flow e signals para acelerar abertura/reconexao, com fallback no frontend para `/flow`, `/signals` e `/assets`.
 - `Latencia WS` deve ser tratada como diagnostico backend local -> navegador, e `Render UI` como custo de desenho da tela ativa; nenhuma delas mede latencia de bolsa ou Profit.
 - `Painel` deve mostrar `Score Quant`, `Indicadores Quant`, `Base Quant` e `Evidencias Quant`, combinando CSV estatistico, RTD de preco e fluxo/T&T quando disponiveis.
 - Sem uma das fontes principais, ou com feed atrasado/parado, a `Base Quant` deve explicitar a falta/idade e o score nao deve parecer uma confirmacao forte.
@@ -234,6 +236,22 @@ Feed freshness OK
 ```
 
 Esse check falha se `/health` perder `lastUpdateAgeMs`, se a faixa superior perder `Feed`, ou se o dashboard perder `Ao vivo`, `Atrasado`, `Parado`, `Idade backend` e `Feed selecionado`. A validacao quant complementar tambem protege o uso dessa freshness no `Score Quant` e no `Radar`.
+
+## Bootstrap QA
+
+Para validar que a abertura do terminal continua consolidada em uma chamada local:
+
+```text
+node tools/validate-bootstrap-loading.js
+```
+
+Resultado esperado:
+
+```text
+Bootstrap loading OK
+```
+
+Esse check falha se `/bootstrap` perder health, assets, snapshot, flow ou signals, ou se o frontend perder o fallback para `/flow`, `/signals` e `/assets`.
 
 ## Navegacao
 

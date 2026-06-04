@@ -76,6 +76,8 @@ O `Painel` tambem mostra um roteiro de analise com `Proximo passo` e etapas `Ati
 
 O render ao vivo do navegador usa fila coalescida por motivo (`snapshot`, `book`, `times`, `flow`, `signal`, `status`, `ui`) e por ativo. A cada pulso, a UI redesenha principalmente a tela ativa e ignora eventos que nao afetam aquela tela. Em `Sistema`, `Render motivos` e `Render ativos` mostram o ultimo lote desenhado.
 
+Na abertura e na reconexao do WebSocket, o frontend tenta `GET /bootstrap` para carregar health, assets, snapshot, flow e signals em uma unica resposta local. Se esse endpoint falhar, a UI volta para `/flow`, `/signals` e `/assets`, mantendo compatibilidade.
+
 O terminal tambem diferencia RTD conectado de dado realmente atualizado. A faixa superior mostra `Feed` como `Ao vivo`, `Atrasado`, `Parado`, `Sem preco` ou `Manual`, com idade do ultimo snapshot do ativo selecionado. O `/health` expoe `lastUpdateAgeMs`, cada item de `/assets` traz `feedStatus` e `lastUpdateAgeMs`, e `Cotacoes`/`Conexoes` mostram freshness por ativo.
 
 `Ctrl+K` abre a paleta de comando para localizar telas, grupos e ativos cadastrados. O topo mostra `Proximo passo`, os grupos aparecem com status operacional e cada ativo mostra feed e fontes `P/B/T`, acelerando a troca de contexto durante o RTD ao vivo.
@@ -137,6 +139,7 @@ Endpoints:
 
 ```text
 GET /health
+GET /bootstrap
 GET /snapshot
 GET /flow
 GET /signals
@@ -221,8 +224,9 @@ logs/                   logs em runtime
 23. Quant QA: rodar `node tools/validate-quant-surface.js` e confirmar `Quant surface OK`.
 24. Render QA: rodar `node tools/validate-live-render-scheduler.js` e confirmar `Live render scheduler OK`.
 25. Feed QA: rodar `node tools/validate-feed-freshness.js` e confirmar `Feed freshness OK`.
-26. Score Quant: confirmar no `Painel` que `Score Quant`, `Indicadores Quant`, `Base Quant` e `Evidencias Quant` aparecem; sem CSV, RTD, fluxo ou com feed atrasado/parado, o score deve ficar penalizado ou aguardando dados.
-27. Roteiro: confirmar que `Proximo passo` muda entre Ativos, Conexoes, Fluxo, Radar e Mesa conforme faltam dados ou conforme o score fica utilizavel.
-28. Sistema: confirmar `Render motivos` e `Render ativos` mudando conforme chegam snapshot, book, times, flow e signal.
-29. Feed parado: pausar/fechar o Profit ou interromper updates e confirmar que `Feed` muda de `Ao vivo` para `Atrasado`/`Parado` na faixa superior, em `Cotacoes` e em `Conexoes`, e que `Score Quant`/`Radar` rebaixam a confianca.
-30. SQLite: confirmar criacao de `data/marketdata.sqlite` quando o provider for restaurado pelo NuGet.
+26. Bootstrap QA: rodar `node tools/validate-bootstrap-loading.js` e confirmar `Bootstrap loading OK`.
+27. Score Quant: confirmar no `Painel` que `Score Quant`, `Indicadores Quant`, `Base Quant` e `Evidencias Quant` aparecem; sem CSV, RTD, fluxo ou com feed atrasado/parado, o score deve ficar penalizado ou aguardando dados.
+28. Roteiro: confirmar que `Proximo passo` muda entre Ativos, Conexoes, Fluxo, Radar e Mesa conforme faltam dados ou conforme o score fica utilizavel.
+29. Sistema: confirmar `Render motivos` e `Render ativos` mudando conforme chegam snapshot, book, times, flow e signal.
+30. Feed parado: pausar/fechar o Profit ou interromper updates e confirmar que `Feed` muda de `Ao vivo` para `Atrasado`/`Parado` na faixa superior, em `Cotacoes` e em `Conexoes`, e que `Score Quant`/`Radar` rebaixam a confianca.
+31. SQLite: confirmar criacao de `data/marketdata.sqlite` quando o provider for restaurado pelo NuGet.

@@ -120,6 +120,7 @@ namespace ColetorProfitRTD
                 () => flowProcessor.CurrentFlowMessage(),
                 () => flowProcessor.CurrentSignalsMessage(),
                 () => BuildAssets(rtdClient),
+                () => BuildBootstrap(config, rtdClient, flowProcessor),
                 body => SaveAsset(rtdClient, body),
                 body => ToggleAsset(rtdClient, body),
                 body => DeleteAsset(rtdClient, flowProcessor, body),
@@ -243,6 +244,20 @@ namespace ColetorProfitRTD
                         ["defaultFields"] = RtdFieldCatalog.DefaultTimesFields.ToList()
                     }
                 },
+                ["localTimestamp"] = DateTimeOffset.Now.ToString("o")
+            };
+        }
+
+        private static Dictionary<string, object> BuildBootstrap(AppConfig config, RtdClient rtdClient, FlowProcessor flowProcessor)
+        {
+            return new Dictionary<string, object>
+            {
+                ["type"] = "bootstrap",
+                ["health"] = BuildHealth(config, rtdClient, flowProcessor),
+                ["assets"] = BuildAssets(rtdClient),
+                ["snapshot"] = rtdClient.CurrentSnapshot.ToLiveMessage(),
+                ["flow"] = flowProcessor.CurrentFlowMessage(),
+                ["signals"] = flowProcessor.CurrentSignalsMessage(),
                 ["localTimestamp"] = DateTimeOffset.Now.ToString("o")
             };
         }
