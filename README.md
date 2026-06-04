@@ -196,4 +196,5 @@ logs/                   logs em runtime
 16. Paleta: confirmar `Ctrl+K`, busca de telas, busca de ativos, setas, `Enter` e `Esc`.
 17. Performance: confirmar que DOM, Painel, Monitor e Cotacoes seguem responsivos com RTD ativo; campos intraday devem atualizar imediatamente.
 18. Telemetria: confirmar que `Latencia WS` e `Msg/s` mudam quando chegam mensagens WebSocket. Essa leitura mede o trecho backend local -> navegador, nao latencia de bolsa ou execucao.
-19. SQLite: confirmar criacao de `data/marketdata.sqlite` quando o provider for restaurado pelo NuGet.
+19. Design QA: rodar `node tools/validate-dashboard-design.js` e confirmar `Dashboard design tokens OK`.
+20. SQLite: confirmar criacao de `data/marketdata.sqlite` quando o provider for restaurado pelo NuGet.

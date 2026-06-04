@@ -135,3 +135,19 @@ SQLite e auxiliar. Se o provider nao restaurar no NuGet ou se o banco falhar, o 
 ## Build no ambiente Codex
 
 Nesta maquina, a validacao foi feita com o `csc.exe` restaurado em `packages/Microsoft.Net.Compilers.Toolset.4.8.0`. Para uso normal, compile com Visual Studio 2022 ou Build Tools modernos.
+
+## Design QA
+
+Para validar a direcao visual Industrial do dashboard:
+
+```text
+node tools/validate-dashboard-design.js
+```
+
+Resultado esperado:
+
+```text
+Dashboard design tokens OK
+```
+
+Esse check falha se o dashboard reintroduzir sombras, gradientes, filtros decorativos ou fontes fora da familia mono.

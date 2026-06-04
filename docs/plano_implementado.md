@@ -27,6 +27,7 @@
 - Telemetria WebSocket no frontend com latencia local, mensagens por segundo, reconexoes e contadores por tipo de mensagem.
 - Coalescing auxiliar para `bookDepth` e `timesTrades`, reduzindo repintura sem bloquear snapshots de preco.
 - Scheduler de render no navegador para agrupar DOM, Painel, Cotacoes e Historico, com padrao de 120 ms e ajuste pela UI, mantendo inputs de preco imediatos.
+- Validador `tools/validate-dashboard-design.js` para preservar tokens Industrial, mono, plano e sem sombras/gradientes.
 
 ## Fluxo de validacao
 
@@ -46,6 +47,7 @@
 14. Confirmar hotbar por clique e atalhos `Alt+1` a `Alt+9`.
 15. Confirmar paleta `Ctrl+K` para telas e ativos.
 16. Confirmar `Latencia WS`, `Msg/s` e contadores no `Sistema`.
+17. Rodar `node tools/validate-dashboard-design.js`.
 
 ## Build validado
 
