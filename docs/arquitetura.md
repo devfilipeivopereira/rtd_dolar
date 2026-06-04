@@ -63,17 +63,19 @@ O CSV diario continua sendo a fonte do historico 21/45/63. O RTD preenche o intr
 
 O menu superior separa:
 
-- `Painel`: checklist operacional, atalhos e resumo do ativo selecionado;
-- `Monitor`: mesa ao vivo com watchlist compacta, estado do ativo, setups, tape, planos e alertas;
+- `Painel`: checklist de analise, atalhos e resumo do ativo selecionado;
+- `Radar`: oportunidades observacionais por ativo e ranking multiativo;
+- `Monitor`: mesa ao vivo com watchlist compacta, estado do ativo, setups, tape, oportunidades e alertas;
+- `Mesa`: cockpit de analise com DOM compacto, book resumido, tape, fluxo, setups e niveis proximos;
 - `Ativos`: cadastro de codigo, tres fontes RTD e CSV historico;
-- `Cotacoes`: watchlist operacional com todos os ativos cadastrados;
+- `Cotacoes`: watchlist de mercado com todos os ativos cadastrados;
 - `Grafico`: grafico e subabas analiticas;
 - `DOM`: escada de preco;
 - `Book`: book de ofertas multi-nivel;
 - `T&T`: Times & Trades RTD;
 - `Fluxo`: delta, book, tape e metricas;
 - `Setups`: sinais;
-- `Boleta`: plano local de entrada, stop, alvo e acompanhamento por toque de preco;
+- `Oportunidades`: ideias observacionais com preco de interesse, stop, alvo, risco simulado e acompanhamento por toque de preco;
 - `Alertas`: alertas locais por preco;
 - `Risco`: calculadora local de stop, alvo e contratos;
 - `Historico`: resumo do CSV e ticks em memoria;
@@ -83,19 +85,23 @@ O menu superior separa:
 
 A faixa superior fica disponivel em todas as telas e mostra ativo selecionado, ultimo preco, bid/ask, status de Book, status de Times, delta 5s, latencia WebSocket local, mensagens por segundo e CSV carregado.
 
-A hotbar operacional fica abaixo da faixa superior e abre telas de uso frequente por clique ou `Alt+1` a `Alt+9`. Ela acelera a rotina sem substituir o menu superior, que continua agrupando todas as funcionalidades.
+A hotbar de analise fica abaixo da faixa superior e abre telas de uso frequente por clique ou `Alt+1` a `Alt+9`. Ela acelera a leitura sem substituir o menu superior, que continua agrupando todas as funcionalidades.
 
 A paleta `Ctrl+K` busca telas e ativos cadastrados. Quando o item escolhido e um ativo, a UI seleciona o ativo e abre `Monitor`.
 
-A tela `Painel` e a entrada operacional. Ela resume RTD, ativo selecionado, ultimo preco, checklist de prontidao, atalhos para as telas principais, setups recentes, planos da boleta e alertas.
+A tela `Painel` e a entrada de analise. Ela resume RTD, ativo selecionado, ultimo preco, checklist de prontidao, atalhos para as telas principais, setups recentes, oportunidades e alertas.
 
-A tela `Monitor` e a mesa de acompanhamento ao vivo. Ela junta watchlist compacta, estado do ativo selecionado, setups ativos, tape, planos e alertas sem editar cadastro nem parametros.
+A tela `Radar` ranqueia oportunidades observacionais por setups, niveis, proximidade, delta e imbalance. Tambem mostra ativos em atencao para troca rapida de contexto.
 
-A tela `Ativos` configura fontes e CSV. A tela `Cotacoes` e a mesa de monitoramento: cada linha mostra ultimo preco, bid/ask, delta, status de Book, status de Times, status das fontes `P/B/T` e botoes para abrir `Grafico`, `DOM`, `Book`, `T&T` ou `Boleta` daquele ativo.
+A tela `Monitor` e a mesa de acompanhamento ao vivo. Ela junta watchlist compacta, estado do ativo selecionado, setups ativos, tape, oportunidades e alertas sem editar cadastro nem parametros.
 
-A `Boleta` persiste planos no navegador por ativo. Ela calcula risco e R/R, acompanha se entrada, alvo ou stop foram tocados pelo preco RTD e nao chama nenhum endpoint de envio de ordem.
+A tela `Mesa` concentra DOM compacto, book resumido, tape, fluxo, setups, niveis proximos e acoes de analise.
 
-A tela `Ajustes` persiste preferencias no navegador em `wdo-ui-settings`. Ela controla tamanho do tick, quantidade de niveis do DOM, intervalo de renderizacao, limite de trades/sinais em memoria e valor por ponto padrao para `Boleta` e `Risco`.
+A tela `Ativos` configura fontes e CSV. A tela `Cotacoes` e a mesa de monitoramento: cada linha mostra ultimo preco, bid/ask, delta, status de Book, status de Times, status das fontes `P/B/T` e botoes para abrir `Grafico`, `DOM`, `Book`, `T&T` ou `Oportunidades` daquele ativo.
+
+A tela `Oportunidades` persiste ideias observacionais no navegador por ativo. Ela calcula risco simulado e R/R, acompanha se preco de interesse, alvo ou stop foram tocados pelo RTD e permanece local.
+
+A tela `Ajustes` persiste preferencias no navegador em `wdo-ui-settings`. Ela controla tamanho do tick, quantidade de niveis do DOM, intervalo de renderizacao, limite de trades/sinais em memoria e valor por ponto padrao para `Oportunidades` e `Risco`.
 
 A tela `Conexoes` consulta `/health` a cada 3 segundos. Ela mostra status do coletor, Profit RTD, arquitetura, ultimo update, estado do WebSocket e status `Preco`, `Book` e `Times` por ativo.
 
@@ -118,7 +124,7 @@ As mensagens auxiliares de profundidade sao coalescidas no cliente RTD para redu
 
 No navegador, campos criticos de preco e inputs intraday sao preenchidos a cada snapshot. Renderizacoes densas como DOM completo, `Painel`, `Monitor`, `Cotacoes` e `Historico` usam scheduler curto, com padrao de 120 ms e ajuste pela aba `Ajustes`, para reduzir travamentos quando o RTD envia muitos updates.
 
-A telemetria `Latencia WS` e calculada no navegador comparando o recebimento da mensagem com `localTimestamp` enviado pelo backend local. Ela serve para diagnosticar atraso entre coletor e interface; nao mede latencia de bolsa, Profit ou execucao de ordem.
+A telemetria `Latencia WS` e calculada no navegador comparando o recebimento da mensagem com `localTimestamp` enviado pelo backend local. Ela serve para diagnosticar atraso entre coletor e interface; nao mede latencia de bolsa ou Profit.
 
 ## Persistencia
 

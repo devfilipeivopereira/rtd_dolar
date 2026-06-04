@@ -980,7 +980,7 @@ Mitigacao:
 - Nao depender do HTML.
 - Nao depender de WebSocket para a UI principal.
 - Nao mexer no projeto atual durante o MVP.
-- Nao executar ordens.
+- Somente analise; sem envio ao Profit.
 - Nao emitir recomendacao automatica de compra/venda.
 - Nao logar cada tick em disco.
 - Nao gravar SQLite no caminho quente do RTD.
@@ -1053,4 +1053,3 @@ Importante:
 - [ ] Thread RTD e UI ficam separadas.
 - [ ] Nenhum IO bloqueia o caminho quente.
 - [ ] README do novo projeto explica uso.
-

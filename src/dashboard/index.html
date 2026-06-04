@@ -577,7 +577,7 @@ tr:hover td{background:#ffffff05}
     </div>
     <nav class="main-tabs" id="main-tabs" aria-label="Areas do terminal"></nav>
     <div class="top-meta">
-      <button class="top-command" id="top-command" type="button" title="Abrir comando rapido">Buscar</button>
+      <button class="top-command" id="top-command" type="button" title="Abrir busca rapida">Buscar</button>
       <span class="pill" id="file-pill">Sem CSV</span>
       <span class="pill warn" id="rtd-pill">RTD Manual</span>
       <span class="pill" id="date-pill">Aguardando</span>
@@ -908,7 +908,7 @@ tr:hover td{background:#ffffff05}
           </div>
           <div class="dashboard-grid">
             <div class="panel">
-              <div class="panel-head"><div class="panel-title">Checklist operacional</div></div>
+              <div class="panel-head"><div class="panel-title">Checklist de analise</div></div>
               <div class="panel-body">
                 <div class="readiness-list" id="dashboard-readiness"></div>
               </div>
@@ -1005,7 +1005,7 @@ tr:hover td{background:#ffffff05}
           <div class="monitor-grid">
             <div class="panel">
               <div class="panel-head">
-                <div class="panel-title">Watchlist operacional</div>
+                <div class="panel-title">Watchlist de mercado</div>
                 <span class="tag" id="monitor-watchlist-count">0</span>
               </div>
               <div class="table-wrap">
@@ -1097,7 +1097,7 @@ tr:hover td{background:#ffffff05}
             </div>
             <div class="panel">
               <div class="panel-head">
-                <div class="panel-title">DOM operacional</div>
+                <div class="panel-title">DOM de leitura</div>
                 <span class="tag green">Mesa</span>
               </div>
               <div class="desk-ladder" id="desk-ladder"></div>
@@ -1266,7 +1266,7 @@ tr:hover td{background:#ffffff05}
         <section class="tab-panel hidden" id="panel-signals">
           <div class="panel">
             <div class="panel-head">
-              <div class="panel-title">Sinais operacionais</div>
+              <div class="panel-title">Sinais de fluxo</div>
               <span class="tag amber">score + contexto</span>
             </div>
             <div class="table-wrap">
@@ -3607,9 +3607,9 @@ function renderCommandPalette() {
         <strong>${escapeHtml(item.label)}</strong>
         <span>${escapeHtml(item.detail || "--")}</span>
       </span>
-      <span class="command-kind">${escapeHtml(item.kind || "Comando")}</span>
+      <span class="command-kind">${escapeHtml(item.kind || "Item")}</span>
     </button>
-  `).join("") : `<div class="warn-line">Nenhum comando encontrado.</div>`;
+  `).join("") : `<div class="warn-line">Nenhum item encontrado.</div>`;
 }
 
 function openCommandPalette(seed = "") {

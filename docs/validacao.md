@@ -21,7 +21,7 @@ Resultado esperado:
 1. Abrir o Profit Pro e deixar conectado.
 2. Executar `ColetorProfitRTD.exe`.
 3. Abrir `http://localhost:5000`.
-4. Confirmar que `Painel` abre como entrada operacional.
+4. Confirmar que `Painel` abre como entrada de analise.
 5. Abrir `Ativos`, cadastrar o ativo e carregar o CSV historico.
 6. Confirmar status `RTD Conectado`.
 7. Abrir `Painel` e confirmar checklist, atalhos, setups, oportunidades e alertas.
@@ -41,7 +41,7 @@ Resultado esperado:
 21. Em `Ajustes`, mudar niveis do DOM e intervalo de renderizacao, salvar, recarregar a pagina e confirmar que os valores persistem.
 22. Confirmar hotbar por clique e atalhos `Alt+1` a `Alt+9`.
 23. Confirmar que os atalhos nao disparam quando o foco esta em campos de texto, select ou textarea.
-24. Confirmar `Ctrl+K`, busca de telas e ativos, navegacao por setas, `Enter` para executar e `Esc` para fechar.
+24. Confirmar `Ctrl+K`, busca de telas e ativos, navegacao por setas, `Enter` para abrir e `Esc` para fechar.
 25. Confirmar que `Latencia WS` e `Msg/s` aparecem na faixa superior e no `Sistema` quando chegam mensagens do WebSocket.
 
 ## Endpoints
@@ -118,12 +118,12 @@ Sem CSV, a aba DOM ainda pode mostrar ticks RTD, bid/ask e tape. Pontos como POC
 - Ao desligar `timesTrades`, o tape real deixa de atualizar e a UI pode manter fallback derivado.
 - CSV salvo deve voltar por `GET /assets/history?asset=...` depois de recarregar a pagina.
 - A faixa superior deve trocar junto com o ativo selecionado e mostrar ultimo preco, bid/ask, Book, Times, delta, latencia WebSocket local, mensagens por segundo e CSV.
-- `Painel` deve ser a entrada operacional e refletir o ativo selecionado sem misturar dados de outro ativo.
+- `Painel` deve ser a entrada de analise e refletir o ativo selecionado sem misturar dados de outro ativo.
 - `Radar` deve listar oportunidades observacionais por setup/nivel, com score, distancia, evidencias e botao `Observar`, alem de ranking multiativo com `Ver` e `Mesa`.
 - `Monitor` deve ser a mesa de acompanhamento ao vivo: watchlist compacta, estado do ativo, setups, tape, oportunidades e alertas, sem campos de cadastro.
 - `Cotacoes` deve separar monitoramento de cadastro: a tela mostra status e atalhos, mas a edicao continua em `Ativos`.
 - `Mesa` deve concentrar DOM compacto, book resumido, tape, fluxo, setups, niveis proximos e acoes de analise.
-- `Oportunidades` deve salvar ideias em localStorage, calcular R/R e mudar status com preco RTD sem comandos operacionais ao Profit.
+- `Oportunidades` deve salvar ideias em localStorage, calcular R/R e mudar status com preco RTD sem envio ao Profit.
 - `Ajustes` deve persistir em `wdo-ui-settings` e aplicar tamanho do tick, niveis do DOM, intervalo de renderizacao, limite de trades/sinais e valor por ponto padrao.
 - `Conexoes` deve consultar `/health` periodicamente e separar status do feed local do debug de fluxo.
 - A hotbar deve espelhar a aba ativa e permitir troca rapida para Monitor, DOM, Book, T&T, Fluxo, Oportunidades, Ativos, Conexoes e Sistema.
@@ -155,6 +155,22 @@ Dashboard design tokens OK
 ```
 
 Esse check falha se o dashboard reintroduzir sombras, gradientes, filtros decorativos ou fontes fora da familia mono.
+
+## Linguagem de Produto
+
+Para validar o foco em analise e busca de oportunidades, sem modulo de envio ao Profit:
+
+```text
+node tools/validate-product-language.js
+```
+
+Resultado esperado:
+
+```text
+Product language OK
+```
+
+Esse check falha se a documentacao ou o dashboard reintroduzirem linguagem de envio de operacoes.
 
 ## Navegacao
 

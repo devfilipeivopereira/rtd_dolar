@@ -71,23 +71,25 @@ Scores sao limitados por qualidade:
 
 O dashboard usa o menu superior:
 
-- `Painel`: checklist operacional, atalhos, setups recentes, planos e alertas;
-- `Monitor`: mesa ao vivo com watchlist compacta, setups, tape, planos e alertas;
+- `Painel`: checklist de analise, atalhos, setups recentes, oportunidades e alertas;
+- `Radar`: oportunidades observacionais por setup/nivel e ranking multiativo;
+- `Monitor`: mesa ao vivo com watchlist compacta, setups, tape, oportunidades e alertas;
+- `Mesa`: DOM compacto, book resumido, tape, fluxo, setups e niveis proximos;
 - `Cotacoes`: watchlist de ativos com ultimo preco, bid/ask, delta e status das fontes;
 - `DOM`: escada de preco com pontos, book no nivel e sinais ativos;
 - `Book`: tabelas dedicadas de compra e venda por nivel;
 - `T&T`: Times & Trades real do RTD quando disponivel;
 - `Fluxo`: delta, cumulative delta, imbalance, OFI, microbias, VWAP e tape real/derivado;
 - `Setups`: sinais confirmados com score, direcao, preco e motivos;
-- `Boleta`: planos locais por ativo, acompanhados pelo preco RTD sem execucao de ordens;
+- `Oportunidades`: ideias observacionais por ativo, acompanhadas pelo preco RTD e mantidas localmente;
 - `Alertas`: alertas locais de preco por ativo;
-- `Risco`: calculadora local de stop, alvo e contratos;
+- `Risco`: calculadora local de stop, alvo e tamanho simulado;
 - `Historico`: CSV carregado e ticks recentes em memoria;
 - `Ajustes`: limites locais de renderizacao, DOM, trades e sinais;
 - `Conexoes`: health do coletor, RTD e fontes por ativo;
 - `Sistema`: qualidade, eventos, bookDepth, Times & Trades, sinais e fila.
 
-A hotbar operacional abre as telas mais usadas com `Alt+1` a `Alt+9`, mantendo `Monitor`, `DOM`, `Book`, `T&T`, `Fluxo`, `Boleta`, `Ativos`, `Conexoes` e `Sistema` a um comando.
+A hotbar de analise abre as telas mais usadas com `Alt+1` a `Alt+9`, mantendo `Monitor`, `DOM`, `Book`, `T&T`, `Fluxo`, `Oportunidades`, `Ativos`, `Conexoes` e `Sistema` a um atalho.
 
 A paleta `Ctrl+K` tambem abre telas e seleciona ativos cadastrados sem sair do fluxo de observacao.
 
