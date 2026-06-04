@@ -644,6 +644,7 @@ tr:hover td{background:#ffffff05}
     <div class="terminal-metric"><span>Book</span><strong id="top-book-status">--</strong></div>
     <div class="terminal-metric"><span>Times</span><strong id="top-times-status">--</strong></div>
     <div class="terminal-metric" id="top-delta-tile"><span>Delta 5s</span><strong id="top-delta">--</strong></div>
+    <div class="terminal-metric" id="top-feed-tile"><span>Feed</span><strong id="top-feed">--</strong></div>
     <div class="terminal-metric" id="top-latency-tile"><span>Latencia WS</span><strong id="top-latency">--</strong></div>
     <div class="terminal-metric"><span>Msg/s</span><strong id="top-rate">--</strong></div>
     <div class="terminal-metric" id="top-render-tile"><span>Render UI</span><strong id="top-render">--</strong></div>
@@ -2164,6 +2165,8 @@ const refs = {
   topTimesStatus: document.getElementById("top-times-status"),
   topDeltaTile: document.getElementById("top-delta-tile"),
   topDelta: document.getElementById("top-delta"),
+  topFeedTile: document.getElementById("top-feed-tile"),
+  topFeed: document.getElementById("top-feed"),
   topLatencyTile: document.getElementById("top-latency-tile"),
   topLatency: document.getElementById("top-latency"),
   topRate: document.getElementById("top-rate"),
@@ -2697,6 +2700,7 @@ function renderMarketStrip() {
   const depth = liveBookDepthForAsset(asset);
   const times = state.rtd.timesTradesByAsset[asset];
   const flow = flowBucket(asset).metrics || {};
+  const feed = feedFreshness(snapshot);
   refs.topLast.textContent = fmt(price);
   refs.topBidAsk.textContent = Number.isFinite(book.bid) && Number.isFinite(book.ask)
     ? `${fmt(book.bid)} / ${fmt(book.ask)}`
@@ -2710,6 +2714,8 @@ function renderMarketStrip() {
   const delta5s = liveNumber(flow.delta5s);
   refs.topDelta.textContent = signedFmt(delta5s, 0);
   setMetricTone(refs.topDeltaTile, delta5s > 0 ? "green" : delta5s < 0 ? "red" : "");
+  refs.topFeed.textContent = `${feed.label}${Number.isFinite(feed.ageMs) ? ` ${feed.detail}` : ""}`;
+  setMetricTone(refs.topFeedTile, feed.tone);
   refs.topLatency.textContent = fmtMs(state.telemetry.lastLagMs);
   setMetricTone(refs.topLatencyTile, state.telemetry.lastLagMs > 1200 ? "red" : state.telemetry.lastLagMs > 500 ? "amber" : "");
   refs.topRate.textContent = `${fmt(wsMessageRate(), 1)}/s`;
@@ -3194,13 +3200,15 @@ function quantReversalAssessment(snapshot, flow = {}) {
   };
 }
 
-function feedContext() {
+function feedContext(snapshot = state.rtd.lastSnapshot) {
   const lag = liveNumber(state.telemetry.lastLagMs);
   const rate = wsMessageRate();
+  const feed = feedFreshness(snapshot);
   if (!state.rtd.enabled) return { value: "Manual", detail: "RTD desligado", tone: "amber" };
+  if (feed.tone !== "green") return { value: feed.label, detail: `${feed.detail} | ${fmt(rate, 1)} msg/s`, tone: feed.tone };
   if (!Number.isFinite(lag)) return { value: "Conectando", detail: "sem telemetria", tone: "amber" };
   const tone = lag > 1200 ? "red" : lag > 500 ? "amber" : "green";
-  return { value: fmtMs(lag), detail: `${fmt(rate, 1)} msg/s`, tone };
+  return { value: feed.label, detail: `${feed.detail} | lag ${fmtMs(lag)} | ${fmt(rate, 1)} msg/s`, tone };
 }
 
 function renderDashboardContext(snapshot, flow) {
@@ -3210,7 +3218,7 @@ function renderDashboardContext(snapshot, flow) {
   const level = nearestLevelContext(snapshot);
   const radar = radarContext(snapshot);
   const quant = quantReversalAssessment(snapshot, flow);
-  const feed = feedContext();
+  const feed = feedContext(snapshot);
   refs.dashboardContext.innerHTML = [
     contextCard("Contexto", price.value, price.detail, price.tone),
     contextCard("Score Quant", Number.isFinite(quant.score) ? `${fmt(quant.score, 0)} ${quant.confidence.label}` : "Aguardando", `${quantDirectionLabel(quant.direction)} | ${quant.dataQuality}`, quant.confidence.tone),
@@ -3238,11 +3246,12 @@ function renderDashboard() {
   const priceOk = !!snapshot && Number.isFinite(intraday.price);
   const bookOk = !!depth || sourceIsOk(config?.bookRtd);
   const timesOk = !!times || sourceIsOk(config?.timesRtd);
+  const freshness = feedFreshness(snapshot);
 
   refs.dashboardRtd.textContent = state.rtd.enabled ? "RTD Live" : "Manual";
   refs.dashboardAsset.textContent = asset;
   refs.dashboardLast.textContent = fmt(intraday.price);
-  refs.dashboardState.textContent = priceOk ? "preco ativo" : config?.enabled ? "aguardando preco" : "ativo desligado";
+  refs.dashboardState.textContent = priceOk ? `preco ${freshness.label.toLowerCase()}` : config?.enabled ? "aguardando preco" : "ativo desligado";
   renderDashboardContext(snapshot, flow);
   const quant = quantReversalAssessment(snapshot, flow);
   const hasFlow = !!flow.lastMessage || Number.isFinite(liveNumber(flow.metrics?.delta5s));
@@ -3250,7 +3259,7 @@ function renderDashboard() {
 
   refs.dashboardReadiness.innerHTML = [
     readinessRow("Ativo", config ? (config.enabled ? "ligado" : "desligado") : "nao cadastrado", !!config && !!config.enabled),
-    readinessRow("RTD preco", priceOk ? "snapshot recebido" : sourceIsOk(config?.priceRtd) ? "assinado" : "sem snapshot", priceOk, sourceIsOk(config?.priceRtd)),
+    readinessRow("RTD preco", priceOk ? `${freshness.label} ${freshness.detail}` : sourceIsOk(config?.priceRtd) ? "assinado" : "sem snapshot", priceOk && freshness.tone === "green", priceOk || sourceIsOk(config?.priceRtd)),
     readinessRow("CSV historico", csvOk ? `${state.uploadedCount || config?.history?.Rows || config?.history?.rows || "--"} pregoes` : "carregar em Ativos", csvOk),
     readinessRow("Book", depth ? `${(depth.bids || []).length} x ${(depth.asks || []).length}` : config?.bookRtd?.enabled ? "ligando" : "desligado", !!depth, config?.bookRtd?.enabled),
     readinessRow("Times", times ? `${(times.trades || []).length} linhas` : config?.timesRtd?.enabled ? "ligando" : "desligado", !!times, config?.timesRtd?.enabled),
@@ -3957,11 +3966,15 @@ function renderConnections() {
   const assets = Array.isArray(health.assets) ? health.assets : state.rtd.assets || [];
   const profitOk = String(health.profitRtd || "").toLowerCase() === "connected";
   const checkedAt = state.health.checkedAt ? new Date(state.health.checkedAt).toLocaleTimeString("pt-BR") : "--";
+  const selectedFreshness = feedFreshness(state.rtd.snapshotsByAsset[selectedAsset()] || null);
 
   refs.connStatus.textContent = health.status || (state.health.checkedAt ? "ok" : "--");
   refs.connProfit.textContent = health.profitRtd || "--";
   refs.connArch.textContent = health.processArchitecture || "--";
-  refs.connUpdate.textContent = healthTime(health.lastUpdate);
+  const backendAge = liveNumber(health.lastUpdateAgeMs);
+  refs.connUpdate.textContent = Number.isFinite(backendAge)
+    ? `${healthTime(health.lastUpdate)} | ${fmtMs(backendAge)}`
+    : healthTime(health.lastUpdate);
   refs.connCheck.textContent = `Check ${checkedAt}`;
   refs.connCheck.className = profitOk ? "tag green" : health.lastError ? "tag red" : "tag amber";
   refs.connAssetCount.textContent = fmt(assets.length, 0);
@@ -3972,6 +3985,8 @@ function renderConnections() {
     ["URL", rtdWebSocketUrl()],
     ["ProgID", health.progId || "RTDTrading.RTDServer"],
     ["Ativo padrao", health.asset || selectedAsset()],
+    ["Idade backend", Number.isFinite(backendAge) ? fmtMs(backendAge) : "--"],
+    ["Feed selecionado", `${selectedFreshness.label} | ${selectedFreshness.detail}`],
     ["Latencia WS", fmtMs(state.telemetry.lastLagMs)],
     ["Mensagens/s", `${fmt(wsMessageRate(), 1)}/s`],
     ["Reconexoes", fmt(state.telemetry.reconnects, 0)],
@@ -4092,6 +4107,8 @@ async function loadHealth() {
     state.health.checkedAt = Date.now();
   }
   renderConnections();
+  renderMarketStrip();
+  scheduleLiveRender(null, false, "status", selectedAsset());
 }
 
 function startHealthPolling() {
@@ -4416,6 +4433,28 @@ function fmtMs(value) {
   if (!Number.isFinite(n)) return "--";
   if (n < 1000) return `${fmt(n, 0)} ms`;
   return `${fmt(n / 1000, 2)} s`;
+}
+
+function timestampAgeMs(value) {
+  if (!value) return NaN;
+  const parsed = Date.parse(value);
+  return Number.isFinite(parsed) ? Math.max(0, Date.now() - parsed) : NaN;
+}
+
+function snapshotAgeMs(snapshot) {
+  return timestampAgeMs(snapshot?.localTimestamp);
+}
+
+function feedFreshness(snapshot) {
+  if (!state.rtd.enabled) return { label: "Manual", detail: "RTD desligado", tone: "amber", ageMs: NaN };
+  if (!Number.isFinite(liveIntradayFromSnapshot(snapshot).price)) {
+    return { label: "Sem preco", detail: "sem ultimo", tone: "red", ageMs: NaN };
+  }
+  const ageMs = snapshotAgeMs(snapshot);
+  if (!Number.isFinite(ageMs)) return { label: "Sem preco", detail: "sem snapshot", tone: "red", ageMs };
+  if (ageMs <= 2500) return { label: "Ao vivo", detail: fmtMs(ageMs), tone: "green", ageMs };
+  if (ageMs <= 10000) return { label: "Atrasado", detail: fmtMs(ageMs), tone: "amber", ageMs };
+  return { label: "Parado", detail: fmtMs(ageMs), tone: "red", ageMs };
 }
 
 function messageServerTimestamp(msg) {

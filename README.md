@@ -74,6 +74,8 @@ O `Painel` tambem mostra um roteiro de analise com `Proximo passo` e etapas `Ati
 
 O render ao vivo do navegador usa fila coalescida por motivo (`snapshot`, `book`, `times`, `flow`, `signal`, `status`, `ui`) e por ativo. A cada pulso, a UI redesenha principalmente a tela ativa e ignora eventos que nao afetam aquela tela. Em `Sistema`, `Render motivos` e `Render ativos` mostram o ultimo lote desenhado.
 
+O terminal tambem diferencia RTD conectado de dado realmente atualizado. A faixa superior mostra `Feed` como `Ao vivo`, `Atrasado`, `Parado`, `Sem preco` ou `Manual`, com idade do ultimo snapshot do ativo selecionado. O `/health` expoe `lastUpdateAgeMs`, e `Conexoes` mostra a idade do backend e o feed selecionado.
+
 `Ctrl+K` abre a paleta de busca para localizar telas e ativos cadastrados.
 
 A aba `DOM` mostra:
@@ -216,7 +218,9 @@ logs/                   logs em runtime
 22. Linguagem de produto: rodar `node tools/validate-product-language.js` e confirmar `Product language OK`.
 23. Quant QA: rodar `node tools/validate-quant-surface.js` e confirmar `Quant surface OK`.
 24. Render QA: rodar `node tools/validate-live-render-scheduler.js` e confirmar `Live render scheduler OK`.
-25. Score Quant: confirmar no `Painel` que `Score Quant`, `Indicadores Quant`, `Base Quant` e `Evidencias Quant` aparecem; sem CSV, RTD ou fluxo, o score deve ficar penalizado ou aguardando dados.
-26. Roteiro: confirmar que `Proximo passo` muda entre Ativos, Conexoes, Fluxo, Radar e Mesa conforme faltam dados ou conforme o score fica utilizavel.
-27. Sistema: confirmar `Render motivos` e `Render ativos` mudando conforme chegam snapshot, book, times, flow e signal.
-28. SQLite: confirmar criacao de `data/marketdata.sqlite` quando o provider for restaurado pelo NuGet.
+25. Feed QA: rodar `node tools/validate-feed-freshness.js` e confirmar `Feed freshness OK`.
+26. Score Quant: confirmar no `Painel` que `Score Quant`, `Indicadores Quant`, `Base Quant` e `Evidencias Quant` aparecem; sem CSV, RTD ou fluxo, o score deve ficar penalizado ou aguardando dados.
+27. Roteiro: confirmar que `Proximo passo` muda entre Ativos, Conexoes, Fluxo, Radar e Mesa conforme faltam dados ou conforme o score fica utilizavel.
+28. Sistema: confirmar `Render motivos` e `Render ativos` mudando conforme chegam snapshot, book, times, flow e signal.
+29. Feed parado: pausar/fechar o Profit ou interromper updates e confirmar que `Feed` muda de `Ao vivo` para `Atrasado`/`Parado`.
+30. SQLite: confirmar criacao de `data/marketdata.sqlite` quando o provider for restaurado pelo NuGet.

@@ -136,6 +136,8 @@ No navegador, campos criticos de preco e inputs intraday sao preenchidos a cada 
 
 O scheduler do navegador agora acumula motivos de render (`snapshot`, `book`, `times`, `flow`, `signal`, `status`, `ui`) e ativos impactados. Antes de redesenhar, ele verifica se o evento afeta a tela ativa. Por exemplo, uma mensagem `flow` nao repinta a tela `Book`, e uma mensagem `book` nao repinta a tela `T&T`. Telas de contexto amplo como `Painel`, `Mesa`, `Monitor`, `Radar`, `Cotacoes`, `Conexoes` e `Sistema` continuam recebendo todos os motivos relevantes.
 
+O backend inclui `lastUpdateAgeMs` em `/health`. No navegador, a faixa superior calcula a idade do snapshot do ativo selecionado e classifica o feed como `Ao vivo`, `Atrasado`, `Parado`, `Sem preco` ou `Manual`. O polling de `/health` tambem aciona um render `status`, para que a UI indique feed parado mesmo quando nenhuma nova mensagem chega pelo WebSocket.
+
 A telemetria `Latencia WS` e calculada no navegador comparando o recebimento da mensagem com `localTimestamp` enviado pelo backend local. A metrica `Render UI` mede a duracao do ultimo batch de desenho da aba ativa, com media e pico no `Sistema`. Essas leituras servem para diagnosticar atraso entre coletor, navegador e interface; nao medem latencia de bolsa ou Profit.
 
 ## Persistencia

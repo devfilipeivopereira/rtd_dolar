@@ -200,6 +200,7 @@ namespace ColetorProfitRTD
         {
             MarketSnapshot snapshot = rtdClient.CurrentSnapshot;
             Exception lastError = rtdClient.LastError;
+            double lastUpdateAgeMs = Math.Max(0, (DateTimeOffset.Now - snapshot.LocalTimestamp).TotalMilliseconds);
 
             return new Dictionary<string, object>
             {
@@ -209,6 +210,7 @@ namespace ColetorProfitRTD
                 ["progId"] = config.Rtd.ProgId,
                 ["processArchitecture"] = Environment.Is64BitProcess ? "x64" : "x86",
                 ["lastUpdate"] = snapshot.LocalTimestamp.ToString("o"),
+                ["lastUpdateAgeMs"] = Math.Round(lastUpdateAgeMs),
                 ["lastError"] = lastError == null ? null : lastError.Message,
                 ["assets"] = rtdClient.AssetStates(),
                 ["flow"] = flowProcessor.Health()

@@ -47,6 +47,7 @@ Resultado esperado:
 27. Confirmar que o `Score Quant` fica aguardando ou penalizado quando faltar CSV, preco RTD ou fluxo/T&T.
 28. Confirmar no `Painel` que o roteiro mostra `Proximo passo` e etapas `Ativo`, `RTD preco`, `CSV`, `Book/T&T`, `Fluxo` e `Score`.
 29. Abrir `Sistema` e confirmar `Render motivos` e `Render ativos` mudando conforme chegam snapshots, book, Times, flow e sinais.
+30. Confirmar na faixa superior que `Feed` mostra `Ao vivo` com RTD atualizando e muda para `Atrasado`/`Parado` quando o snapshot do ativo selecionado fica antigo.
 
 ## Endpoints
 
@@ -139,6 +140,7 @@ Sem CSV, a aba DOM ainda pode mostrar ticks RTD, bid/ask e tape. Pontos como POC
 - Sem uma das fontes principais, a `Base Quant` deve explicitar a falta e o score nao deve parecer uma confirmacao forte.
 - O roteiro do `Painel` deve indicar o proximo passo real e abrir a tela correta: `Ativos`, `Conexoes`, `Fluxo`, `Radar` ou `Mesa`.
 - O scheduler de render deve agrupar motivos por lote e evitar repintar a tela ativa quando o evento nao e relevante para ela.
+- O feed deve diferenciar RTD conectado de snapshot fresco; `Conexoes` deve mostrar `Idade backend` e `Feed selecionado`.
 
 ## SQLite
 
@@ -211,6 +213,22 @@ Live render scheduler OK
 ```
 
 Esse check falha se o dashboard perder a fila de motivos, o filtro por aba ativa ou o diagnostico `Render motivos` / `Render ativos`.
+
+## Feed QA
+
+Para validar que a UI e o backend continuam detectando dado parado, rode:
+
+```text
+node tools/validate-feed-freshness.js
+```
+
+Resultado esperado:
+
+```text
+Feed freshness OK
+```
+
+Esse check falha se `/health` perder `lastUpdateAgeMs`, se a faixa superior perder `Feed`, ou se o dashboard perder `Ao vivo`, `Atrasado`, `Parado`, `Idade backend` e `Feed selecionado`.
 
 ## Navegacao
 
