@@ -77,6 +77,7 @@ O dashboard usa o menu superior:
 - `T&T`: Times & Trades real do RTD quando disponivel;
 - `Fluxo`: delta, cumulative delta, imbalance, OFI, microbias, VWAP e tape real/derivado;
 - `Setups`: sinais confirmados com score, direcao, preco e motivos;
+- `Boleta`: planos locais por ativo, acompanhados pelo preco RTD sem execucao de ordens;
 - `Alertas`: alertas locais de preco por ativo;
 - `Risco`: calculadora local de stop, alvo e contratos;
 - `Historico`: CSV carregado e ticks recentes em memoria;

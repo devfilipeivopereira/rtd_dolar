@@ -24,12 +24,13 @@ Resultado esperado:
 4. Abrir `Ativos`, cadastrar o ativo e carregar o CSV historico.
 5. Confirmar status `RTD Conectado`.
 6. Abrir `Cotacoes` e confirmar que a linha do ativo mostra ultimo preco, bid/ask, delta, Book, Times e fontes `P/B/T`.
-7. Confirmar que os botoes de `Cotacoes` abrem `Grafico`, `DOM`, `Book` e `T&T` do ativo correto.
+7. Confirmar que os botoes de `Cotacoes` abrem `Grafico`, `DOM`, `Book`, `T&T` e `Boleta` do ativo correto.
 8. Confirmar que a aba `DOM` mostra preco, tape e pontos principais.
 9. Adicionar um ativo em `Ativos`, selecionar com `Ver` e ligar/desligar sem reiniciar o app.
 10. Abrir `Book` e confirmar 50 niveis quando `BOOK0` estiver ligado.
 11. Abrir `T&T` e confirmar ate 100 linhas quando `T&T0` estiver ligado.
-12. Abrir `Alertas`, `Risco`, `Historico` e `Sistema` e confirmar que cada tela mostra apenas sua funcionalidade.
+12. Abrir `Boleta`, salvar um plano local e confirmar que ele nao envia ordem.
+13. Abrir `Alertas`, `Risco`, `Historico` e `Sistema` e confirmar que cada tela mostra apenas sua funcionalidade.
 
 ## Endpoints
 
@@ -106,6 +107,7 @@ Sem CSV, a aba DOM ainda pode mostrar ticks RTD, bid/ask e tape. Pontos como POC
 - CSV salvo deve voltar por `GET /assets/history?asset=...` depois de recarregar a pagina.
 - A faixa superior deve trocar junto com o ativo selecionado e mostrar ultimo preco, bid/ask, Book, Times, delta e CSV.
 - `Cotacoes` deve separar monitoramento de cadastro: a tela mostra status e atalhos, mas a edicao continua em `Ativos`.
+- `Boleta` deve salvar planos em localStorage, calcular R/R e mudar status com preco RTD sem chamar endpoint de ordem.
 - `Book` e `T&T` devem atualizar sem travar a pagina mesmo com muitos campos RTD, respeitando coalescing do backend.
 
 ## SQLite

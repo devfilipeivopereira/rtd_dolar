@@ -71,6 +71,7 @@ O menu superior separa:
 - `T&T`: Times & Trades RTD;
 - `Fluxo`: delta, book, tape e metricas;
 - `Setups`: sinais;
+- `Boleta`: plano local de entrada, stop, alvo e acompanhamento por toque de preco;
 - `Alertas`: alertas locais por preco;
 - `Risco`: calculadora local de stop, alvo e contratos;
 - `Historico`: resumo do CSV e ticks em memoria;
@@ -78,7 +79,9 @@ O menu superior separa:
 
 A faixa superior fica disponivel em todas as telas e mostra ativo selecionado, ultimo preco, bid/ask, status de Book, status de Times, delta 5s e CSV carregado.
 
-A tela `Ativos` configura fontes e CSV. A tela `Cotacoes` e a mesa de monitoramento: cada linha mostra ultimo preco, bid/ask, delta, status de Book, status de Times, status das fontes `P/B/T` e botoes para abrir `Grafico`, `DOM`, `Book` ou `T&T` daquele ativo.
+A tela `Ativos` configura fontes e CSV. A tela `Cotacoes` e a mesa de monitoramento: cada linha mostra ultimo preco, bid/ask, delta, status de Book, status de Times, status das fontes `P/B/T` e botoes para abrir `Grafico`, `DOM`, `Book`, `T&T` ou `Boleta` daquele ativo.
+
+A `Boleta` persiste planos no navegador por ativo. Ela calcula risco e R/R, acompanha se entrada, alvo ou stop foram tocados pelo preco RTD e nao chama nenhum endpoint de envio de ordem.
 
 A selecao de ativo define o que aparece nos campos intraday, DOM, fluxo e setups. Snapshots, book e Times & Trades de ativos diferentes ficam em caches separados no navegador, e as fontes podem ser ajustadas por ativo sem reiniciar o app.
 

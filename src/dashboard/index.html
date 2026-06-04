@@ -394,9 +394,18 @@ tr:hover td{background:#ffffff05}
 .times-grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(280px,.75fr);gap:14px}
 .times-table td,.times-table th{text-align:right}
 .times-table td:first-child,.times-table th:first-child{text-align:left}
-.alert-grid,.risk-grid,.history-grid{display:grid;grid-template-columns:minmax(320px,.85fr) minmax(0,1.2fr);gap:14px}
+.alert-grid,.risk-grid,.order-grid,.history-grid{display:grid;grid-template-columns:minmax(320px,.85fr) minmax(0,1.2fr);gap:14px}
 .alert-row{display:grid;grid-template-columns:88px 1fr 74px 76px;gap:8px;align-items:center;border:1px solid var(--line);background:#10141a;padding:7px 8px;font-family:var(--mono);font-size:11px}
 .alert-row.triggered{border-color:#1f7a66;background:#0d261f}
+.order-ticket-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+.order-table td,.order-table th{text-align:right;white-space:nowrap}
+.order-table td:first-child,.order-table th:first-child{text-align:left}
+.orders-list-panel{margin-top:14px}
+.order-status{display:inline-flex;align-items:center;justify-content:center;min-height:22px;padding:0 7px;border:1px solid var(--line);background:#0e1318;color:var(--muted);font-size:10px;font-weight:900}
+.order-status.waiting{border-color:#7a5f1f;color:#ffd66b;background:#28210d}
+.order-status.open{border-color:#285d80;color:#9bd7ff;background:#10202b}
+.order-status.target{border-color:#1f7a66;color:#9df2d5;background:#0d261f}
+.order-status.stop{border-color:#7a2b2b;color:#ff9b9b;background:#2b1111}
 .risk-result{display:grid;grid-template-columns:repeat(4,minmax(120px,1fr));gap:8px}
 .history-tape{max-height:540px;overflow:auto}
 .flow-debug-grid{display:grid;grid-template-columns:repeat(3,minmax(160px,1fr));gap:10px}
@@ -437,7 +446,7 @@ tr:hover td{background:#ffffff05}
   .brand-title,.brand-sub{white-space:normal}
   .top-meta{justify-content:flex-start}
   .field-grid{grid-template-columns:1fr}
-  .market-table-grid,.times-grid,.alert-grid,.risk-grid,.history-grid{grid-template-columns:1fr}
+  .market-table-grid,.times-grid,.alert-grid,.risk-grid,.order-grid,.history-grid{grid-template-columns:1fr}
   .risk-result{grid-template-columns:1fr 1fr}
   .cards{grid-template-columns:1fr 1fr}
   .chart-shell{height:340px;padding:10px}
@@ -481,6 +490,7 @@ tr:hover td{background:#ffffff05}
       </div>
       <div class="tab-group">
         <span class="tab-group-label">Controle</span>
+        <button class="main-tab" data-main-tab="orders" type="button">Boleta</button>
         <button class="main-tab" data-main-tab="alerts" type="button">Alertas</button>
         <button class="main-tab" data-main-tab="risk" type="button">Risco</button>
         <button class="main-tab" data-main-tab="history" type="button">Historico</button>
@@ -966,6 +976,84 @@ tr:hover td{background:#ffffff05}
           </div>
         </section>
 
+        <section class="tab-panel hidden" id="panel-orders">
+          <div class="order-grid">
+            <div class="panel">
+              <div class="panel-head">
+                <div class="panel-title">Boleta local</div>
+                <span class="tag amber">Nao envia ordens</span>
+              </div>
+              <div class="panel-body">
+                <div class="field-grid">
+                  <div class="field">
+                    <label for="order-side">Lado</label>
+                    <select id="order-side">
+                      <option value="buy">Compra</option>
+                      <option value="sell">Venda</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label for="order-trigger">Gatilho entrada</label>
+                    <select id="order-trigger">
+                      <option value="above">Preco acima/igual</option>
+                      <option value="below">Preco abaixo/igual</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label for="order-entry">Entrada</label>
+                    <input type="number" id="order-entry" step="0.5">
+                  </div>
+                  <div class="field">
+                    <label for="order-stop">Stop</label>
+                    <input type="number" id="order-stop" step="0.5">
+                  </div>
+                  <div class="field">
+                    <label for="order-target">Alvo</label>
+                    <input type="number" id="order-target" step="0.5">
+                  </div>
+                  <div class="field">
+                    <label for="order-contracts">Contratos</label>
+                    <input type="number" id="order-contracts" min="1" step="1" value="1">
+                  </div>
+                  <div class="field">
+                    <label for="order-point-value">Valor por ponto</label>
+                    <input type="number" id="order-point-value" step="0.01" placeholder="opcional">
+                  </div>
+                  <div class="field">
+                    <label for="order-note">Observacao</label>
+                    <input type="text" id="order-note" placeholder="Plano do setup">
+                  </div>
+                </div>
+                <div class="order-ticket-actions">
+                  <button class="btn-secondary blue" id="order-use-price" type="button">Usar preco</button>
+                  <button class="btn-secondary ok" id="order-save" type="button">Salvar plano</button>
+                  <button class="btn-secondary bad" id="order-clear" type="button">Limpar planos</button>
+                </div>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="panel-head"><div class="panel-title">Resumo do plano</div></div>
+              <div class="panel-body"><div class="risk-result" id="order-summary"></div></div>
+            </div>
+          </div>
+          <div class="panel orders-list-panel">
+            <div class="panel-head">
+              <div class="panel-title">Planos do ativo</div>
+              <span class="tag" id="order-count">0</span>
+            </div>
+            <div class="table-wrap">
+              <table class="order-table">
+                <thead>
+                  <tr>
+                    <th>Plano</th><th>Lado</th><th>Entrada</th><th>Stop</th><th>Alvo</th><th>R/R</th><th>Status</th><th>Acoes</th>
+                  </tr>
+                </thead>
+                <tbody id="order-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
         <section class="tab-panel hidden" id="panel-alerts">
           <div class="alert-grid">
             <div class="panel">
@@ -1310,7 +1398,22 @@ function saveAlerts() {
   } catch (_) {}
 }
 
-const MAIN_TABS = ["assets", "quotes", "panorama", "dom", "book", "times", "flow", "signals", "alerts", "risk", "history", "diagnostics"];
+function loadOrderPlans() {
+  try {
+    const parsed = JSON.parse(globalThis.localStorage?.getItem("wdo-order-plans") || "[]");
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (_) {
+    return [];
+  }
+}
+
+function saveOrderPlans() {
+  try {
+    globalThis.localStorage?.setItem("wdo-order-plans", JSON.stringify(state.orderPlans));
+  } catch (_) {}
+}
+
+const MAIN_TABS = ["assets", "quotes", "panorama", "dom", "book", "times", "flow", "signals", "orders", "alerts", "risk", "history", "diagnostics"];
 
 const state = {
   ui: {
@@ -1366,6 +1469,7 @@ const state = {
     factor: 1,
   },
   alerts: loadAlerts(),
+  orderPlans: loadOrderPlans(),
 };
 
 const COLORS = {
@@ -1506,6 +1610,20 @@ const refs = {
   alertAdd: document.getElementById("alert-add"),
   alertClear: document.getElementById("alert-clear"),
   alertsList: document.getElementById("alerts-list"),
+  orderSide: document.getElementById("order-side"),
+  orderTrigger: document.getElementById("order-trigger"),
+  orderEntry: document.getElementById("order-entry"),
+  orderStop: document.getElementById("order-stop"),
+  orderTarget: document.getElementById("order-target"),
+  orderContracts: document.getElementById("order-contracts"),
+  orderPointValue: document.getElementById("order-point-value"),
+  orderNote: document.getElementById("order-note"),
+  orderUsePrice: document.getElementById("order-use-price"),
+  orderSave: document.getElementById("order-save"),
+  orderClear: document.getElementById("order-clear"),
+  orderSummary: document.getElementById("order-summary"),
+  orderCount: document.getElementById("order-count"),
+  orderBody: document.getElementById("order-body"),
   riskEntry: document.getElementById("risk-entry"),
   riskStop: document.getElementById("risk-stop"),
   riskTarget: document.getElementById("risk-target"),
@@ -1848,7 +1966,7 @@ function renderTopAssetSelect() {
 
 function renderMarketStrip() {
   const asset = selectedAsset();
-  const snapshot = state.rtd.snapshotsByAsset[asset] || state.rtd.lastSnapshot;
+  const snapshot = state.rtd.snapshotsByAsset[asset] || null;
   const price = liveIntradayFromSnapshot(snapshot).price;
   const book = liveBookFromSnapshot(snapshot);
   const depth = liveBookDepthForAsset(asset);
@@ -1944,6 +2062,7 @@ function renderQuotesPanel() {
             <button class="asset-action view" type="button" data-quotes-open="dom" data-asset="${escapeHtml(asset)}">DOM</button>
             <button class="asset-action view" type="button" data-quotes-open="book" data-asset="${escapeHtml(asset)}">Book</button>
             <button class="asset-action view" type="button" data-quotes-open="times" data-asset="${escapeHtml(asset)}">T&amp;T</button>
+            <button class="asset-action view" type="button" data-quotes-open="orders" data-asset="${escapeHtml(asset)}">Boleta</button>
           </div>
         </td>
       </tr>
@@ -2074,6 +2193,179 @@ function renderAlerts() {
   `).join("");
 }
 
+function currentLivePrice() {
+  const snapshot = state.rtd.snapshotsByAsset[selectedAsset()] || null;
+  const live = liveIntradayFromSnapshot(snapshot).price;
+  return Number.isFinite(live) ? live : liveNumber(refs.inputs.price.value);
+}
+
+function orderPlanKey(plan) {
+  return plan?.id || `${plan?.asset}|${plan?.createdAt}|${plan?.entry}`;
+}
+
+function orderPlanMetrics(plan) {
+  const entry = liveNumber(plan.entry);
+  const stop = liveNumber(plan.stop);
+  const target = liveNumber(plan.target);
+  const contracts = Math.max(1, Math.round(liveNumber(plan.contracts) || 1));
+  const pointValue = liveNumber(plan.pointValue);
+  const riskPts = Math.abs(entry - stop);
+  const gainPts = Math.abs(target - entry);
+  return {
+    entry,
+    stop,
+    target,
+    contracts,
+    pointValue,
+    riskPts,
+    gainPts,
+    rr: riskPts > 0 ? gainPts / riskPts : NaN,
+    riskMoney: Number.isFinite(pointValue) ? riskPts * contracts * pointValue : NaN,
+    gainMoney: Number.isFinite(pointValue) ? gainPts * contracts * pointValue : NaN,
+  };
+}
+
+function orderPlanIsValid(plan) {
+  const m = orderPlanMetrics(plan);
+  if (!Number.isFinite(m.entry) || !Number.isFinite(m.stop) || !Number.isFinite(m.target)) return false;
+  if (m.riskPts <= 0 || m.gainPts <= 0) return false;
+  if (plan.side === "buy") return m.stop < m.entry && m.target > m.entry;
+  return m.stop > m.entry && m.target < m.entry;
+}
+
+function entryTriggerHit(plan, price) {
+  const entry = liveNumber(plan.entry);
+  if (!Number.isFinite(price) || !Number.isFinite(entry)) return false;
+  return plan.trigger === "below" ? price <= entry : price >= entry;
+}
+
+function targetHit(plan, price) {
+  const target = liveNumber(plan.target);
+  if (!Number.isFinite(price) || !Number.isFinite(target)) return false;
+  return plan.side === "buy" ? price >= target : price <= target;
+}
+
+function stopHit(plan, price) {
+  const stop = liveNumber(plan.stop);
+  if (!Number.isFinite(price) || !Number.isFinite(stop)) return false;
+  return plan.side === "buy" ? price <= stop : price >= stop;
+}
+
+function orderStatus(plan) {
+  if (plan.result === "target") return { label: "alvo", cls: "target" };
+  if (plan.result === "stop") return { label: "stop", cls: "stop" };
+  if (plan.entryTouchedAt) return { label: "aberto", cls: "open" };
+  return { label: "aguardando", cls: "waiting" };
+}
+
+function updateOrderPlans(price) {
+  if (!Number.isFinite(price)) return;
+  let changed = false;
+  const now = new Date().toISOString();
+  state.orderPlans.forEach(plan => {
+    if (normalizeAsset(plan.asset) !== selectedAsset() || plan.closedAt || !orderPlanIsValid(plan)) return;
+    if (!plan.entryTouchedAt && entryTriggerHit(plan, price)) {
+      plan.entryTouchedAt = now;
+      changed = true;
+    }
+    if (plan.entryTouchedAt && !plan.closedAt) {
+      if (targetHit(plan, price)) {
+        plan.closedAt = now;
+        plan.result = "target";
+        changed = true;
+      } else if (stopHit(plan, price)) {
+        plan.closedAt = now;
+        plan.result = "stop";
+        changed = true;
+      }
+    }
+  });
+  if (changed) {
+    saveOrderPlans();
+    renderOrders();
+  }
+}
+
+function orderDraft() {
+  return {
+    asset: selectedAsset(),
+    side: refs.orderSide.value,
+    trigger: refs.orderTrigger.value,
+    entry: liveNumber(refs.orderEntry.value),
+    stop: liveNumber(refs.orderStop.value),
+    target: liveNumber(refs.orderTarget.value),
+    contracts: Math.max(1, Math.round(liveNumber(refs.orderContracts.value) || 1)),
+    pointValue: liveNumber(refs.orderPointValue.value),
+    note: refs.orderNote.value || "",
+  };
+}
+
+function renderOrderSummary() {
+  if (!refs.orderSummary) return;
+  const draft = orderDraft();
+  const m = orderPlanMetrics(draft);
+  const price = currentLivePrice();
+  const dist = Number.isFinite(price) && Number.isFinite(m.entry) ? price - m.entry : NaN;
+  refs.orderSummary.innerHTML = [
+    ["Atual", fmt(price)],
+    ["Dist. entrada", Number.isFinite(dist) ? `${signedFmt(dist, 1)} pts` : "--"],
+    ["Risco", Number.isFinite(m.riskMoney) ? `R$ ${fmt(m.riskMoney, 2)}` : `${fmt(m.riskPts)} pts`],
+    ["Alvo", Number.isFinite(m.gainMoney) ? `R$ ${fmt(m.gainMoney, 2)}` : `${fmt(m.gainPts)} pts`],
+    ["R/R", Number.isFinite(m.rr) ? fmt(m.rr, 2) : "--"],
+    ["Validade", orderPlanIsValid(draft) ? "valido" : "ajustar"],
+  ].map(([k, v]) => `<div class="live-kv"><span>${escapeHtml(k)}</span><strong>${escapeHtml(v)}</strong></div>`).join("");
+}
+
+function renderOrders() {
+  renderOrderSummary();
+  if (!refs.orderBody) return;
+  const orders = state.orderPlans.filter(plan => normalizeAsset(plan.asset) === selectedAsset());
+  refs.orderCount.textContent = fmt(orders.length, 0);
+  if (!orders.length) {
+    refs.orderBody.innerHTML = `<tr><td colspan="8">Nenhum plano salvo para o ativo.</td></tr>`;
+    return;
+  }
+
+  refs.orderBody.innerHTML = orders.map(plan => {
+    const m = orderPlanMetrics(plan);
+    const status = orderStatus(plan);
+    const label = trimText(plan.note || plan.createdAt?.slice(11, 19) || "Plano", 32);
+    return `
+      <tr>
+        <td>${escapeHtml(label)}</td>
+        <td>${plan.side === "buy" ? "Compra" : "Venda"}</td>
+        <td class="strong">${fmt(m.entry)}</td>
+        <td>${fmt(m.stop)}</td>
+        <td>${fmt(m.target)}</td>
+        <td>${Number.isFinite(m.rr) ? fmt(m.rr, 2) : "--"}</td>
+        <td><span class="order-status ${status.cls}">${escapeHtml(status.label)}</span></td>
+        <td><button class="asset-action delete" type="button" data-order-remove="${escapeHtml(orderPlanKey(plan))}">Excluir</button></td>
+      </tr>
+    `;
+  }).join("");
+}
+
+function addOrderPlan() {
+  const draft = orderDraft();
+  if (!orderPlanIsValid(draft)) {
+    renderOrderSummary();
+    return;
+  }
+  state.orderPlans.unshift({
+    ...draft,
+    id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+    createdAt: new Date().toISOString(),
+    entryTouchedAt: null,
+    closedAt: null,
+    result: null,
+    pointValue: Number.isFinite(draft.pointValue) ? draft.pointValue : null,
+  });
+  state.orderPlans = state.orderPlans.slice(0, 120);
+  saveOrderPlans();
+  updateOrderPlans(currentLivePrice());
+  renderOrders();
+}
+
 function renderRisk() {
   if (!refs.riskResult) return;
   const entry = liveNumber(refs.riskEntry.value || refs.inputs.price.value);
@@ -2157,6 +2449,7 @@ function showMainTab(tabName) {
   else if (safe === "times") activateSubTab("times");
   else if (safe === "flow") activateSubTab("flow");
   else if (safe === "signals") activateSubTab("signals");
+  else if (safe === "orders") activateSubTab("orders");
   else if (safe === "alerts") activateSubTab("alerts");
   else if (safe === "risk") activateSubTab("risk");
   else if (safe === "history") activateSubTab("history");
@@ -2168,6 +2461,7 @@ function showMainTab(tabName) {
   if (safe === "times") renderTimesPanel();
   if (safe === "flow") renderFlow();
   if (safe === "signals") renderSignals();
+  if (safe === "orders") renderOrders();
   if (safe === "alerts") renderAlerts();
   if (safe === "risk") renderRisk();
   if (safe === "history") renderHistoryPanel();
@@ -2188,6 +2482,7 @@ function renderSelectedAsset() {
   renderDom(snapshot);
   renderBookPanel();
   renderTimesPanel();
+  renderOrders();
   renderAlerts();
   renderRisk();
   renderHistoryPanel();
@@ -2218,7 +2513,14 @@ function selectAsset(asset) {
     writeLiveInput(refs.inputs.vwap, intraday.vwapIntraday);
     writeLiveInput(refs.inputs.volume, intraday.volumeAcumulado, 0);
     scheduleLiveRecalc();
+  } else {
+    Object.values(refs.inputs).forEach(input => {
+      input.value = "";
+      input.classList.remove("live-fed");
+    });
+    updateReady();
   }
+  renderOrderSummary();
 }
 
 async function loadAssets() {
@@ -4725,7 +5027,10 @@ function applyLiveSnapshot(msg) {
   writeLiveInput(refs.inputs.vwap, intraday.vwapIntraday);
   writeLiveInput(refs.inputs.volume, intraday.volumeAcumulado, 0);
 
-  checkAlerts(liveNumber(intraday.precoAtual));
+  const currentPrice = liveNumber(intraday.precoAtual);
+  checkAlerts(currentPrice);
+  updateOrderPlans(currentPrice);
+  renderOrderSummary();
   renderDom(msg);
   renderMarketStrip();
   renderRisk();
@@ -4993,6 +5298,31 @@ refs.quotesBody.addEventListener("click", ev => {
   showMainTab(action.dataset.quotesOpen);
 });
 
+refs.orderUsePrice.addEventListener("click", () => {
+  const price = currentLivePrice();
+  if (Number.isFinite(price)) {
+    refs.orderEntry.value = price.toFixed(1);
+    renderOrderSummary();
+  }
+});
+refs.orderSave.addEventListener("click", addOrderPlan);
+refs.orderClear.addEventListener("click", () => {
+  state.orderPlans = state.orderPlans.filter(plan => normalizeAsset(plan.asset) !== selectedAsset());
+  saveOrderPlans();
+  renderOrders();
+});
+refs.orderBody.addEventListener("click", ev => {
+  const remove = ev.target.closest("[data-order-remove]");
+  if (!remove) return;
+  state.orderPlans = state.orderPlans.filter(plan => orderPlanKey(plan) !== remove.dataset.orderRemove);
+  saveOrderPlans();
+  renderOrders();
+});
+[refs.orderSide, refs.orderTrigger, refs.orderEntry, refs.orderStop, refs.orderTarget, refs.orderContracts, refs.orderPointValue, refs.orderNote].forEach(input => {
+  input.addEventListener("input", renderOrderSummary);
+  input.addEventListener("change", renderOrderSummary);
+});
+
 refs.alertAdd.addEventListener("click", addPriceAlert);
 refs.alertClear.addEventListener("click", () => {
   state.alerts = state.alerts.filter(alert => normalizeAsset(alert.asset) !== selectedAsset());
@@ -5095,6 +5425,8 @@ Object.values(refs.inputs).forEach(input => {
     input.classList.remove("live-fed");
     updateReady();
     renderRisk();
+    renderOrderSummary();
+    updateOrderPlans(currentLivePrice());
     if (!refs.btn.disabled) recalc();
   });
 });
@@ -5282,6 +5614,7 @@ renderMarketStrip();
 renderQuotesPanel();
 renderBookPanel();
 renderTimesPanel();
+renderOrders();
 renderAlerts();
 renderRisk();
 renderHistoryPanel();

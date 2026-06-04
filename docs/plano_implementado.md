@@ -16,6 +16,7 @@
 - SQLite auxiliar para snapshots de 1 segundo e consolidado por minuto.
 - HTML do `dolar-points` importado e adaptado com menu superior agrupado em `Cadastro`, `Mercado`, `Fluxo` e `Controle`.
 - Tela `Cotacoes` como watchlist operacional entre o cadastro de ativos e as telas de analise.
+- Tela `Boleta` para planos locais de entrada, stop, alvo, risco e status por toque de preco, sem envio de ordens.
 - Faixa superior operacional com ativo selecionado, ultimo preco, bid/ask, Book, Times, delta e CSV.
 - Coalescing auxiliar para `bookDepth` e `timesTrades`, reduzindo repintura sem bloquear snapshots de preco.
 
@@ -28,8 +29,9 @@
 5. Cadastrar ativo em `Ativos` e carregar CSV historico.
 6. Confirmar que os campos intraday sao preenchidos por RTD.
 7. Adicionar outro ativo em `Ativos`, testar `Ver`, `Ligado`, `Desligado`, fontes e `Excluir`.
-8. Abrir `Cotacoes` e testar os atalhos para `Grafico`, `DOM`, `Book` e `T&T`.
-9. Abrir `Book`, `T&T`, `Alertas`, `Risco`, `Historico` e `Sistema`.
+8. Abrir `Cotacoes` e testar os atalhos para `Grafico`, `DOM`, `Book`, `T&T` e `Boleta`.
+9. Salvar um plano local na `Boleta` e confirmar que nenhum endpoint de ordem e chamado.
+10. Abrir `Book`, `T&T`, `Alertas`, `Risco`, `Historico` e `Sistema`.
 
 ## Build validado
 
