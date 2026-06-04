@@ -42,8 +42,9 @@ O historico diario continua sendo carregado por CSV no navegador. O RTD preenche
 
 O menu superior agora separa o terminal em grupos operacionais: `Inicio`, `Cadastro`, `Mercado`, `Fluxo`, `Controle` e `Sistema`. A hotbar contextual abaixo mostra apenas as telas do grupo ativo, enquanto a faixa superior mantem ativo selecionado, ultimo preco, bid/ask, status de Book, status de Times, delta, latencia WebSocket local, mensagens por segundo e CSV:
 
-- `Painel`: entrada operacional com checklist, atalhos, setups, planos e alertas;
-- `Monitor`: mesa ao vivo com watchlist compacta, estado do ativo, setups, tape, planos e alertas;
+- `Painel`: entrada operacional com checklist, atalhos, setups, oportunidades e alertas;
+- `Monitor`: mesa ao vivo com watchlist compacta, estado do ativo, setups, tape, oportunidades e alertas;
+- `Mesa`: cockpit de analise com DOM compacto, book resumido, tape, fluxo, setups e acoes de risco;
 - `Ativos`: cadastro, CSV historico, ligar/desligar e excluir;
 - `Cotacoes`: watchlist operacional com todos os ativos cadastrados, ultimo preco, bid/ask, delta, Book, Times e atalhos;
 - `Grafico`: grafico, niveis, abertura, POC, variacao, profile e backtest;
@@ -52,15 +53,15 @@ O menu superior agora separa o terminal em grupos operacionais: `Inicio`, `Cadas
 - `T&T`: Times & Trades RTD;
 - `Fluxo`: delta, book, tape e metricas de order flow;
 - `Setups`: sinais ativos e recentes;
-- `Boleta`: plano local de entrada, stop, alvo, contratos, risco e status por toque de preco;
+- `Oportunidades`: ideias observacionais com preco de interesse, stop, alvo, risco simulado e status por toque de preco;
 - `Alertas`: alertas locais de preco por ativo;
-- `Risco`: calculadora local de stop, alvo e contratos;
+- `Risco`: calculadora local de stop, alvo e tamanho simulado;
 - `Historico`: resumo do CSV e ticks em memoria;
 - `Ajustes`: parametros locais de tick, DOM, renderizacao, memoria de tape/sinais e valor por ponto;
 - `Conexoes`: estado do coletor, Profit RTD, WebSocket, `/health` e fontes por ativo;
 - `Sistema`: RTD, WebSocket, telemetria de mensagens e debug de fluxo.
 
-A hotbar lembra a ultima tela usada dentro de cada grupo e ainda abre telas frequentes por teclado: `Alt+1` Monitor, `Alt+2` DOM, `Alt+3` Book, `Alt+4` T&T, `Alt+5` Fluxo, `Alt+6` Boleta, `Alt+7` Ativos, `Alt+8` Conexoes e `Alt+9` Sistema.
+A hotbar lembra a ultima tela usada dentro de cada grupo e ainda abre telas frequentes por teclado: `Alt+1` Monitor, `Alt+2` DOM, `Alt+3` Book, `Alt+4` T&T, `Alt+5` Fluxo, `Alt+6` Oportunidades, `Alt+7` Ativos, `Alt+8` Conexoes e `Alt+9` Sistema.
 
 `Ctrl+K` abre a paleta de comandos para buscar telas e ativos cadastrados.
 
@@ -86,7 +87,7 @@ Se aparecer `Class not registered` ou `RTDTrading.RTDServer nao encontrado`, com
 
 Use o MSBuild do Visual Studio 2022/Build Tools. O MSBuild antigo de `C:\Windows\Microsoft.NET\Framework*\v4.0.30319` nao entende `PackageReference` e falha antes da compilacao.
 
-## Execucao
+## Como rodar
 
 1. Abra o Profit Pro e deixe conectado.
 2. Execute `ColetorProfitRTD.exe`.
@@ -96,16 +97,17 @@ Use o MSBuild do Visual Studio 2022/Build Tools. O MSBuild antigo de `C:\Windows
 6. Configure `BOOK0` e `T&T0`, ou os topicos equivalentes do Profit.
 7. Carregue o CSV historico do ativo.
 8. Clique em `Salvar`.
-9. Abra `Painel` para ver checklist operacional, atalhos, setups, planos e alertas.
-10. Abra `Monitor` para acompanhar watchlist, setups, tape, planos e alertas do ativo selecionado.
-11. Abra `Cotacoes` para ver todos os ativos cadastrados e entrar em `Grafico`, `DOM`, `Book`, `T&T` ou `Boleta`.
-12. Abra `Ajustes` se quiser mudar niveis do DOM, cadencia de renderizacao ou valor por ponto padrao.
-13. Abra `Conexoes` para confirmar coletor, Profit RTD, WebSocket, arquitetura e fontes por ativo.
-14. Deixe o modo `RTD Live` ativo para preencher o intraday automaticamente.
-15. Confira `Latencia WS` e `Msg/s` na faixa superior ou em `Sistema` para diagnosticar atraso entre backend local e navegador.
-16. Use os grupos superiores, a hotbar contextual, `Alt+1` a `Alt+9` ou `Ctrl+K` para alternar telas e selecionar ativos rapidamente.
+9. Abra `Painel` para ver checklist operacional, atalhos, setups, oportunidades e alertas.
+10. Abra `Mesa` para analisar DOM, book, tape, fluxo, setups e acoes de risco em uma tela integrada.
+11. Abra `Monitor` para acompanhar watchlist, setups, tape, oportunidades e alertas do ativo selecionado.
+12. Abra `Cotacoes` para ver todos os ativos cadastrados e entrar em `Grafico`, `DOM`, `Book`, `T&T` ou `Oportunidades`.
+13. Abra `Ajustes` se quiser mudar niveis do DOM, cadencia de renderizacao ou valor por ponto padrao.
+14. Abra `Conexoes` para confirmar coletor, Profit RTD, WebSocket, arquitetura e fontes por ativo.
+15. Deixe o modo `RTD Live` ativo para preencher o intraday automaticamente.
+16. Confira `Latencia WS` e `Msg/s` na faixa superior ou em `Sistema` para diagnosticar atraso entre backend local e navegador.
+17. Use os grupos superiores, a hotbar contextual, `Alt+1` a `Alt+9` ou `Ctrl+K` para alternar telas e selecionar ativos rapidamente.
 
-A `Boleta` e apenas um plano local/simulado. O aplicativo nao envia ordens para o Profit.
+O aplicativo e somente para analise e busca de oportunidades. Ele nao envia comandos operacionais ao Profit.
 
 Para uma prova minima sem dashboard:
 
@@ -185,16 +187,17 @@ logs/                   logs em runtime
 5. Manual: desligar `RTD Live` e editar os campos manualmente.
 6. Multiativo: adicionar um novo ativo em `Ativos`, ligar/desligar, trocar fontes, excluir e confirmar `/assets`.
 7. Book/T&T: confirmar mensagens `bookDepth` e `timesTrades` no WebSocket quando `BOOK0` e `T&T0` estiverem ligados.
-8. Painel: confirmar checklist, atalhos, setups, planos e alertas do ativo selecionado.
-9. Monitor: confirmar watchlist compacta, estado do ativo, setups, tape, planos e alertas.
-10. Cotacoes: confirmar que a watchlist mostra todos os ativos e que os botoes abrem `Grafico`, `DOM`, `Book`, `T&T` e `Boleta`.
-11. Boleta: salvar um plano local e confirmar status `aguardando`, `aberto`, `alvo` ou `stop` conforme o preco.
-12. Abas operacionais: confirmar `Book`, `T&T`, `Alertas`, `Risco`, `Historico`, `Ajustes`, `Conexoes` e `Sistema` sem erro no navegador.
-13. Conexoes: confirmar polling de `/health`, arquitetura x64/x86, Profit RTD, WebSocket e status `Preco`, `Book`, `Times` por ativo.
-14. Ajustes: alterar niveis do DOM e intervalo de renderizacao, salvar, recarregar a pagina e confirmar persistencia local.
-15. Navegacao: confirmar grupos superiores, hotbar contextual, memoria da ultima tela por grupo e atalhos `Alt+1` a `Alt+9`, sem disparar quando o foco esta em campos de texto.
-16. Paleta: confirmar `Ctrl+K`, busca de telas, busca de ativos, setas, `Enter` e `Esc`.
-17. Performance: confirmar que DOM, Painel, Monitor e Cotacoes seguem responsivos com RTD ativo; campos intraday devem atualizar imediatamente.
-18. Telemetria: confirmar que `Latencia WS` e `Msg/s` mudam quando chegam mensagens WebSocket. Essa leitura mede o trecho backend local -> navegador, nao latencia de bolsa ou execucao.
-19. Design QA: rodar `node tools/validate-dashboard-design.js` e confirmar `Dashboard design tokens OK`.
-20. SQLite: confirmar criacao de `data/marketdata.sqlite` quando o provider for restaurado pelo NuGet.
+8. Painel: confirmar checklist, atalhos, setups, oportunidades e alertas do ativo selecionado.
+9. Mesa: confirmar DOM compacto, book resumido, tape, fluxo, setups, niveis proximos e botoes para `Oportunidades`, `Risco`, `Alertas` e `Grafico`.
+10. Monitor: confirmar watchlist compacta, estado do ativo, setups, tape, oportunidades e alertas.
+11. Cotacoes: confirmar que a watchlist mostra todos os ativos e que os botoes abrem `Grafico`, `DOM`, `Book`, `T&T` e `Oportunidades`.
+12. Oportunidades: salvar uma ideia observacional e confirmar status `monitorando`, `observado`, `alvo` ou `stop` conforme o preco.
+13. Abas operacionais: confirmar `Book`, `T&T`, `Alertas`, `Risco`, `Historico`, `Ajustes`, `Conexoes` e `Sistema` sem erro no navegador.
+14. Conexoes: confirmar polling de `/health`, arquitetura x64/x86, Profit RTD, WebSocket e status `Preco`, `Book`, `Times` por ativo.
+15. Ajustes: alterar niveis do DOM e intervalo de renderizacao, salvar, recarregar a pagina e confirmar persistencia local.
+16. Navegacao: confirmar grupos superiores, hotbar contextual, memoria da ultima tela por grupo e atalhos `Alt+1` a `Alt+9`, sem disparar quando o foco esta em campos de texto.
+17. Paleta: confirmar `Ctrl+K`, busca de telas, busca de ativos, setas, `Enter` e `Esc`.
+18. Performance: confirmar que DOM, Mesa, Painel, Monitor e Cotacoes seguem responsivos com RTD ativo; campos intraday devem atualizar imediatamente.
+19. Telemetria: confirmar que `Latencia WS` e `Msg/s` mudam quando chegam mensagens WebSocket. Essa leitura mede o trecho backend local -> navegador, nao latencia de bolsa ou Profit.
+20. Design QA: rodar `node tools/validate-dashboard-design.js` e confirmar `Dashboard design tokens OK`.
+21. SQLite: confirmar criacao de `data/marketdata.sqlite` quando o provider for restaurado pelo NuGet.

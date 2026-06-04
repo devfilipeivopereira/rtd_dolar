@@ -24,23 +24,24 @@ Resultado esperado:
 4. Confirmar que `Painel` abre como entrada operacional.
 5. Abrir `Ativos`, cadastrar o ativo e carregar o CSV historico.
 6. Confirmar status `RTD Conectado`.
-7. Abrir `Painel` e confirmar checklist, atalhos, setups, planos e alertas.
-8. Abrir `Monitor` e confirmar watchlist compacta, estado do ativo, setups, tape, planos e alertas.
-9. Confirmar que os botoes de `Monitor` abrem `DOM`, `Book` e `Boleta` do ativo correto.
-10. Abrir `Cotacoes` e confirmar que a linha do ativo mostra ultimo preco, bid/ask, delta, Book, Times e fontes `P/B/T`.
-11. Confirmar que os botoes de `Cotacoes` abrem `Grafico`, `DOM`, `Book`, `T&T` e `Boleta` do ativo correto.
-12. Confirmar que a aba `DOM` mostra preco, tape e pontos principais.
-13. Adicionar um ativo em `Ativos`, selecionar com `Ver` e ligar/desligar sem reiniciar o app.
-14. Abrir `Book` e confirmar 50 niveis quando `BOOK0` estiver ligado.
-15. Abrir `T&T` e confirmar ate 100 linhas quando `T&T0` estiver ligado.
-16. Abrir `Boleta`, salvar um plano local e confirmar que ele nao envia ordem.
-17. Abrir `Alertas`, `Risco`, `Historico`, `Ajustes`, `Conexoes` e `Sistema` e confirmar que cada tela mostra apenas sua funcionalidade.
-18. Em `Conexoes`, confirmar polling de `/health`, arquitetura, Profit RTD, WebSocket e fontes `Preco`, `Book` e `Times` por ativo.
-19. Em `Ajustes`, mudar niveis do DOM e intervalo de renderizacao, salvar, recarregar a pagina e confirmar que os valores persistem.
-20. Confirmar hotbar por clique e atalhos `Alt+1` a `Alt+9`.
-21. Confirmar que os atalhos nao disparam quando o foco esta em campos de texto, select ou textarea.
-22. Confirmar `Ctrl+K`, busca de telas e ativos, navegacao por setas, `Enter` para executar e `Esc` para fechar.
-23. Confirmar que `Latencia WS` e `Msg/s` aparecem na faixa superior e no `Sistema` quando chegam mensagens do WebSocket.
+7. Abrir `Painel` e confirmar checklist, atalhos, setups, oportunidades e alertas.
+8. Abrir `Mesa` e confirmar DOM compacto, book resumido, tape, fluxo, setups, niveis proximos e acoes de analise.
+9. Abrir `Monitor` e confirmar watchlist compacta, estado do ativo, setups, tape, oportunidades e alertas.
+10. Confirmar que os botoes de `Monitor` abrem `DOM`, `Book` e `Oportunidades` do ativo correto.
+11. Abrir `Cotacoes` e confirmar que a linha do ativo mostra ultimo preco, bid/ask, delta, Book, Times e fontes `P/B/T`.
+12. Confirmar que os botoes de `Cotacoes` abrem `Grafico`, `DOM`, `Book`, `T&T` e `Oportunidades` do ativo correto.
+13. Confirmar que a aba `DOM` mostra preco, tape e pontos principais.
+14. Adicionar um ativo em `Ativos`, selecionar com `Ver` e ligar/desligar sem reiniciar o app.
+15. Abrir `Book` e confirmar 50 niveis quando `BOOK0` estiver ligado.
+16. Abrir `T&T` e confirmar ate 100 linhas quando `T&T0` estiver ligado.
+17. Abrir `Oportunidades`, salvar uma ideia observacional e confirmar que ela permanece local.
+18. Abrir `Alertas`, `Risco`, `Historico`, `Ajustes`, `Conexoes` e `Sistema` e confirmar que cada tela mostra apenas sua funcionalidade.
+19. Em `Conexoes`, confirmar polling de `/health`, arquitetura, Profit RTD, WebSocket e fontes `Preco`, `Book` e `Times` por ativo.
+20. Em `Ajustes`, mudar niveis do DOM e intervalo de renderizacao, salvar, recarregar a pagina e confirmar que os valores persistem.
+21. Confirmar hotbar por clique e atalhos `Alt+1` a `Alt+9`.
+22. Confirmar que os atalhos nao disparam quando o foco esta em campos de texto, select ou textarea.
+23. Confirmar `Ctrl+K`, busca de telas e ativos, navegacao por setas, `Enter` para executar e `Esc` para fechar.
+24. Confirmar que `Latencia WS` e `Msg/s` aparecem na faixa superior e no `Sistema` quando chegam mensagens do WebSocket.
 
 ## Endpoints
 
@@ -117,16 +118,17 @@ Sem CSV, a aba DOM ainda pode mostrar ticks RTD, bid/ask e tape. Pontos como POC
 - CSV salvo deve voltar por `GET /assets/history?asset=...` depois de recarregar a pagina.
 - A faixa superior deve trocar junto com o ativo selecionado e mostrar ultimo preco, bid/ask, Book, Times, delta, latencia WebSocket local, mensagens por segundo e CSV.
 - `Painel` deve ser a entrada operacional e refletir o ativo selecionado sem misturar dados de outro ativo.
-- `Monitor` deve ser a mesa de acompanhamento ao vivo: watchlist compacta, estado do ativo, setups, tape, planos e alertas, sem campos de cadastro.
+- `Monitor` deve ser a mesa de acompanhamento ao vivo: watchlist compacta, estado do ativo, setups, tape, oportunidades e alertas, sem campos de cadastro.
 - `Cotacoes` deve separar monitoramento de cadastro: a tela mostra status e atalhos, mas a edicao continua em `Ativos`.
-- `Boleta` deve salvar planos em localStorage, calcular R/R e mudar status com preco RTD sem chamar endpoint de ordem.
+- `Mesa` deve concentrar DOM compacto, book resumido, tape, fluxo, setups, niveis proximos e acoes de analise.
+- `Oportunidades` deve salvar ideias em localStorage, calcular R/R e mudar status com preco RTD sem comandos operacionais ao Profit.
 - `Ajustes` deve persistir em `wdo-ui-settings` e aplicar tamanho do tick, niveis do DOM, intervalo de renderizacao, limite de trades/sinais e valor por ponto padrao.
 - `Conexoes` deve consultar `/health` periodicamente e separar status do feed local do debug de fluxo.
-- A hotbar deve espelhar a aba ativa e permitir troca rapida para Monitor, DOM, Book, T&T, Fluxo, Boleta, Ativos, Conexoes e Sistema.
+- A hotbar deve espelhar a aba ativa e permitir troca rapida para Monitor, DOM, Book, T&T, Fluxo, Oportunidades, Ativos, Conexoes e Sistema.
 - A paleta `Ctrl+K` deve buscar telas e ativos cadastrados sem depender de recarregar a pagina.
 - `Book` e `T&T` devem atualizar sem travar a pagina mesmo com muitos campos RTD, respeitando coalescing do backend.
-- Campos intraday devem ser preenchidos a cada snapshot; DOM, `Painel`, `Monitor`, `Cotacoes` e `Historico` podem atualizar em lote curto configuravel para manter a UI responsiva.
-- `Latencia WS` deve ser tratada como diagnostico backend local -> navegador, nao como latencia de bolsa, Profit ou execucao.
+- Campos intraday devem ser preenchidos a cada snapshot; DOM, `Mesa`, `Painel`, `Monitor`, `Cotacoes` e `Historico` podem atualizar em lote curto configuravel para manter a UI responsiva.
+- `Latencia WS` deve ser tratada como diagnostico backend local -> navegador, nao como latencia de bolsa ou Profit.
 
 ## SQLite
 

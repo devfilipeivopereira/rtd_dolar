@@ -352,6 +352,37 @@ tr:hover td{background:#ffffff05}
   max-height:620px;overflow-y:auto;overscroll-behavior:contain;
   scrollbar-color:#3b4552 #10141a;scrollbar-width:thin;
 }
+.desk-grid{display:grid;grid-template-columns:minmax(300px,.86fr) minmax(390px,1.16fr) minmax(300px,.9fr);gap:12px;align-items:start}
+.desk-stack{display:flex;flex-direction:column;gap:12px;min-width:0}
+.desk-ladder{
+  font-family:var(--mono);font-size:12px;max-height:690px;overflow-y:auto;overscroll-behavior:contain;
+  scrollbar-color:#3b4552 #10141a;scrollbar-width:thin;
+}
+.desk-ladder .dom-row{grid-template-columns:64px minmax(84px,1fr) 64px minmax(92px,1.15fr)}
+.desk-action-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.desk-action{
+  min-height:36px;border:1px solid var(--line);background:#10141a;color:var(--txt);
+  font-size:11px;font-weight:900;text-transform:uppercase;text-align:left;padding:7px 9px;
+}
+.desk-action span{display:block;margin-top:3px;color:var(--muted);font-size:9px;font-weight:700;text-transform:none}
+.desk-action.buy{border-color:#1f7a66;color:#9df2d5;background:#0d261f}
+.desk-action.sell{border-color:#7a2b2b;color:#ff9b9b;background:#2b1111}
+.desk-action.blue{border-color:#285d80;color:#9bd7ff;background:#10202b}
+.desk-book{display:flex;flex-direction:column;gap:3px;max-height:330px;overflow:auto}
+.desk-book-row{display:grid;grid-template-columns:1fr 54px 54px 1fr;gap:6px;align-items:center;min-height:24px;border:1px solid var(--line);background:#10141a;padding:3px 6px;font-size:10px}
+.desk-book-row .bid{color:#9df2d5;text-align:right}
+.desk-book-row .ask{color:#ffb1b1}
+.desk-feed{max-height:300px;overflow:auto}
+.desk-signal,.desk-level{
+  display:grid;grid-template-columns:72px minmax(0,1fr) 58px;gap:7px;align-items:center;
+  min-height:30px;border:1px solid var(--line);background:#10141a;padding:5px 7px;margin-bottom:5px;font-size:10px;
+}
+.desk-signal.buy{border-left:3px solid var(--green)}
+.desk-signal.sell{border-left:3px solid var(--red)}
+.desk-level.above{border-left:3px solid var(--red)}
+.desk-level.below{border-left:3px solid var(--green)}
+.desk-signal strong,.desk-level strong{font-size:11px}
+.desk-signal span,.desk-level span{color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .dom-row{
   display:grid;grid-template-columns:82px minmax(96px,1fr) 82px minmax(130px,1.05fr);
   min-height:28px;border-bottom:1px solid #ffffff0a;align-items:stretch;
@@ -489,6 +520,7 @@ tr:hover td{background:#ffffff05}
   .cards{grid-template-columns:repeat(3,1fr)}
   .panel-grid{grid-template-columns:1fr}
   .dom-grid{grid-template-columns:1fr}
+  .desk-grid{grid-template-columns:1fr}
   .dom-summary{grid-template-columns:repeat(2,1fr)}
 }
 @media(max-width:700px){
@@ -865,12 +897,13 @@ tr:hover td{background:#ffffff05}
               <div class="panel-head"><div class="panel-title">Acessos rapidos</div></div>
               <div class="panel-body">
                 <div class="dashboard-actions">
+                  <button class="quick-action" type="button" data-dashboard-open="desk"><strong>Mesa</strong><span>DOM, fluxo, book e tape</span></button>
                   <button class="quick-action" type="button" data-dashboard-open="monitor"><strong>Monitor</strong><span>Watchlist, setups e tape</span></button>
                   <button class="quick-action" type="button" data-dashboard-open="quotes"><strong>Cotacoes</strong><span>Monitorar ativos e abrir telas</span></button>
                   <button class="quick-action" type="button" data-dashboard-open="dom"><strong>DOM</strong><span>Escada de preco e pontos</span></button>
                   <button class="quick-action" type="button" data-dashboard-open="book"><strong>Book</strong><span>Ofertas multi-nivel</span></button>
                   <button class="quick-action" type="button" data-dashboard-open="times"><strong>T&amp;T</strong><span>Negocios do RTD</span></button>
-                  <button class="quick-action" type="button" data-dashboard-open="orders"><strong>Boleta</strong><span>Plano local de risco</span></button>
+                  <button class="quick-action" type="button" data-dashboard-open="orders"><strong>Oportunidades</strong><span>Ideias e risco simulado</span></button>
                   <button class="quick-action" type="button" data-dashboard-open="settings"><strong>Ajustes</strong><span>DOM, render e memoria</span></button>
                   <button class="quick-action" type="button" data-dashboard-open="connections"><strong>Conexoes</strong><span>Feed, fontes e health</span></button>
                   <button class="quick-action" type="button" data-dashboard-open="assets"><strong>Ativos</strong><span>Cadastro e fontes RTD</span></button>
@@ -889,7 +922,7 @@ tr:hover td{background:#ffffff05}
               </div>
             </div>
             <div class="panel">
-              <div class="panel-head"><div class="panel-title">Planos e alertas</div></div>
+              <div class="panel-head"><div class="panel-title">Oportunidades e alertas</div></div>
               <div class="panel-body">
                 <div class="small-list" id="dashboard-actions-list"></div>
               </div>
@@ -953,9 +986,69 @@ tr:hover td{background:#ffffff05}
               </div>
             </div>
             <div class="panel">
-              <div class="panel-head"><div class="panel-title">Planos e alertas</div></div>
+              <div class="panel-head"><div class="panel-title">Oportunidades e alertas</div></div>
               <div class="panel-body">
                 <div class="small-list" id="monitor-controls"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="tab-panel hidden" id="panel-desk">
+          <div class="dom-summary flow-summary">
+            <div class="live-kv"><span>Ativo</span><strong id="desk-asset">--</strong></div>
+            <div class="live-kv"><span>Ultimo</span><strong id="desk-last">--</strong></div>
+            <div class="live-kv"><span>Bid / Ask</span><strong id="desk-bidask">--</strong></div>
+            <div class="live-kv"><span>Delta 5s</span><strong id="desk-delta">--</strong></div>
+            <div class="live-kv"><span>Dist. VWAP</span><strong id="desk-vwap-dist">--</strong></div>
+            <div class="live-kv"><span>Latencia</span><strong id="desk-latency">--</strong></div>
+          </div>
+          <div class="desk-grid">
+            <div class="desk-stack">
+              <div class="panel">
+                <div class="panel-head">
+                  <div class="panel-title">Acoes da mesa</div>
+                  <span class="tag amber" id="desk-state">Aguardando</span>
+                </div>
+                <div class="panel-body">
+                  <div class="desk-action-grid">
+                    <button class="desk-action blue" data-desk-open="orders" type="button">Oportunidades<span>Ideias em observacao</span></button>
+                    <button class="desk-action" data-desk-open="risk" type="button">Risco<span>Stop, alvo e tamanho</span></button>
+                    <button class="desk-action blue" data-desk-open="alerts" type="button">Alertas<span>Niveis do ativo</span></button>
+                    <button class="desk-action" data-desk-open="panorama" type="button">Grafico<span>Niveis e estudos</span></button>
+                  </div>
+                </div>
+              </div>
+              <div class="panel">
+                <div class="panel-head"><div class="panel-title">Book resumido</div></div>
+                <div class="panel-body">
+                  <div class="desk-book" id="desk-book"></div>
+                </div>
+              </div>
+              <div class="panel">
+                <div class="panel-head"><div class="panel-title">Fluxo</div></div>
+                <div class="panel-body"><div class="small-list" id="desk-flow"></div></div>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="panel-head">
+                <div class="panel-title">DOM operacional</div>
+                <span class="tag green">Mesa</span>
+              </div>
+              <div class="desk-ladder" id="desk-ladder"></div>
+            </div>
+            <div class="desk-stack">
+              <div class="panel">
+                <div class="panel-head"><div class="panel-title">Tape</div></div>
+                <div class="panel-body"><div class="dom-tape desk-feed" id="desk-tape"></div></div>
+              </div>
+              <div class="panel">
+                <div class="panel-head"><div class="panel-title">Setups</div></div>
+                <div class="panel-body"><div class="desk-feed" id="desk-signals"></div></div>
+              </div>
+              <div class="panel">
+                <div class="panel-head"><div class="panel-title">Niveis proximos</div></div>
+                <div class="panel-body"><div class="desk-feed" id="desk-levels"></div></div>
               </div>
             </div>
           </div>
@@ -1137,27 +1230,27 @@ tr:hover td{background:#ffffff05}
           <div class="order-grid">
             <div class="panel">
               <div class="panel-head">
-                <div class="panel-title">Boleta local</div>
-                <span class="tag amber">Nao envia ordens</span>
+                <div class="panel-title">Oportunidades</div>
+                <span class="tag amber">Analise</span>
               </div>
               <div class="panel-body">
                 <div class="field-grid">
                   <div class="field">
-                    <label for="order-side">Lado</label>
+                    <label for="order-side">Direcao</label>
                     <select id="order-side">
-                      <option value="buy">Compra</option>
-                      <option value="sell">Venda</option>
+                      <option value="buy">Alta</option>
+                      <option value="sell">Baixa</option>
                     </select>
                   </div>
                   <div class="field">
-                    <label for="order-trigger">Gatilho entrada</label>
+                    <label for="order-trigger">Criterio do preco</label>
                     <select id="order-trigger">
                       <option value="above">Preco acima/igual</option>
                       <option value="below">Preco abaixo/igual</option>
                     </select>
                   </div>
                   <div class="field">
-                    <label for="order-entry">Entrada</label>
+                    <label for="order-entry">Preco de interesse</label>
                     <input type="number" id="order-entry" step="0.5">
                   </div>
                   <div class="field">
@@ -1169,7 +1262,7 @@ tr:hover td{background:#ffffff05}
                     <input type="number" id="order-target" step="0.5">
                   </div>
                   <div class="field">
-                    <label for="order-contracts">Contratos</label>
+                    <label for="order-contracts">Tamanho simulado</label>
                     <input type="number" id="order-contracts" min="1" step="1" value="1">
                   </div>
                   <div class="field">
@@ -1178,31 +1271,31 @@ tr:hover td{background:#ffffff05}
                   </div>
                   <div class="field">
                     <label for="order-note">Observacao</label>
-                    <input type="text" id="order-note" placeholder="Plano do setup">
+                    <input type="text" id="order-note" placeholder="Contexto da oportunidade">
                   </div>
                 </div>
                 <div class="order-ticket-actions">
                   <button class="btn-secondary blue" id="order-use-price" type="button">Usar preco</button>
-                  <button class="btn-secondary ok" id="order-save" type="button">Salvar plano</button>
-                  <button class="btn-secondary bad" id="order-clear" type="button">Limpar planos</button>
+                  <button class="btn-secondary ok" id="order-save" type="button">Salvar oportunidade</button>
+                  <button class="btn-secondary bad" id="order-clear" type="button">Limpar oportunidades</button>
                 </div>
               </div>
             </div>
             <div class="panel">
-              <div class="panel-head"><div class="panel-title">Resumo do plano</div></div>
+              <div class="panel-head"><div class="panel-title">Resumo da oportunidade</div></div>
               <div class="panel-body"><div class="risk-result" id="order-summary"></div></div>
             </div>
           </div>
           <div class="panel orders-list-panel">
             <div class="panel-head">
-              <div class="panel-title">Planos do ativo</div>
+              <div class="panel-title">Oportunidades do ativo</div>
               <span class="tag" id="order-count">0</span>
             </div>
             <div class="table-wrap">
               <table class="order-table">
                 <thead>
                   <tr>
-                    <th>Plano</th><th>Lado</th><th>Entrada</th><th>Stop</th><th>Alvo</th><th>R/R</th><th>Status</th><th>Acoes</th>
+                    <th>Oportunidade</th><th>Direcao</th><th>Preco</th><th>Stop</th><th>Alvo</th><th>R/R</th><th>Status</th><th>Acoes</th>
                   </tr>
                 </thead>
                 <tbody id="order-body"></tbody>
@@ -1257,9 +1350,9 @@ tr:hover td{background:#ffffff05}
                   <div class="field"><label for="risk-entry">Entrada</label><input type="number" id="risk-entry" step="0.5"></div>
                   <div class="field"><label for="risk-stop">Stop</label><input type="number" id="risk-stop" step="0.5"></div>
                   <div class="field"><label for="risk-target">Alvo</label><input type="number" id="risk-target" step="0.5"></div>
-                  <div class="field"><label for="risk-contracts">Contratos</label><input type="number" id="risk-contracts" step="1" value="1"></div>
+                  <div class="field"><label for="risk-contracts">Tamanho simulado</label><input type="number" id="risk-contracts" step="1" value="1"></div>
                   <div class="field"><label for="risk-point-value">Valor por ponto</label><input type="number" id="risk-point-value" step="0.01" placeholder="opcional"></div>
-                  <div class="field"><label for="risk-side">Lado</label><select id="risk-side"><option value="buy">Compra</option><option value="sell">Venda</option></select></div>
+                  <div class="field"><label for="risk-side">Direcao</label><select id="risk-side"><option value="buy">Alta</option><option value="sell">Baixa</option></select></div>
                 </div>
               </div>
             </div>
@@ -1725,6 +1818,7 @@ function saveUiSettings(settings) {
 const TAB_META = {
   dashboard: { label: "Painel", detail: "Checklist e atalhos" },
   monitor: { label: "Monitor", detail: "Watchlist, setups e tape" },
+  desk: { label: "Mesa", detail: "DOM, fluxo, book e tape" },
   assets: { label: "Ativos", detail: "Cadastro RTD e CSV" },
   quotes: { label: "Cotacoes", detail: "Lista completa de ativos" },
   panorama: { label: "Grafico", detail: "Niveis e estudos" },
@@ -1733,7 +1827,7 @@ const TAB_META = {
   times: { label: "T&T", detail: "Times & Trades" },
   flow: { label: "Fluxo", detail: "Delta e metricas" },
   signals: { label: "Setups", detail: "Sinais ativos" },
-  orders: { label: "Boleta", detail: "Plano local" },
+  orders: { label: "Oportunidades", detail: "Ideias e risco simulado" },
   alerts: { label: "Alertas", detail: "Alertas de preco" },
   risk: { label: "Risco", detail: "Calculadora local" },
   history: { label: "Historico", detail: "CSV e ticks" },
@@ -1742,7 +1836,7 @@ const TAB_META = {
   diagnostics: { label: "Sistema", detail: "Diagnostico" },
 };
 const WORKSPACE_GROUPS = [
-  { id: "home", label: "Inicio", tabs: ["dashboard", "monitor"] },
+  { id: "home", label: "Inicio", tabs: ["dashboard", "monitor", "desk"] },
   { id: "setup", label: "Cadastro", tabs: ["assets"] },
   { id: "market", label: "Mercado", tabs: ["quotes", "panorama", "dom", "book", "times"] },
   { id: "flow", label: "Fluxo", tabs: ["flow", "signals"] },
@@ -1969,6 +2063,20 @@ const refs = {
   monitorSignals: document.getElementById("monitor-signals"),
   monitorTape: document.getElementById("monitor-tape"),
   monitorControls: document.getElementById("monitor-controls"),
+  deskPanel: document.getElementById("panel-desk"),
+  deskAsset: document.getElementById("desk-asset"),
+  deskLast: document.getElementById("desk-last"),
+  deskBidAsk: document.getElementById("desk-bidask"),
+  deskDelta: document.getElementById("desk-delta"),
+  deskVwapDist: document.getElementById("desk-vwap-dist"),
+  deskLatency: document.getElementById("desk-latency"),
+  deskState: document.getElementById("desk-state"),
+  deskBook: document.getElementById("desk-book"),
+  deskFlow: document.getElementById("desk-flow"),
+  deskLadder: document.getElementById("desk-ladder"),
+  deskTape: document.getElementById("desk-tape"),
+  deskSignals: document.getElementById("desk-signals"),
+  deskLevels: document.getElementById("desk-levels"),
   quotesTotal: document.getElementById("quotes-total"),
   quotesEnabled: document.getElementById("quotes-enabled"),
   quotesConnected: document.getElementById("quotes-connected"),
@@ -2502,7 +2610,7 @@ function renderQuotesPanel() {
             <button class="asset-action view" type="button" data-quotes-open="dom" data-asset="${escapeHtml(asset)}">DOM</button>
             <button class="asset-action view" type="button" data-quotes-open="book" data-asset="${escapeHtml(asset)}">Book</button>
             <button class="asset-action view" type="button" data-quotes-open="times" data-asset="${escapeHtml(asset)}">T&amp;T</button>
-            <button class="asset-action view" type="button" data-quotes-open="orders" data-asset="${escapeHtml(asset)}">Boleta</button>
+            <button class="asset-action view" type="button" data-quotes-open="orders" data-asset="${escapeHtml(asset)}">Oportunidades</button>
           </div>
         </td>
       </tr>
@@ -2569,7 +2677,7 @@ function renderMonitor() {
             <div class="monitor-actions">
               <button class="asset-action view" type="button" data-monitor-open="dom" data-asset="${escapeHtml(rowAsset)}">DOM</button>
               <button class="asset-action view" type="button" data-monitor-open="book" data-asset="${escapeHtml(rowAsset)}">Book</button>
-              <button class="asset-action view" type="button" data-monitor-open="orders" data-asset="${escapeHtml(rowAsset)}">Boleta</button>
+              <button class="asset-action view" type="button" data-monitor-open="orders" data-asset="${escapeHtml(rowAsset)}">Oportunidades</button>
             </div>
           </td>
         </tr>
@@ -2612,11 +2720,11 @@ function renderMonitor() {
   }).join("") || `<div class="warn-line">Aguardando tape do ativo.</div>`;
 
   refs.monitorControls.innerHTML = [
-    ["Planos ativos", fmt(openOrders.length, 0)],
-    ["Planos salvos", fmt(orders.length, 0)],
+    ["Oportunidades ativas", fmt(openOrders.length, 0)],
+    ["Oportunidades salvas", fmt(orders.length, 0)],
     ["Alertas ativos", fmt(openAlerts.length, 0)],
     ["Alertas acionados", fmt(alerts.filter(alert => alert.triggeredAt).length, 0)],
-    ["Proximo plano", openOrders[0] ? `${openOrders[0].side === "buy" ? "Compra" : "Venda"} ${fmt(liveNumber(openOrders[0].entry))}` : "--"],
+    ["Proxima oportunidade", openOrders[0] ? `${openOrders[0].side === "buy" ? "Alta" : "Baixa"} ${fmt(liveNumber(openOrders[0].entry))}` : "--"],
     ["Proximo alerta", openAlerts[0] ? `${openAlerts[0].side === "above" ? "Acima" : "Abaixo"} ${fmt(liveNumber(openAlerts[0].price))}` : "--"],
   ].map(([k, v]) => `<div class="kv"><span>${escapeHtml(k)}</span><span>${escapeHtml(v)}</span></div>`).join("");
 }
@@ -2662,7 +2770,7 @@ function renderDashboard() {
     readinessRow("CSV historico", csvOk ? `${state.uploadedCount || config?.history?.Rows || config?.history?.rows || "--"} pregoes` : "carregar em Ativos", csvOk),
     readinessRow("Book", depth ? `${(depth.bids || []).length} x ${(depth.asks || []).length}` : config?.bookRtd?.enabled ? "ligando" : "desligado", !!depth, config?.bookRtd?.enabled),
     readinessRow("Times", times ? `${(times.trades || []).length} linhas` : config?.timesRtd?.enabled ? "ligando" : "desligado", !!times, config?.timesRtd?.enabled),
-    readinessRow("Plano local", openOrders.length ? `${openOrders.length} ativo(s)` : "sem plano aberto", openOrders.length > 0, orders.length > 0),
+    readinessRow("Oportunidades", openOrders.length ? `${openOrders.length} em observacao` : "sem oportunidade ativa", openOrders.length > 0, orders.length > 0),
   ].join("");
 
   refs.dashboardSignals.innerHTML = activeSignals.length
@@ -2678,8 +2786,8 @@ function renderDashboard() {
     : `<tr><td colspan="5">Nenhum setup recente para o ativo.</td></tr>`;
 
   refs.dashboardActionsList.innerHTML = [
-    ["Planos salvos", fmt(orders.length, 0)],
-    ["Planos ativos", fmt(openOrders.length, 0)],
+    ["Oportunidades salvas", fmt(orders.length, 0)],
+    ["Oportunidades ativas", fmt(openOrders.length, 0)],
     ["Alertas ativos", fmt(alerts.filter(alert => !alert.triggeredAt).length, 0)],
     ["Alertas acionados", fmt(alerts.filter(alert => alert.triggeredAt).length, 0)],
     ["Delta 5s", signedFmt(flow.metrics?.delta5s, 0)],
@@ -2873,8 +2981,8 @@ function stopHit(plan, price) {
 function orderStatus(plan) {
   if (plan.result === "target") return { label: "alvo", cls: "target" };
   if (plan.result === "stop") return { label: "stop", cls: "stop" };
-  if (plan.entryTouchedAt) return { label: "aberto", cls: "open" };
-  return { label: "aguardando", cls: "waiting" };
+  if (plan.entryTouchedAt) return { label: "observado", cls: "open" };
+  return { label: "monitorando", cls: "waiting" };
 }
 
 function updateOrderPlans(price) {
@@ -2928,7 +3036,7 @@ function renderOrderSummary() {
   const dist = Number.isFinite(price) && Number.isFinite(m.entry) ? price - m.entry : NaN;
   refs.orderSummary.innerHTML = [
     ["Atual", fmt(price)],
-    ["Dist. entrada", Number.isFinite(dist) ? `${signedFmt(dist, 1)} pts` : "--"],
+    ["Dist. preco", Number.isFinite(dist) ? `${signedFmt(dist, 1)} pts` : "--"],
     ["Risco", Number.isFinite(m.riskMoney) ? `R$ ${fmt(m.riskMoney, 2)}` : `${fmt(m.riskPts)} pts`],
     ["Alvo", Number.isFinite(m.gainMoney) ? `R$ ${fmt(m.gainMoney, 2)}` : `${fmt(m.gainPts)} pts`],
     ["R/R", Number.isFinite(m.rr) ? fmt(m.rr, 2) : "--"],
@@ -2942,7 +3050,7 @@ function renderOrders() {
   const orders = state.orderPlans.filter(plan => normalizeAsset(plan.asset) === selectedAsset());
   refs.orderCount.textContent = fmt(orders.length, 0);
   if (!orders.length) {
-    refs.orderBody.innerHTML = `<tr><td colspan="8">Nenhum plano salvo para o ativo.</td></tr>`;
+    refs.orderBody.innerHTML = `<tr><td colspan="8">Nenhuma oportunidade salva para o ativo.</td></tr>`;
     return;
   }
 
@@ -2953,7 +3061,7 @@ function renderOrders() {
     return `
       <tr>
         <td>${escapeHtml(label)}</td>
-        <td>${plan.side === "buy" ? "Compra" : "Venda"}</td>
+        <td>${plan.side === "buy" ? "Alta" : "Baixa"}</td>
         <td class="strong">${fmt(m.entry)}</td>
         <td>${fmt(m.stop)}</td>
         <td>${fmt(m.target)}</td>
@@ -3004,7 +3112,7 @@ function renderRisk() {
     ["Risco pts", Number.isFinite(riskPts) ? fmt(riskPts) : "--"],
     ["Alvo pts", Number.isFinite(targetPts) ? fmt(targetPts) : "--"],
     ["R/R", Number.isFinite(rr) ? fmt(rr, 2) : "--"],
-    ["Contratos", fmt(contracts, 0)],
+    ["Tamanho simulado", fmt(contracts, 0)],
     ["Risco financeiro", Number.isFinite(financialRisk) ? fmt(financialRisk, 2) : "--"],
   ].map(([k, v]) => `<div class="live-kv"><span>${escapeHtml(k)}</span><strong>${escapeHtml(v)}</strong></div>`).join("");
 }
@@ -3080,10 +3188,10 @@ function renderSettings() {
     `DOM monta ${settings.domVisibleTicks} niveis em torno do ultimo preco do ativo selecionado.`,
     `Render live consolida atualizacoes a cada ${settings.liveIntervalMs} ms para preservar fluidez.`,
     "Atalhos: Alt+1 Monitor, Alt+2 DOM, Alt+3 Book, Alt+4 T&T, Alt+5 Fluxo.",
-    "Atalhos: Alt+6 Boleta, Alt+7 Ativos, Alt+8 Conexoes, Alt+9 Sistema.",
+    "Atalhos: Alt+6 Oportunidades, Alt+7 Ativos, Alt+8 Conexoes, Alt+9 Sistema.",
     Number.isFinite(settings.defaultPointValue)
-      ? "Valor por ponto aplicado em Boleta e Risco quando os campos estiverem vazios."
-      : "Valor por ponto permanece manual em Boleta e Risco.",
+      ? "Valor por ponto aplicado em Oportunidades e Risco quando os campos estiverem vazios."
+      : "Valor por ponto permanece manual em Oportunidades e Risco.",
   ];
   refs.settingsNotes.innerHTML = notes.map(note => `<div class="warn-line">${escapeHtml(note)}</div>`).join("");
 }
@@ -3377,6 +3485,7 @@ function showMainTab(tabName) {
   if (safe === "panorama") activateSubTab("levels");
   else if (safe === "dashboard") activateSubTab("dashboard");
   else if (safe === "monitor") activateSubTab("monitor");
+  else if (safe === "desk") activateSubTab("desk");
   else if (safe === "quotes") activateSubTab("quotes");
   else if (safe === "dom") activateSubTab("dom");
   else if (safe === "book") activateSubTab("book");
@@ -3393,6 +3502,7 @@ function showMainTab(tabName) {
 
   if (safe === "dashboard") renderDashboard();
   if (safe === "monitor") renderMonitor();
+  if (safe === "desk") renderDesk();
   if (safe === "quotes") renderQuotesPanel();
   if (safe === "dom") renderDom();
   if (safe === "book") renderBookPanel();
@@ -3420,6 +3530,7 @@ function renderSelectedAsset() {
   renderSignals();
   renderFlowDebug();
   renderDom(snapshot);
+  renderDesk(snapshot);
   renderBookPanel();
   renderTimesPanel();
   renderOrders();
@@ -4250,25 +4361,25 @@ function sigmaLevels(anchor, sigma) {
 function referenceDeviationLevels(referencePrice, sigma, currentPrice) {
   const levels = [];
   [1, 2, 3, 4].forEach(m => {
-    const sellPrice = referencePrice + m * sigma;
-    const buyPrice = referencePrice - m * sigma;
+    const resistancePrice = referencePrice + m * sigma;
+    const supportPrice = referencePrice - m * sigma;
     levels.push({
-      side: "Venda",
+      side: "Resistencia",
       dir: "sell",
       sigma: m,
-      price: sellPrice,
-      distReference: sellPrice - referencePrice,
-      distCurrent: sellPrice - currentPrice,
-      label: `Venda +${m} desvio`,
+      price: resistancePrice,
+      distReference: resistancePrice - referencePrice,
+      distCurrent: resistancePrice - currentPrice,
+      label: `Resistencia +${m} desvio`,
     });
     levels.push({
-      side: "Compra",
+      side: "Suporte",
       dir: "buy",
       sigma: -m,
-      price: buyPrice,
-      distReference: buyPrice - referencePrice,
-      distCurrent: buyPrice - currentPrice,
-      label: `Compra -${m} desvio`,
+      price: supportPrice,
+      distReference: supportPrice - referencePrice,
+      distCurrent: supportPrice - currentPrice,
+      label: `Suporte -${m} desvio`,
     });
   });
   return levels;
@@ -4696,8 +4807,8 @@ function renderOpeningMap(r) {
     ["Abertura usada", fmt(r.intraday.open)],
     ["Desvio da janela", `${fmt(r.gk.points)} pts`],
     ["Janela estatistica", `${r.window} dias`],
-    ["Venda 1 desvio", fmt(r.intraday.open + r.gk.points)],
-    ["Compra 1 desvio", fmt(r.intraday.open - r.gk.points)],
+    ["Resistencia 1 desvio", fmt(r.intraday.open + r.gk.points)],
+    ["Suporte 1 desvio", fmt(r.intraday.open - r.gk.points)],
     ["Regra", "4 niveis acima e 4 abaixo da abertura"],
   ].map(([k, v]) => `<div class="kv"><span>${k}</span><span>${v}</span></div>`).join("");
 }
@@ -4737,8 +4848,8 @@ function renderPocDeviationMap(r) {
     ["POC usado", fmt(pocPrice)],
     ["Desvio da janela", `${fmt(r.gk.points)} pts`],
     ["Janela estatistica", `${r.window} dias`],
-    ["Venda 1 desvio", fmt(pocPrice + r.gk.points)],
-    ["Compra 1 desvio", fmt(pocPrice - r.gk.points)],
+    ["Resistencia 1 desvio", fmt(pocPrice + r.gk.points)],
+    ["Suporte 1 desvio", fmt(pocPrice - r.gk.points)],
     ["Status", "POC proxy por OHLCV diario"],
   ].map(([k, v]) => `<div class="kv"><span>${k}</span><span>${v}</span></div>`).join("");
 }
@@ -5277,6 +5388,220 @@ function renderDom(msg = state.rtd.lastSnapshot) {
   renderDomKeyLevels(msg);
 }
 
+function renderDeskSummary(msg = state.rtd.lastSnapshot) {
+  if (!refs.deskAsset) return;
+  const asset = selectedAsset();
+  const snapshot = msg || state.rtd.snapshotsByAsset[asset] || null;
+  const intraday = liveIntradayFromSnapshot(snapshot);
+  const book = liveBookFromSnapshot(snapshot);
+  const flow = flowBucket(asset);
+  const metrics = flow.metrics || {};
+  const hasPrice = Number.isFinite(intraday.price);
+  const hasBook = !!liveBookDepthForAsset(asset) || (Number.isFinite(book.bid) && Number.isFinite(book.ask));
+  const hasFlow = !!flow.lastMessage;
+
+  refs.deskAsset.textContent = asset;
+  refs.deskLast.textContent = fmt(intraday.price);
+  refs.deskBidAsk.textContent = Number.isFinite(book.bid) && Number.isFinite(book.ask)
+    ? `${fmt(book.bid)} / ${fmt(book.ask)}`
+    : "--";
+  refs.deskDelta.textContent = signedFmt(metrics.delta5s, 0);
+  refs.deskVwapDist.textContent = `${signedFmt(metrics.vwapDistanceTicks, 1)} t`;
+  refs.deskLatency.textContent = fmtMs(state.telemetry.lastLagMs);
+  refs.deskState.textContent = hasPrice && hasBook && hasFlow ? "Operacional" : hasPrice ? "Parcial" : "Aguardando";
+  refs.deskState.className = `tag ${hasPrice && hasBook && hasFlow ? "green" : hasPrice ? "amber" : "red"}`;
+}
+
+function renderDeskBook(msg = state.rtd.lastSnapshot) {
+  if (!refs.deskBook) return;
+  const depth = liveBookDepthForAsset();
+  const book = liveBookFromSnapshot(msg);
+  const bids = depth?.bids || [];
+  const asks = depth?.asks || [];
+  const rows = Math.max(bids.length, asks.length);
+
+  if (!rows && Number.isFinite(book.bid) && Number.isFinite(book.ask)) {
+    refs.deskBook.innerHTML = `
+      <div class="desk-book-row">
+        <span class="bid">${fmt(book.bid)}</span>
+        <span class="bid">${fmt(book.bidVolume, 0)}</span>
+        <span class="ask">${fmt(book.askVolume, 0)}</span>
+        <span class="ask">${fmt(book.ask)}</span>
+      </div>
+    `;
+    return;
+  }
+
+  if (!rows) {
+    refs.deskBook.innerHTML = `<div class="warn-line">Aguardando book RTD.</div>`;
+    return;
+  }
+
+  refs.deskBook.innerHTML = Array.from({ length: Math.min(rows, 14) }, (_, index) => {
+    const bid = bids[index] || {};
+    const ask = asks[index] || {};
+    return `
+      <div class="desk-book-row">
+        <span class="bid">${fmt(liveNumber(bid.price))}</span>
+        <span class="bid">${fmt(liveNumber(bid.qty), 0)}</span>
+        <span class="ask">${fmt(liveNumber(ask.qty), 0)}</span>
+        <span class="ask">${fmt(liveNumber(ask.price))}</span>
+      </div>
+    `;
+  }).join("");
+}
+
+function renderDeskFlow() {
+  if (!refs.deskFlow) return;
+  const metrics = state.flow.metrics || {};
+  refs.deskFlow.innerHTML = [
+    ["Delta 1s / 5s", `${signedFmt(metrics.delta1s, 0)} / ${signedFmt(metrics.delta5s, 0)}`],
+    ["Delta acum.", signedFmt(metrics.cumulativeDelta, 0)],
+    ["Imbalance", Number.isFinite(liveNumber(metrics.topBookImbalance)) ? fmt(liveNumber(metrics.topBookImbalance), 2) : "--"],
+    ["OFI", signedFmt(metrics.orderFlowImbalance, 0)],
+    ["Microprice", fmt(liveNumber(metrics.microPrice))],
+    ["Qualidade", state.flow.lastMessage?.dataQuality || "unknown"],
+  ].map(([k, v]) => `<div class="kv"><span>${escapeHtml(k)}</span><span>${escapeHtml(v)}</span></div>`).join("");
+}
+
+function renderDeskTape() {
+  if (!refs.deskTape) return;
+  const trades = state.flow.trades || [];
+  if (trades.length) {
+    refs.deskTape.innerHTML = trades.slice(0, 20).map(trade => {
+      const side = trade.side || trade.aggressorSide || "unknown";
+      const dir = side === "buy" ? "up" : side === "sell" ? "down" : "flat";
+      return `
+        <div class="dom-tick ${dir}">
+          <span>${escapeHtml(trade.time || "--")}</span>
+          <strong>${fmt(liveNumber(trade.price))}</strong>
+          <span>${fmt(liveNumber(trade.qty), 0)}</span>
+          <span>${escapeHtml(side)}${trade.derived ? " d" : ""}</span>
+        </div>
+      `;
+    }).join("");
+    return;
+  }
+
+  refs.deskTape.innerHTML = (state.rtd.ticks || []).slice(0, 20).map(tick => {
+    const dir = tick.delta > 0 ? "up" : tick.delta < 0 ? "down" : "flat";
+    return `
+      <div class="dom-tick ${dir}">
+        <span>${escapeHtml(tick.time || "--")}</span>
+        <strong>${fmt(tick.price)}</strong>
+        <span>${tick.delta > 0 ? "+" : ""}${fmt(tick.delta)}</span>
+        <span>${escapeHtml(tick.side || "--")}</span>
+      </div>
+    `;
+  }).join("") || `<div class="warn-line">Aguardando tape do ativo.</div>`;
+}
+
+function renderDeskSignals() {
+  if (!refs.deskSignals) return;
+  refs.deskSignals.innerHTML = (state.flow.signals || []).slice(0, 8).map(signal => {
+    const direction = signal.direction || "neutral";
+    return `
+      <div class="desk-signal ${escapeHtml(direction)}">
+        <strong>${escapeHtml((signal.timestamp || "").slice(11, 19) || "--")}</strong>
+        <span>${escapeHtml(signal.setup || "--")} ${escapeHtml(signal.levelLabel || "")}</span>
+        <strong>${fmt(liveNumber(signal.price))}</strong>
+      </div>
+    `;
+  }).join("") || `<div class="warn-line">Aguardando setups confirmados.</div>`;
+}
+
+function renderDeskLevels(msg = state.rtd.lastSnapshot) {
+  if (!refs.deskLevels) return;
+  const price = currentDomPrice(msg);
+  const levels = collectDomLevels(msg)
+    .filter(level => Number.isFinite(price) && Number.isFinite(level.price))
+    .sort((a, b) => Math.abs(a.price - price) - Math.abs(b.price - price) || b.score - a.score)
+    .slice(0, 9);
+
+  refs.deskLevels.innerHTML = levels.map(level => {
+    const dist = level.price - price;
+    const side = dist > 0 ? "above" : "below";
+    return `
+      <div class="desk-level ${side}">
+        <strong>${fmt(level.price)}</strong>
+        <span>${escapeHtml(level.label || level.type || "Nivel")}</span>
+        <strong>${dist > 0 ? "+" : ""}${fmt(dist)}</strong>
+      </div>
+    `;
+  }).join("") || `<div class="warn-line">Carregue CSV ou aguarde sinais para listar niveis.</div>`;
+}
+
+function renderDeskLadder(msg = state.rtd.lastSnapshot) {
+  if (!refs.deskLadder) return;
+  const price = currentDomPrice(msg);
+  const book = liveBookFromSnapshot(msg);
+  const step = state.rtd.tickSize;
+  const center = roundToTick(price, step);
+  const previousScrollTop = refs.deskLadder.scrollTop;
+  const hadRows = !!refs.deskLadder.querySelector(".dom-row");
+
+  if (!Number.isFinite(center)) {
+    refs.deskLadder.innerHTML = `<div class="warn-line">Aguardando preco atual para montar a mesa.</div>`;
+    return;
+  }
+
+  const ticksEachSide = Math.min(60, Math.max(20, Math.round(state.rtd.domVisibleTicks / 4)));
+  const levels = collectDomLevels(msg).filter(level => {
+    const levelPrice = roundToTick(level.price, step);
+    return Number.isFinite(levelPrice) && Math.abs(Math.round((levelPrice - center) / step)) <= ticksEachSide;
+  });
+  const lastTick = state.rtd.ticks[0];
+  const lastDir = lastTick?.delta > 0 ? "up" : lastTick?.delta < 0 ? "down" : "flat";
+  const rows = [];
+
+  for (let offset = ticksEachSide; offset >= -ticksEachSide; offset--) {
+    const rowPrice = center + offset * step;
+    const marks = levels
+      .filter(level => sameTick(level.price, rowPrice, step))
+      .sort((a, b) => b.score - a.score || a.label.localeCompare(b.label));
+    const isLast = sameTick(price, rowPrice, step);
+    const isBid = sameTick(book.bid, rowPrice, step);
+    const isAsk = sameTick(book.ask, rowPrice, step);
+    const depthBid = bookDepthAtPrice(rowPrice, "bid", step);
+    const depthAsk = bookDepthAtPrice(rowPrice, "ask", step);
+    const bidQty = liveNumber(depthBid?.qty);
+    const askQty = liveNumber(depthAsk?.qty);
+    const classes = ["dom-row"];
+    if (marks.length) classes.push("near");
+    if (isLast) classes.push("last", lastDir);
+    if (isBid || depthBid) classes.push("bid-level");
+    if (isAsk || depthAsk) classes.push("ask-level");
+
+    rows.push(`
+      <div class="${classes.join(" ")}"${isLast ? " data-current=\"true\"" : ""}>
+        <div class="dom-cell dom-ask">${Number.isFinite(askQty) ? fmt(askQty, 0) : isAsk && Number.isFinite(book.askVolume) ? fmt(book.askVolume, 0) : ""}</div>
+        <div class="dom-cell dom-price">${fmt(rowPrice)}</div>
+        <div class="dom-cell dom-bid">${Number.isFinite(bidQty) ? fmt(bidQty, 0) : isBid && Number.isFinite(book.bidVolume) ? fmt(book.bidVolume, 0) : ""}</div>
+        <div class="dom-cell dom-marks">
+          ${marks.slice(0, 2).map(level => `<span class="dom-tag ${domLevelTypeClass(level)}" title="${escapeHtml(level.label || level.type || "Nivel")}">${escapeHtml(trimText(level.label || level.type || "Nivel", 16))}</span>`).join("")}
+        </div>
+      </div>
+    `);
+  }
+
+  refs.deskLadder.innerHTML = rows.join("");
+  if (hadRows) {
+    refs.deskLadder.scrollTop = previousScrollTop;
+  } else {
+    refs.deskLadder.scrollTop = Math.max(0, (refs.deskLadder.scrollHeight - refs.deskLadder.clientHeight) / 2);
+  }
+}
+
+function renderDesk(msg = state.rtd.lastSnapshot) {
+  renderDeskSummary(msg);
+  renderDeskBook(msg);
+  renderDeskFlow();
+  renderDeskLadder(msg);
+  renderDeskTape();
+  renderDeskSignals();
+  renderDeskLevels(msg);
+}
+
 function nowMs() {
   return globalThis.performance?.now ? globalThis.performance.now() : Date.now();
 }
@@ -5287,6 +5612,7 @@ function runLiveRenderBatch() {
   const snapshot = state.render.pendingSnapshot || state.rtd.lastSnapshot;
   state.render.pendingSnapshot = null;
   renderDom(snapshot);
+  renderDesk(snapshot);
   renderRisk();
   renderHistoryPanel();
   renderDashboard();
@@ -5947,6 +6273,7 @@ function renderAll() {
   renderBacktest(r);
   renderChart(r);
   renderDom();
+  renderDesk();
 
   setPill(refs.windowPill, "", `Janela ${r.window}d`);
   setPill(refs.anchorPill, Number.isFinite(r.intraday.vwap) ? "ok" : "warn", `Ancora: ${Number.isFinite(r.intraday.vwap) ? "VWAP" : "proxy"}`);
@@ -6068,6 +6395,7 @@ function applyBookDepthMessage(msg) {
   renderQuotesPanel();
   if (sameAsset(asset)) {
     renderDom(state.rtd.lastSnapshot);
+    renderDesk(state.rtd.lastSnapshot);
     renderBookPanel();
     renderFlowDebug();
     renderMarketStrip();
@@ -6105,6 +6433,7 @@ function applyTimesTradesMessage(msg) {
   if (sameAsset(asset)) {
     syncSelectedFlow();
     renderDomTape();
+    renderDesk(state.rtd.lastSnapshot);
     renderFlowTrades();
     renderTimesPanel();
     renderFlowDebug();
@@ -6168,11 +6497,13 @@ function connectRtdLive() {
       const ok = msg.status === "connected";
       setRtdStatus(ok ? "ok" : "warn", ok ? "Conectado" : "Reconectando");
       renderMarketStrip();
+      renderDesk(state.rtd.lastSnapshot);
       renderConnections();
       renderFlowDebug();
     } else if (msg.type === "error") {
       setRtdStatus("bad", "Sem Profit");
       renderMarketStrip();
+      renderDesk(state.rtd.lastSnapshot);
       renderConnections();
       renderFlowDebug();
     }
@@ -6184,6 +6515,7 @@ function connectRtdLive() {
     state.telemetry.reconnects += 1;
     setRtdStatus("warn", "Reconectando");
     renderMarketStrip();
+    renderDesk(state.rtd.lastSnapshot);
     renderConnections();
     renderFlowDebug();
     window.clearTimeout(state.rtd.reconnectTimer);
@@ -6236,6 +6568,7 @@ function applyCsvContent(text, fileName, encoding, targets = {}) {
   renderMarketStrip();
   renderHistoryPanel();
   renderDashboard();
+  renderDesk(state.rtd.lastSnapshot);
   renderQuotesPanel();
   return { ok: true, parsed };
 }
@@ -6422,6 +6755,12 @@ document.getElementById("panel-dashboard").addEventListener("click", ev => {
   const action = ev.target.closest("[data-dashboard-open]");
   if (!action) return;
   showMainTab(action.dataset.dashboardOpen);
+});
+
+refs.deskPanel.addEventListener("click", ev => {
+  const action = ev.target.closest("[data-desk-open]");
+  if (!action) return;
+  showMainTab(action.dataset.deskOpen);
 });
 
 refs.orderUsePrice.addEventListener("click", () => {
@@ -6767,6 +7106,7 @@ renderTopAssetSelect();
 renderMarketStrip();
 renderDashboard();
 renderMonitor();
+renderDesk();
 renderQuotesPanel();
 renderBookPanel();
 renderTimesPanel();
