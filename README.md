@@ -42,6 +42,7 @@ O historico diario continua sendo carregado por CSV no navegador. O RTD preenche
 
 O menu superior separa as telas por funcionalidade e a faixa superior mostra ativo selecionado, ultimo preco, bid/ask, status de Book, status de Times, delta e CSV:
 
+- `Painel`: entrada operacional com checklist, atalhos, setups, planos e alertas;
 - `Ativos`: cadastro, CSV historico, ligar/desligar e excluir;
 - `Cotacoes`: watchlist operacional com todos os ativos cadastrados, ultimo preco, bid/ask, delta, Book, Times e atalhos;
 - `Grafico`: grafico, niveis, abertura, POC, variacao, profile e backtest;
@@ -88,8 +89,9 @@ Use o MSBuild do Visual Studio 2022/Build Tools. O MSBuild antigo de `C:\Windows
 6. Configure `BOOK0` e `T&T0`, ou os topicos equivalentes do Profit.
 7. Carregue o CSV historico do ativo.
 8. Clique em `Salvar`.
-9. Abra `Cotacoes` para monitorar os ativos cadastrados e entrar em `Grafico`, `DOM`, `Book`, `T&T` ou `Boleta`.
-10. Deixe o modo `RTD Live` ativo para preencher o intraday automaticamente.
+9. Abra `Painel` para ver checklist operacional, atalhos, setups, planos e alertas.
+10. Abra `Cotacoes` para monitorar os ativos cadastrados e entrar em `Grafico`, `DOM`, `Book`, `T&T` ou `Boleta`.
+11. Deixe o modo `RTD Live` ativo para preencher o intraday automaticamente.
 
 A `Boleta` e apenas um plano local/simulado. O aplicativo nao envia ordens para o Profit.
 
@@ -171,7 +173,8 @@ logs/                   logs em runtime
 5. Manual: desligar `RTD Live` e editar os campos manualmente.
 6. Multiativo: adicionar um novo ativo em `Ativos`, ligar/desligar, trocar fontes, excluir e confirmar `/assets`.
 7. Book/T&T: confirmar mensagens `bookDepth` e `timesTrades` no WebSocket quando `BOOK0` e `T&T0` estiverem ligados.
-8. Cotacoes: confirmar que a watchlist mostra todos os ativos e que os botoes abrem `Grafico`, `DOM`, `Book`, `T&T` e `Boleta`.
-9. Boleta: salvar um plano local e confirmar status `aguardando`, `aberto`, `alvo` ou `stop` conforme o preco.
-10. Abas operacionais: confirmar `Book`, `T&T`, `Alertas`, `Risco`, `Historico` e `Sistema` sem erro no navegador.
-11. SQLite: confirmar criacao de `data/marketdata.sqlite` quando o provider for restaurado pelo NuGet.
+8. Painel: confirmar checklist, atalhos, setups, planos e alertas do ativo selecionado.
+9. Cotacoes: confirmar que a watchlist mostra todos os ativos e que os botoes abrem `Grafico`, `DOM`, `Book`, `T&T` e `Boleta`.
+10. Boleta: salvar um plano local e confirmar status `aguardando`, `aberto`, `alvo` ou `stop` conforme o preco.
+11. Abas operacionais: confirmar `Book`, `T&T`, `Alertas`, `Risco`, `Historico` e `Sistema` sem erro no navegador.
+12. SQLite: confirmar criacao de `data/marketdata.sqlite` quando o provider for restaurado pelo NuGet.

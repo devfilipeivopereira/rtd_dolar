@@ -386,6 +386,22 @@ tr:hover td{background:#ffffff05}
 .source-dot.ok{border-color:#1f7a66;color:#9df2d5;background:#0d261f}
 .source-dot.warn{border-color:#7a5f1f;color:#ffd66b;background:#28210d}
 .source-dot.off{border-color:#555d69;color:#738091;background:#0e1318}
+.dashboard-grid{display:grid;grid-template-columns:minmax(360px,.9fr) minmax(0,1.4fr);gap:14px}
+.dashboard-actions{display:grid;grid-template-columns:repeat(3,minmax(150px,1fr));gap:8px}
+.quick-action{
+  min-height:58px;border:1px solid var(--line);background:#10141a;color:var(--txt);
+  display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:5px;padding:9px 10px;
+}
+.quick-action strong{font-size:12px;font-weight:900;text-transform:uppercase}
+.quick-action span{font-size:10px;color:var(--muted);text-align:left;line-height:1.25}
+.quick-action:hover{border-color:#1f8a70;background:#123125}
+.readiness-list{display:flex;flex-direction:column;gap:7px}
+.readiness-row{
+  display:grid;grid-template-columns:72px minmax(0,1fr) 92px;gap:9px;align-items:center;
+  border:1px solid var(--line);background:#10141a;padding:8px 9px;font-family:var(--mono);font-size:11px;
+}
+.readiness-row strong{color:var(--txt)}
+.readiness-row span{color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .market-table-grid{display:grid;grid-template-columns:minmax(320px,1fr) minmax(320px,1fr);gap:14px}
 .book-table td,.book-table th{text-align:right}
 .book-table td:first-child,.book-table th:first-child{text-align:left}
@@ -446,7 +462,8 @@ tr:hover td{background:#ffffff05}
   .brand-title,.brand-sub{white-space:normal}
   .top-meta{justify-content:flex-start}
   .field-grid{grid-template-columns:1fr}
-  .market-table-grid,.times-grid,.alert-grid,.risk-grid,.order-grid,.history-grid{grid-template-columns:1fr}
+  .market-table-grid,.times-grid,.alert-grid,.risk-grid,.order-grid,.history-grid,.dashboard-grid{grid-template-columns:1fr}
+  .dashboard-actions{grid-template-columns:1fr 1fr}
   .risk-result{grid-template-columns:1fr 1fr}
   .cards{grid-template-columns:1fr 1fr}
   .chart-shell{height:340px;padding:10px}
@@ -472,8 +489,12 @@ tr:hover td{background:#ffffff05}
     </div>
     <nav class="main-tabs" id="main-tabs">
       <div class="tab-group">
+        <span class="tab-group-label">Inicio</span>
+        <button class="main-tab active" data-main-tab="dashboard" type="button">Painel</button>
+      </div>
+      <div class="tab-group">
         <span class="tab-group-label">Cadastro</span>
-        <button class="main-tab active" data-main-tab="assets" type="button">Ativos</button>
+        <button class="main-tab" data-main-tab="assets" type="button">Ativos</button>
       </div>
       <div class="tab-group">
         <span class="tab-group-label">Mercado</span>
@@ -804,6 +825,53 @@ tr:hover td{background:#ffffff05}
       </nav>
 
       <div class="content">
+        <section class="tab-panel hidden" id="panel-dashboard">
+          <div class="dom-summary">
+            <div class="live-kv"><span>RTD</span><strong id="dashboard-rtd">--</strong></div>
+            <div class="live-kv"><span>Ativo</span><strong id="dashboard-asset">--</strong></div>
+            <div class="live-kv"><span>Ultimo</span><strong id="dashboard-last">--</strong></div>
+            <div class="live-kv"><span>Estado</span><strong id="dashboard-state">--</strong></div>
+          </div>
+          <div class="dashboard-grid">
+            <div class="panel">
+              <div class="panel-head"><div class="panel-title">Checklist operacional</div></div>
+              <div class="panel-body">
+                <div class="readiness-list" id="dashboard-readiness"></div>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="panel-head"><div class="panel-title">Acessos rapidos</div></div>
+              <div class="panel-body">
+                <div class="dashboard-actions">
+                  <button class="quick-action" type="button" data-dashboard-open="quotes"><strong>Cotacoes</strong><span>Monitorar ativos e abrir telas</span></button>
+                  <button class="quick-action" type="button" data-dashboard-open="dom"><strong>DOM</strong><span>Escada de preco e pontos</span></button>
+                  <button class="quick-action" type="button" data-dashboard-open="book"><strong>Book</strong><span>Ofertas multi-nivel</span></button>
+                  <button class="quick-action" type="button" data-dashboard-open="times"><strong>T&amp;T</strong><span>Negocios do RTD</span></button>
+                  <button class="quick-action" type="button" data-dashboard-open="orders"><strong>Boleta</strong><span>Plano local de risco</span></button>
+                  <button class="quick-action" type="button" data-dashboard-open="assets"><strong>Ativos</strong><span>Cadastro e fontes RTD</span></button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="panel-grid orders-list-panel">
+            <div class="panel">
+              <div class="panel-head"><div class="panel-title">Setups recentes</div></div>
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th>Hora</th><th>Setup</th><th>Direcao</th><th>Preco</th><th>Score</th></tr></thead>
+                  <tbody id="dashboard-signals"></tbody>
+                </table>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="panel-head"><div class="panel-title">Planos e alertas</div></div>
+              <div class="panel-body">
+                <div class="small-list" id="dashboard-actions-list"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <section class="tab-panel hidden" id="panel-quotes">
           <div class="dom-summary">
             <div class="live-kv"><span>Ativos</span><strong id="quotes-total">--</strong></div>
@@ -1363,9 +1431,9 @@ function saveChartLayers() {
 function loadMainTab() {
   try {
     const raw = globalThis.localStorage?.getItem("wdo-main-tab");
-    return MAIN_TABS.includes(raw) ? raw : "assets";
+    return MAIN_TABS.includes(raw) ? raw : "dashboard";
   } catch (_) {
-    return "assets";
+    return "dashboard";
   }
 }
 
@@ -1413,7 +1481,7 @@ function saveOrderPlans() {
   } catch (_) {}
 }
 
-const MAIN_TABS = ["assets", "quotes", "panorama", "dom", "book", "times", "flow", "signals", "orders", "alerts", "risk", "history", "diagnostics"];
+const MAIN_TABS = ["dashboard", "assets", "quotes", "panorama", "dom", "book", "times", "flow", "signals", "orders", "alerts", "risk", "history", "diagnostics"];
 
 const state = {
   ui: {
@@ -1562,6 +1630,13 @@ const refs = {
   rtdLast: document.getElementById("rtd-last"),
   rtdBook: document.getElementById("rtd-book"),
   rtdVpj: document.getElementById("rtd-vpj"),
+  dashboardRtd: document.getElementById("dashboard-rtd"),
+  dashboardAsset: document.getElementById("dashboard-asset"),
+  dashboardLast: document.getElementById("dashboard-last"),
+  dashboardState: document.getElementById("dashboard-state"),
+  dashboardReadiness: document.getElementById("dashboard-readiness"),
+  dashboardSignals: document.getElementById("dashboard-signals"),
+  dashboardActionsList: document.getElementById("dashboard-actions-list"),
   quotesTotal: document.getElementById("quotes-total"),
   quotesEnabled: document.getElementById("quotes-enabled"),
   quotesConnected: document.getElementById("quotes-connected"),
@@ -1759,6 +1834,7 @@ function updateAssetsMessage(msg) {
   renderAssetScreenList();
   renderTopAssetSelect();
   renderMarketStrip();
+  renderDashboard();
   renderQuotesPanel();
   const selected = selectedAssetConfig();
   populateAssetForm(selected);
@@ -2070,6 +2146,72 @@ function renderQuotesPanel() {
   }).join("");
 }
 
+function readinessRow(label, detail, ok, warn = false) {
+  const cls = ok ? "green" : warn ? "amber" : "red";
+  const text = ok ? "OK" : warn ? "Ajustar" : "Pendente";
+  return `
+    <div class="readiness-row">
+      <span class="tag ${cls}">${text}</span>
+      <strong>${escapeHtml(label)}</strong>
+      <span>${escapeHtml(detail)}</span>
+    </div>
+  `;
+}
+
+function renderDashboard() {
+  if (!refs.dashboardReadiness) return;
+  const asset = selectedAsset();
+  const config = selectedAssetConfig();
+  const snapshot = state.rtd.snapshotsByAsset[asset] || null;
+  const intraday = liveIntradayFromSnapshot(snapshot);
+  const depth = liveBookDepthForAsset(asset);
+  const times = state.rtd.timesTradesByAsset[asset];
+  const flow = flowBucket(asset);
+  const alerts = state.alerts.filter(alert => normalizeAsset(alert.asset) === asset);
+  const orders = state.orderPlans.filter(plan => normalizeAsset(plan.asset) === asset);
+  const openOrders = orders.filter(plan => !plan.closedAt);
+  const activeSignals = (flow.signals || []).slice(0, 5);
+  const csvOk = historyHasCsv(config?.history) || state.uploadedCount > 0;
+  const priceOk = !!snapshot && Number.isFinite(intraday.price);
+  const bookOk = !!depth || sourceIsOk(config?.bookRtd);
+  const timesOk = !!times || sourceIsOk(config?.timesRtd);
+
+  refs.dashboardRtd.textContent = state.rtd.enabled ? "RTD Live" : "Manual";
+  refs.dashboardAsset.textContent = asset;
+  refs.dashboardLast.textContent = fmt(intraday.price);
+  refs.dashboardState.textContent = priceOk ? "preco ativo" : config?.enabled ? "aguardando preco" : "ativo desligado";
+
+  refs.dashboardReadiness.innerHTML = [
+    readinessRow("Ativo", config ? (config.enabled ? "ligado" : "desligado") : "nao cadastrado", !!config && !!config.enabled),
+    readinessRow("RTD preco", priceOk ? "snapshot recebido" : sourceIsOk(config?.priceRtd) ? "assinado" : "sem snapshot", priceOk, sourceIsOk(config?.priceRtd)),
+    readinessRow("CSV historico", csvOk ? `${state.uploadedCount || config?.history?.Rows || config?.history?.rows || "--"} pregoes` : "carregar em Ativos", csvOk),
+    readinessRow("Book", depth ? `${(depth.bids || []).length} x ${(depth.asks || []).length}` : config?.bookRtd?.enabled ? "ligando" : "desligado", !!depth, config?.bookRtd?.enabled),
+    readinessRow("Times", times ? `${(times.trades || []).length} linhas` : config?.timesRtd?.enabled ? "ligando" : "desligado", !!times, config?.timesRtd?.enabled),
+    readinessRow("Plano local", openOrders.length ? `${openOrders.length} ativo(s)` : "sem plano aberto", openOrders.length > 0, orders.length > 0),
+  ].join("");
+
+  refs.dashboardSignals.innerHTML = activeSignals.length
+    ? activeSignals.map(signal => `
+      <tr>
+        <td>${escapeHtml((signal.timestamp || "").slice(11, 19) || "--")}</td>
+        <td class="strong">${escapeHtml(signal.setup || "--")}</td>
+        <td>${escapeHtml(signal.direction || "--")}</td>
+        <td class="strong">${fmt(liveNumber(signal.price))}</td>
+        <td>${fmt(liveNumber(signal.score), 0)}</td>
+      </tr>
+    `).join("")
+    : `<tr><td colspan="5">Nenhum setup recente para o ativo.</td></tr>`;
+
+  refs.dashboardActionsList.innerHTML = [
+    ["Planos salvos", fmt(orders.length, 0)],
+    ["Planos ativos", fmt(openOrders.length, 0)],
+    ["Alertas ativos", fmt(alerts.filter(alert => !alert.triggeredAt).length, 0)],
+    ["Alertas acionados", fmt(alerts.filter(alert => alert.triggeredAt).length, 0)],
+    ["Delta 5s", signedFmt(flow.metrics?.delta5s, 0)],
+    ["Qualidade fluxo", flow.lastMessage?.dataQuality || "unknown"],
+  ].map(([k, v]) => `<div class="kv"><span>${escapeHtml(k)}</span><span>${escapeHtml(v)}</span></div>`).join("");
+}
+
 function renderBookPanel() {
   const depth = liveBookDepthForAsset();
   if (!refs.bookBidsBody) return;
@@ -2155,6 +2297,7 @@ function addPriceAlert() {
   saveAlerts();
   refs.alertPrice.value = "";
   refs.alertNote.value = "";
+  renderDashboard();
   renderAlerts();
 }
 
@@ -2172,6 +2315,7 @@ function checkAlerts(price) {
   if (changed) {
     saveAlerts();
     renderAlerts();
+    renderDashboard();
   }
 }
 
@@ -2282,6 +2426,7 @@ function updateOrderPlans(price) {
   });
   if (changed) {
     saveOrderPlans();
+    renderDashboard();
     renderOrders();
   }
 }
@@ -2363,6 +2508,7 @@ function addOrderPlan() {
   state.orderPlans = state.orderPlans.slice(0, 120);
   saveOrderPlans();
   updateOrderPlans(currentLivePrice());
+  renderDashboard();
   renderOrders();
 }
 
@@ -2422,7 +2568,7 @@ function activateSubTab(tabName) {
 }
 
 function showMainTab(tabName) {
-  const safe = MAIN_TABS.includes(tabName) ? tabName : "assets";
+  const safe = MAIN_TABS.includes(tabName) ? tabName : "dashboard";
   state.ui.mainTab = safe;
   saveMainTab(safe);
   refs.mainTabs.querySelectorAll("[data-main-tab]").forEach(btn => {
@@ -2443,6 +2589,7 @@ function showMainTab(tabName) {
   refs.terminalMain.classList.toggle("full-view", fullView);
 
   if (safe === "panorama") activateSubTab("levels");
+  else if (safe === "dashboard") activateSubTab("dashboard");
   else if (safe === "quotes") activateSubTab("quotes");
   else if (safe === "dom") activateSubTab("dom");
   else if (safe === "book") activateSubTab("book");
@@ -2455,6 +2602,7 @@ function showMainTab(tabName) {
   else if (safe === "history") activateSubTab("history");
   else if (safe === "diagnostics") activateSubTab("flowdebug");
 
+  if (safe === "dashboard") renderDashboard();
   if (safe === "quotes") renderQuotesPanel();
   if (safe === "dom") renderDom();
   if (safe === "book") renderBookPanel();
@@ -2489,6 +2637,7 @@ function renderSelectedAsset() {
   renderMarketStrip();
   renderTopAssetSelect();
   renderAssetList();
+  renderDashboard();
   renderQuotesPanel();
 }
 
@@ -4342,6 +4491,7 @@ function applyFlowMessage(msg) {
   renderDom();
   renderMarketStrip();
   renderHistoryPanel();
+  renderDashboard();
   renderQuotesPanel();
 }
 
@@ -4363,6 +4513,7 @@ function applySignalMessage(msg) {
   renderDom();
   renderAlerts();
   renderMarketStrip();
+  renderDashboard();
   renderQuotesPanel();
 }
 
@@ -4377,6 +4528,7 @@ function applySignalsMessage(msg) {
   renderDom();
   renderAlerts();
   renderMarketStrip();
+  renderDashboard();
   renderQuotesPanel();
 }
 
@@ -5035,6 +5187,7 @@ function applyLiveSnapshot(msg) {
   renderMarketStrip();
   renderRisk();
   renderHistoryPanel();
+  renderDashboard();
   renderQuotesPanel();
   scheduleLiveRecalc();
 }
@@ -5043,6 +5196,7 @@ function applyBookDepthMessage(msg) {
   if (!msg || msg.type !== "bookDepth") return;
   const asset = normalizeAsset(msg.asset);
   state.rtd.bookDepthByAsset[asset] = msg;
+  renderDashboard();
   renderQuotesPanel();
   if (sameAsset(asset)) {
     renderDom(state.rtd.lastSnapshot);
@@ -5077,6 +5231,7 @@ function applyTimesTradesMessage(msg) {
   bucket.trades = Array.isArray(msg.trades)
     ? msg.trades.map(normalizeTimesTrade).filter(trade => Number.isFinite(trade.price)).slice(0, state.flow.maxTrades)
     : [];
+  renderDashboard();
   renderQuotesPanel();
   if (sameAsset(asset)) {
     syncSelectedFlow();
@@ -5193,6 +5348,7 @@ function applyCsvContent(text, fileName, encoding, targets = {}) {
   recalc();
   renderMarketStrip();
   renderHistoryPanel();
+  renderDashboard();
   renderQuotesPanel();
   return { ok: true, parsed };
 }
@@ -5254,6 +5410,7 @@ async function saveDraftHistory(asset = selectedAsset()) {
     item.history = msg.history;
     populateAssetForm(item);
     renderAssetScreenList();
+    renderDashboard();
     renderQuotesPanel();
   }
   state.assetEditor.draftCsvText = null;
@@ -5298,6 +5455,12 @@ refs.quotesBody.addEventListener("click", ev => {
   showMainTab(action.dataset.quotesOpen);
 });
 
+document.getElementById("panel-dashboard").addEventListener("click", ev => {
+  const action = ev.target.closest("[data-dashboard-open]");
+  if (!action) return;
+  showMainTab(action.dataset.dashboardOpen);
+});
+
 refs.orderUsePrice.addEventListener("click", () => {
   const price = currentLivePrice();
   if (Number.isFinite(price)) {
@@ -5309,6 +5472,7 @@ refs.orderSave.addEventListener("click", addOrderPlan);
 refs.orderClear.addEventListener("click", () => {
   state.orderPlans = state.orderPlans.filter(plan => normalizeAsset(plan.asset) !== selectedAsset());
   saveOrderPlans();
+  renderDashboard();
   renderOrders();
 });
 refs.orderBody.addEventListener("click", ev => {
@@ -5316,6 +5480,7 @@ refs.orderBody.addEventListener("click", ev => {
   if (!remove) return;
   state.orderPlans = state.orderPlans.filter(plan => orderPlanKey(plan) !== remove.dataset.orderRemove);
   saveOrderPlans();
+  renderDashboard();
   renderOrders();
 });
 [refs.orderSide, refs.orderTrigger, refs.orderEntry, refs.orderStop, refs.orderTarget, refs.orderContracts, refs.orderPointValue, refs.orderNote].forEach(input => {
@@ -5327,6 +5492,7 @@ refs.alertAdd.addEventListener("click", addPriceAlert);
 refs.alertClear.addEventListener("click", () => {
   state.alerts = state.alerts.filter(alert => normalizeAsset(alert.asset) !== selectedAsset());
   saveAlerts();
+  renderDashboard();
   renderAlerts();
 });
 refs.alertsList.addEventListener("click", ev => {
@@ -5334,6 +5500,7 @@ refs.alertsList.addEventListener("click", ev => {
   if (!remove) return;
   state.alerts = state.alerts.filter(alert => alertKey(alert) !== remove.dataset.alertRemove);
   saveAlerts();
+  renderDashboard();
   renderAlerts();
 });
 [refs.riskEntry, refs.riskStop, refs.riskTarget, refs.riskContracts, refs.riskPointValue].forEach(input => {
@@ -5611,6 +5778,7 @@ renderSignals();
 renderFlowDebug();
 renderTopAssetSelect();
 renderMarketStrip();
+renderDashboard();
 renderQuotesPanel();
 renderBookPanel();
 renderTimesPanel();

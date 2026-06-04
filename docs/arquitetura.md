@@ -63,6 +63,7 @@ O CSV diario continua sendo a fonte do historico 21/45/63. O RTD preenche o intr
 
 O menu superior separa:
 
+- `Painel`: checklist operacional, atalhos e resumo do ativo selecionado;
 - `Ativos`: cadastro de codigo, tres fontes RTD e CSV historico;
 - `Cotacoes`: watchlist operacional com todos os ativos cadastrados;
 - `Grafico`: grafico e subabas analiticas;
@@ -78,6 +79,8 @@ O menu superior separa:
 - `Sistema`: saude e debug.
 
 A faixa superior fica disponivel em todas as telas e mostra ativo selecionado, ultimo preco, bid/ask, status de Book, status de Times, delta 5s e CSV carregado.
+
+A tela `Painel` e a entrada operacional. Ela resume RTD, ativo selecionado, ultimo preco, checklist de prontidao, atalhos para as telas principais, setups recentes, planos da boleta e alertas.
 
 A tela `Ativos` configura fontes e CSV. A tela `Cotacoes` e a mesa de monitoramento: cada linha mostra ultimo preco, bid/ask, delta, status de Book, status de Times, status das fontes `P/B/T` e botoes para abrir `Grafico`, `DOM`, `Book`, `T&T` ou `Boleta` daquele ativo.
 
