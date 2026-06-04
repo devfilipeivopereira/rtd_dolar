@@ -122,7 +122,7 @@ Os pontos marcados incluem abertura, maxima, minima, VWAP/MED, POC, VAH, VAL, de
 
 As mensagens auxiliares de profundidade sao coalescidas no cliente RTD para reduzir repintura da UI: `bookDepth` tem broadcast minimo de 100 ms e `timesTrades` de 150 ms. Snapshots de preco continuam no fluxo existente.
 
-No navegador, campos criticos de preco e inputs intraday sao preenchidos a cada snapshot. Renderizacoes densas como DOM completo, `Painel`, `Monitor`, `Cotacoes` e `Historico` usam scheduler curto, com padrao de 120 ms no preset `Equilibrado` e ajuste pela aba `Ajustes`, para reduzir travamentos quando o RTD envia muitos updates.
+No navegador, campos criticos de preco e inputs intraday sao preenchidos a cada snapshot. Renderizacoes densas usam scheduler curto, com padrao de 120 ms no preset `Equilibrado` e ajuste pela aba `Ajustes`. O batch ao vivo renderiza a aba ativa e evita repintar telas invisiveis como DOM, Mesa, Painel, Monitor, Cotacoes e Historico no mesmo pulso.
 
 A telemetria `Latencia WS` e calculada no navegador comparando o recebimento da mensagem com `localTimestamp` enviado pelo backend local. Ela serve para diagnosticar atraso entre coletor e interface; nao mede latencia de bolsa ou Profit.
 

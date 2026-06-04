@@ -129,7 +129,7 @@ Sem CSV, a aba DOM ainda pode mostrar ticks RTD, bid/ask e tape. Pontos como POC
 - A hotbar deve espelhar a aba ativa e permitir troca rapida para Monitor, DOM, Book, T&T, Fluxo, Oportunidades, Ativos, Conexoes e Sistema.
 - A paleta `Ctrl+K` deve buscar telas e ativos cadastrados sem depender de recarregar a pagina.
 - `Book` e `T&T` devem atualizar sem travar a pagina mesmo com muitos campos RTD, respeitando coalescing do backend.
-- Campos intraday devem ser preenchidos a cada snapshot; DOM, `Mesa`, `Painel`, `Monitor`, `Cotacoes` e `Historico` podem atualizar em lote curto configuravel para manter a UI responsiva.
+- Campos intraday devem ser preenchidos a cada snapshot; o lote curto configuravel deve renderizar principalmente a aba ativa para manter a UI responsiva com RTD intenso.
 - `Latencia WS` deve ser tratada como diagnostico backend local -> navegador, nao como latencia de bolsa ou Profit.
 
 ## SQLite

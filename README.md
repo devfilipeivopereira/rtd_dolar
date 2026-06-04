@@ -200,7 +200,7 @@ logs/                   logs em runtime
 16. Ajustes: alternar presets `Rapido`, `Equilibrado` e `Detalhado`; depois alterar niveis do DOM e intervalo de renderizacao, salvar, recarregar a pagina e confirmar persistencia local.
 17. Navegacao: confirmar grupos superiores, hotbar contextual, memoria da ultima tela por grupo e atalhos `Alt+1` a `Alt+9`, sem disparar quando o foco esta em campos de texto.
 18. Paleta: confirmar `Ctrl+K`, busca de telas, busca de ativos, setas, `Enter` e `Esc`.
-19. Performance: confirmar que DOM, Mesa, Painel, Monitor e Cotacoes seguem responsivos com RTD ativo; campos intraday devem atualizar imediatamente.
+19. Performance: confirmar que a aba ativa segue responsiva com RTD ativo; campos intraday devem atualizar imediatamente e telas invisiveis nao devem causar travamento perceptivel.
 20. Telemetria: confirmar que `Latencia WS` e `Msg/s` mudam quando chegam mensagens WebSocket. Essa leitura mede o trecho backend local -> navegador, nao latencia de bolsa ou Profit.
 21. Design QA: rodar `node tools/validate-dashboard-design.js` e confirmar `Dashboard design tokens OK`.
 22. Linguagem de produto: rodar `node tools/validate-product-language.js` e confirmar `Product language OK`.

@@ -5971,6 +5971,42 @@ function renderDesk(msg = state.rtd.lastSnapshot) {
   renderDeskLevels(msg);
 }
 
+function renderActiveLivePanels(snapshot = state.rtd.lastSnapshot) {
+  const tab = state.ui.mainTab;
+
+  if (tab === "dashboard") renderDashboard();
+  else if (tab === "radar") renderRadar(snapshot);
+  else if (tab === "monitor") renderMonitor();
+  else if (tab === "desk") renderDesk(snapshot);
+  else if (tab === "quotes") renderQuotesPanel();
+  else if (tab === "dom") renderDom(snapshot);
+  else if (tab === "book") renderBookPanel();
+  else if (tab === "times") renderTimesPanel();
+  else if (tab === "flow") renderFlow();
+  else if (tab === "signals") renderSignals();
+  else if (tab === "orders") renderOrders();
+  else if (tab === "alerts") renderAlerts();
+  else if (tab === "risk") renderRisk();
+  else if (tab === "history") renderHistoryPanel();
+  else if (tab === "settings") renderSettings();
+  else if (tab === "connections") renderConnections();
+  else if (tab === "diagnostics") renderFlowDebug();
+  else if (tab === "assets") {
+    renderAssetScreenList();
+    renderAssetList();
+  }
+
+  renderMarketStrip();
+}
+
+function renderLiveAssetChange(asset, snapshot = state.rtd.lastSnapshot) {
+  const tab = state.ui.mainTab;
+  const multiAssetTabs = ["assets", "radar", "monitor", "quotes", "connections"];
+  if (sameAsset(asset) || multiAssetTabs.includes(tab)) {
+    renderActiveLivePanels(snapshot);
+  }
+}
+
 function nowMs() {
   return globalThis.performance?.now ? globalThis.performance.now() : Date.now();
 }
@@ -5980,14 +6016,7 @@ function runLiveRenderBatch() {
   state.render.lastLiveRenderMs = nowMs();
   const snapshot = state.render.pendingSnapshot || state.rtd.lastSnapshot;
   state.render.pendingSnapshot = null;
-  renderRadar(snapshot);
-  renderDom(snapshot);
-  renderDesk(snapshot);
-  renderRisk();
-  renderHistoryPanel();
-  renderDashboard();
-  renderMonitor();
-  renderQuotesPanel();
+  renderActiveLivePanels(snapshot);
 }
 
 function scheduleLiveRender(snapshot = null, immediate = false) {
@@ -6036,20 +6065,12 @@ function applyFlowMessage(msg) {
   }
   bucket.signals = mergeByKey(msg.activeSignals, bucket.signals, signalKey, state.flow.maxSignals);
   if (!sameAsset(asset)) {
-    renderAssetList();
-    renderRadarAssets();
-    scheduleLiveRender();
+    renderLiveAssetChange(asset);
     return;
   }
 
   syncSelectedFlow();
-  renderRadar(state.rtd.lastSnapshot);
-  renderFlow();
-  renderSignals();
-  renderFlowDebug();
-  renderMonitor();
-  renderMarketStrip();
-  scheduleLiveRender();
+  renderLiveAssetChange(asset);
 }
 
 function applySignalMessage(msg) {
@@ -6059,20 +6080,12 @@ function applySignalMessage(msg) {
   const bucket = flowBucket(asset);
   bucket.signals = mergeByKey([signal], bucket.signals, signalKey, state.flow.maxSignals);
   if (!sameAsset(asset)) {
-    renderAssetList();
-    renderRadarAssets();
-    scheduleLiveRender();
+    renderLiveAssetChange(asset);
     return;
   }
 
   syncSelectedFlow();
-  renderRadar(state.rtd.lastSnapshot);
-  renderSignals();
-  renderFlowDebug();
-  renderAlerts();
-  renderMonitor();
-  renderMarketStrip();
-  scheduleLiveRender();
+  renderLiveAssetChange(asset);
 }
 
 function applySignalsMessage(msg) {
@@ -6082,12 +6095,7 @@ function applySignalsMessage(msg) {
     bucket.signals = mergeByKey([signal], bucket.signals, signalKey, state.flow.maxSignals);
   });
   syncSelectedFlow();
-  renderRadar(state.rtd.lastSnapshot);
-  renderSignals();
-  renderAlerts();
-  renderMonitor();
-  renderMarketStrip();
-  scheduleLiveRender();
+  renderLiveAssetChange(selectedAsset());
 }
 
 async function loadInitialFlow() {
@@ -6734,9 +6742,7 @@ function applyLiveSnapshot(msg) {
   registerDomTick(msg);
 
   if (!sameAsset(asset)) {
-    renderAssetList();
-    renderRadarAssets();
-    scheduleLiveRender();
+    renderLiveAssetChange(asset);
     return;
   }
 
@@ -6767,17 +6773,7 @@ function applyBookDepthMessage(msg) {
   if (!msg || msg.type !== "bookDepth") return;
   const asset = normalizeAsset(msg.asset);
   state.rtd.bookDepthByAsset[asset] = msg;
-  renderDashboard();
-  renderMonitor();
-  renderQuotesPanel();
-  renderRadarAssets();
-  if (sameAsset(asset)) {
-    renderDom(state.rtd.lastSnapshot);
-    renderDesk(state.rtd.lastSnapshot);
-    renderBookPanel();
-    renderFlowDebug();
-    renderMarketStrip();
-  }
+  renderLiveAssetChange(asset);
 }
 
 function normalizeTimesTrade(row) {
@@ -6805,20 +6801,10 @@ function applyTimesTradesMessage(msg) {
   bucket.trades = Array.isArray(msg.trades)
     ? msg.trades.map(normalizeTimesTrade).filter(trade => Number.isFinite(trade.price)).slice(0, state.flow.maxTrades)
     : [];
-  renderDashboard();
-  renderMonitor();
-  renderQuotesPanel();
-  renderRadarAssets();
   if (sameAsset(asset)) {
     syncSelectedFlow();
-    renderDomTape();
-    renderDesk(state.rtd.lastSnapshot);
-    renderFlowTrades();
-    renderTimesPanel();
-    renderFlowDebug();
-    renderMarketStrip();
-    renderHistoryPanel();
   }
+  renderLiveAssetChange(asset);
 }
 
 function rtdWebSocketUrl() {
