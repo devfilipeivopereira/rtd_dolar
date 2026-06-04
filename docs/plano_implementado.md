@@ -27,7 +27,7 @@
 - Selos operacionais no menu superior, calculados por grupo a partir de feed, cadastro, fluxo, ideias/alertas e health.
 - Paleta `Ctrl+K` para buscar grupos, telas e ativos cadastrados, com `Proximo passo`, status operacional, atalhos e feed/fontes por ativo.
 - Faixa superior de contexto com ativo selecionado, ultimo preco, bid/ask, Book, Times, delta e CSV.
-- `Score Quant` no `Painel`, com `Indicadores Quant`, `Base Quant` e `Evidencias Quant` combinando CSV estatistico, RTD de preco, fluxo derivado/T&T, confluencia e backtest proxy.
+- `Score Quant` no `Painel`, com `Edge Quant`, `Gate Quant`, `EV Proxy`, `R/R Proxy`, `Amostra Quant`, `Indicadores Quant`, `Base Quant` e `Evidencias Quant` combinando CSV estatistico, RTD de preco, fluxo derivado/T&T, confluencia, backtest proxy e gate de edge.
 - Telemetria no frontend com latencia WebSocket local, mensagens por segundo, render da UI, reconexoes, contadores por tipo de mensagem, contadores backend de WebSocket e saude do processo local.
 - Roteiro de analise no `Painel`, com `Proximo passo` dinamico e etapas clicaveis para Ativo, RTD preco, CSV, Book/T&T, Fluxo e Score.
 - Coalescing auxiliar para `bookDepth` e `timesTrades`, reduzindo repintura sem bloquear snapshots de preco.
@@ -38,7 +38,7 @@
 - Penalizacao de freshness no `Score Quant`, no `Radar` e no ranking multiativo, para rebaixar feed atrasado/parado e expor a evidencia ao usuario.
 - Validador `tools/validate-dashboard-design.js` para preservar tokens Industrial, mono, plano e sem sombras/gradientes.
 - Validador `tools/validate-product-language.js` para preservar o foco em analise/oportunidades e bloquear linguagem de envio de operacoes.
-- Validador `tools/validate-quant-surface.js` para preservar estimadores, indicadores, radar, score quant e evidencias visiveis.
+- Validador `tools/validate-quant-surface.js` para preservar estimadores, indicadores, radar, score quant, gate de edge, EV/RR proxy, cap de score e evidencias visiveis.
 - Validador `tools/validate-live-render-scheduler.js` para preservar coalescing de render, motivos, ativos e filtro por aba ativa.
 - Validador `tools/validate-feed-freshness.js` para preservar idade de feed, status `Ao vivo`/`Atrasado`/`Parado` e diagnostico de freshness.
 - Validador `tools/validate-bootstrap-loading.js` para preservar `/bootstrap` e fallback de carregamento inicial.
@@ -77,7 +77,7 @@
 28. Confirmar `GET /bootstrap` retornando health, assets, snapshot, flow e signals.
 29. Confirmar `/health.webSocket` com clientes, broadcasts e falhas.
 30. Confirmar `/health.process` com uptime, memoria e threads.
-31. Confirmar `Score Quant`, `Indicadores Quant`, `Base Quant` e `Evidencias Quant` no `Painel`.
+31. Confirmar `Score Quant`, `Edge Quant`, `Gate Quant`, `EV Proxy`, `R/R Proxy`, `Amostra Quant`, `Indicadores Quant`, `Base Quant` e `Evidencias Quant` no `Painel`.
 32. Confirmar o roteiro de analise com `Proximo passo` e atalhos para Ativos, Conexoes, Fluxo, Radar e Mesa.
 33. Confirmar `Render motivos`, `Render ativos`, contadores backend de WebSocket e saude do processo no `Sistema`.
 34. Confirmar `Feed`, `Idade backend`, `Feed selecionado` e Feed por ativo em tempo real.

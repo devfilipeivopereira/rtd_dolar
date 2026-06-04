@@ -67,6 +67,8 @@ O motor quant usa duas familias de entrada. O CSV historico alimenta volatilidad
 
 O `Score Quant` no `Painel` consolida essas entradas em uma leitura observacional de reversao ou continuidade. Ele pondera nivel/proximidade, regime estatistico, backtest proxy, z-score e alinhamento de fluxo. Quando falta CSV, preco RTD ou fluxo/T&T, o score e penalizado e a `Base Quant` mostra a falta de fonte. Quando o snapshot do ativo fica atrasado ou parado, o score recebe penalizacao adicional, a qualidade muda para `feed atrasado` ou `feed parado` e as evidencias exibem a idade do feed. A interface tambem exibe `Indicadores Quant` e `Evidencias Quant`, para que o usuario veja de onde saiu o numero.
 
+Acima do score bruto existe um gate de edge. Ele usa amostra minima de 21 pregoes, taxa de reversao do backtest proxy, acordo entre Garman-Klass/Yang-Zhang/Parkinson/Rogers-Satchell/ATR, R/R proxy, EV proxy, fluxo e freshness do feed. O `Painel` expoe `Edge Quant`, `Gate Quant`, `EV Proxy`, `R/R Proxy` e `Amostra Quant`; o `Radar` aplica a mesma regra e limita scores quando o edge fica em teste ou bloqueado. Assim o RTD serve como dado vivo de preco/fluxo, mas a leitura final continua dependente de contexto estatistico auditavel.
+
 Esse motor e analitico: ele procura pontos de reversao e oportunidades por estatistica, indicador tecnico e leitura de fluxo, sem promessa de resultado financeiro e sem envio ao Profit.
 
 O menu superior separa:

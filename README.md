@@ -42,6 +42,8 @@ O historico diario continua sendo carregado por CSV no navegador. O RTD preenche
 
 O motor analitico combina estatistica historica, indicadores tecnicos e fluxo em tempo real. O CSV alimenta estimadores de volatilidade Garman-Klass, Parkinson, Rogers-Satchell, Yang-Zhang, ATR, z-score, regime, profile proxy, POC, VAH/VAL, confluencias e backtest proxy. O RTD alimenta preco intraday, book, Times & Trades, delta, imbalance, VWAP derivada, microprice e tape. O `Painel` mostra `Score Quant`, `Indicadores Quant`, `Base Quant` e `Evidencias Quant` para deixar claro quais dados sustentam cada oportunidade observacional.
 
+O `Score Quant` agora passa por um gate de edge: amostra minima, taxa de reversao do backtest proxy, acordo entre estimadores de volatilidade, R/R proxy, EV proxy, fluxo e freshness do feed. O `Painel` mostra `Edge Quant`, `Gate Quant`, `EV Proxy`, `R/R Proxy` e `Amostra Quant`. O `Radar` aplica o mesmo gate e capa candidatos sem amostra, EV negativo, R/R fraco ou feed ruim, para que um ponto proximo do preco nao pareca forte sem base estatistica.
+
 O RTD tambem entra como controle de qualidade. Quando o snapshot do ativo fica `Atrasado` ou `Parado`, o `Score Quant` e o `Radar` aplicam penalizacao de confianca, mostram `feed atrasado` ou `feed parado` na base/evidencias e impedem que uma oportunidade pareca forte so porque o ultimo preco ficou congelado.
 
 Esses sinais sao ferramentas de analise quantitativa e tape reading. Eles nao prometem resultado financeiro; a robustez vem de fonte de dados identificavel, penalizacao quando falta dado, evidencias visiveis e validacao manual/automatizada.
@@ -227,7 +229,7 @@ logs/                   logs em runtime
 26. Bootstrap QA: rodar `node tools/validate-bootstrap-loading.js` e confirmar `Bootstrap loading OK`.
 27. WebSocket QA: rodar `node tools/validate-websocket-health.js` e confirmar `WebSocket health OK`.
 28. Process QA: rodar `node tools/validate-process-health.js` e confirmar `Process health OK`.
-29. Score Quant: confirmar no `Painel` que `Score Quant`, `Indicadores Quant`, `Base Quant` e `Evidencias Quant` aparecem; sem CSV, RTD, fluxo ou com feed atrasado/parado, o score deve ficar penalizado ou aguardando dados.
+29. Score Quant: confirmar no `Painel` que `Score Quant`, `Edge Quant`, `Gate Quant`, `EV Proxy`, `R/R Proxy`, `Amostra Quant`, `Indicadores Quant`, `Base Quant` e `Evidencias Quant` aparecem; sem CSV, RTD, fluxo, edge valido ou com feed atrasado/parado, o score deve ficar capado, penalizado ou aguardando dados.
 30. Roteiro: confirmar que `Proximo passo` muda entre Ativos, Conexoes, Fluxo, Radar e Mesa conforme faltam dados ou conforme o score fica utilizavel.
 31. Sistema: confirmar `Render motivos`, `Render ativos`, `WS clientes backend`, `WS broadcasts backend`, `Memoria local` e `Threads local` mudando conforme chegam snapshot, book, times, flow e signal.
 32. Feed parado: pausar/fechar o Profit ou interromper updates e confirmar que `Feed` muda de `Ao vivo` para `Atrasado`/`Parado` na faixa superior, em `Cotacoes` e em `Conexoes`, e que `Score Quant`/`Radar` rebaixam a confianca.

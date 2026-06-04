@@ -3138,7 +3138,164 @@ function maxBacktestReversalRate(r) {
   return rates.length ? Math.max(...rates) : NaN;
 }
 
-function quantIndicatorSummary(r) {
+function volatilityAgreementScore(r) {
+  if (!r) return NaN;
+  const values = [
+    liveNumber(r.gk?.points),
+    liveNumber(r.yz?.points),
+    liveNumber(r.parkinson?.points),
+    liveNumber(r.rs?.points),
+    liveNumber(r.atr?.value),
+  ].filter(value => Number.isFinite(value) && value > 0);
+  if (values.length < 3) return NaN;
+  const avg = average(values);
+  if (!Number.isFinite(avg) || avg <= 0) return NaN;
+  const dispersionPct = stdev(values) / avg * 100;
+  return clamp(100 - dispersionPct * 2.2, 0, 100);
+}
+
+function sampleQualityScore(days) {
+  if (days >= 63) return 100;
+  if (days >= 45) return 84;
+  if (days >= 21) return 64;
+  return clamp(days / 21 * 58, 0, 58);
+}
+
+function edgeTone(edge) {
+  if (!edge || !edge.hasMinimumData) return "amber";
+  if (edge.gate === "validado") return edge.score >= 76 ? "green" : "blue";
+  if (edge.gate === "em_teste") return "amber";
+  return "red";
+}
+
+function edgeGateLabel(edge) {
+  if (!edge) return "aguardando";
+  if (edge.gate === "validado") return "edge validado";
+  if (edge.gate === "em_teste") return "edge em teste";
+  return "edge bloqueado";
+}
+
+function nearestEdgeLevel(r, price, direction, explicitLevel) {
+  if (Number.isFinite(explicitLevel)) return { price: explicitLevel, source: "radar" };
+  const levels = (r?.confluence || []).filter(level => Number.isFinite(level.price));
+  if (!levels.length || !Number.isFinite(price)) return null;
+  const filtered = direction === "up"
+    ? levels.filter(level => level.price <= price)
+    : direction === "down"
+      ? levels.filter(level => level.price >= price)
+      : levels;
+  const pool = filtered.length ? filtered : levels;
+  return [...pool].sort((a, b) => Math.abs(a.price - price) - Math.abs(b.price - price) || liveNumber(b.score) - liveNumber(a.score))[0];
+}
+
+function estimateEdgeRiskReward(r, price, direction, explicitLevel) {
+  if (!r || !Number.isFinite(price) || !["up", "down"].includes(direction)) {
+    return { risk: NaN, reward: NaN, rr: NaN, targetPrice: NaN, stopPrice: NaN };
+  }
+  const step = state.rtd.tickSize || 0.5;
+  const level = nearestEdgeLevel(r, price, direction, explicitLevel);
+  const levelPrice = liveNumber(level?.price);
+  const atr = liveNumber(r.atr?.value);
+  const sigma = liveNumber(r.gk?.points);
+  const minRisk = Math.max(step * 8, Number.isFinite(atr) ? atr * 0.28 : 0, Number.isFinite(sigma) ? sigma * 0.18 : 0);
+  const levelDistance = Number.isFinite(levelPrice) ? Math.abs(price - levelPrice) : 0;
+  const risk = Math.max(minRisk, levelDistance + step * 8);
+  const levels = (r.confluence || []).filter(item => Number.isFinite(item.price));
+  const target = direction === "up"
+    ? [...levels].filter(item => item.price > price + step * 4).sort((a, b) => a.price - b.price || liveNumber(b.score) - liveNumber(a.score))[0]
+    : [...levels].filter(item => item.price < price - step * 4).sort((a, b) => b.price - a.price || liveNumber(b.score) - liveNumber(a.score))[0];
+  const reward = target ? Math.max(Math.abs(target.price - price), risk * 1.1) : risk * 1.6;
+  return {
+    risk,
+    reward,
+    rr: reward / Math.max(risk, step),
+    targetPrice: target ? target.price : direction === "up" ? price + reward : price - reward,
+    stopPrice: direction === "up" ? price - risk : price + risk,
+  };
+}
+
+function quantEdgeAssessment(r, snapshot, flow = {}, options = {}) {
+  const metrics = flow.metrics || flow || {};
+  const price = liveNumber(options.currentPrice ?? currentDomPrice(snapshot));
+  const direction = options.direction || "neutral";
+  const sampleDays = r?.bars?.length || state.uploadedCount || state.bars.length || 0;
+  const hasMinimumData = !!r && sampleDays >= 21;
+  const reversalRate = maxBacktestReversalRate(r);
+  const regimeScore = liveNumber(r?.regime?.meanReversionScore);
+  const volScore = volatilityAgreementScore(r);
+  const zAbs = Math.abs(liveNumber(r?.z));
+  const flowScore = flowAlignment(direction, metrics);
+  const rr = estimateEdgeRiskReward(r, price, direction, liveNumber(options.levelPrice));
+  const winRate = Number.isFinite(reversalRate) ? clamp(reversalRate, 0, 100) / 100 : NaN;
+  const ev = Number.isFinite(winRate) && Number.isFinite(rr.rr) ? winRate * rr.rr - (1 - winRate) : NaN;
+
+  let score = 0;
+  let weight = 0;
+  const add = (value, valueWeight) => {
+    if (!Number.isFinite(value)) return;
+    score += clamp(value, 0, 100) * valueWeight;
+    weight += valueWeight;
+  };
+  add(sampleQualityScore(sampleDays), 0.18);
+  add(reversalRate, 0.20);
+  add(regimeScore, 0.16);
+  add(volScore, 0.14);
+  add(Number.isFinite(rr.rr) ? clamp(rr.rr / 2.2 * 100, 0, 100) : NaN, 0.16);
+  add(Number.isFinite(ev) ? clamp(50 + ev * 35, 0, 100) : NaN, 0.10);
+  add(clamp(flowScore * 4.2, 0, 100), 0.06);
+
+  const edgeScore = weight > 0 ? score / weight : NaN;
+  const gate = !hasMinimumData
+    ? "bloqueado"
+    : Number.isFinite(ev) && ev > 0 && Number.isFinite(rr.rr) && rr.rr >= 1.2 && Number.isFinite(reversalRate) && reversalRate >= 45
+      ? "validado"
+      : "em_teste";
+  const multiplier = gate === "validado"
+    ? clamp(0.92 + (Number.isFinite(edgeScore) ? edgeScore : 60) / 520, 0.92, 1.10)
+    : gate === "em_teste"
+      ? clamp(0.62 + (Number.isFinite(edgeScore) ? edgeScore : 45) / 420, 0.62, 0.90)
+      : 0.55;
+  const cap = !hasMinimumData
+    ? 48
+    : Number.isFinite(ev) && ev < 0
+      ? 58
+      : Number.isFinite(rr.rr) && rr.rr < 1
+        ? 62
+        : gate === "em_teste"
+          ? 72
+          : 100;
+  const reasons = [
+    hasMinimumData ? `${sampleDays} pregoes` : `amostra ${sampleDays}/21`,
+    Number.isFinite(reversalRate) ? `backtest ${fmt(reversalRate, 0)}%` : "sem backtest",
+    Number.isFinite(rr.rr) ? `RR ${fmt(rr.rr, 2)}` : "RR indefinido",
+    Number.isFinite(ev) ? `EV ${fmt(ev, 2)}R` : "EV indefinido",
+    Number.isFinite(volScore) ? `vol ${fmt(volScore, 0)}` : "",
+  ].filter(Boolean);
+
+  return {
+    hasMinimumData,
+    sampleDays,
+    reversalRate,
+    regimeScore,
+    volatilityAgreement: volScore,
+    rr: rr.rr,
+    risk: rr.risk,
+    reward: rr.reward,
+    targetPrice: rr.targetPrice,
+    stopPrice: rr.stopPrice,
+    ev,
+    score: edgeScore,
+    gate,
+    multiplier,
+    cap,
+    tone: edgeTone({ hasMinimumData, gate, score: edgeScore }),
+    label: edgeGateLabel({ gate }),
+    detail: Number.isFinite(ev) && Number.isFinite(rr.rr) ? `EV ${fmt(ev, 2)}R | RR ${fmt(rr.rr, 2)}` : reasons.slice(0, 2).join(" | "),
+    reasons,
+  };
+}
+
+function quantIndicatorSummary(r, edge = null) {
   if (!r) return "aguardando CSV";
   const values = [
     `GK ${fmt(liveNumber(r.gk?.points), 1)}`,
@@ -3146,8 +3303,9 @@ function quantIndicatorSummary(r) {
     `ATR ${fmt(liveNumber(r.atr?.value), 1)}`,
     `POC ${fmt(liveNumber(r.profile?.poc?.price), 1)}`,
     `VA ${fmt(liveNumber(r.profile?.val), 1)}-${fmt(liveNumber(r.profile?.vah), 1)}`,
+    edge && Number.isFinite(edge.ev) ? `EV ${fmt(edge.ev, 2)}R` : "",
   ];
-  return values.join(" | ");
+  return values.filter(Boolean).join(" | ");
 }
 
 function quantReversalAssessment(snapshot, flow = {}) {
@@ -3175,6 +3333,11 @@ function quantReversalAssessment(snapshot, flow = {}) {
         ? "up"
         : "neutral";
   const flowScore = flowAlignment(direction, metrics);
+  const edge = quantEdgeAssessment(r, snapshot, flow, {
+    direction,
+    currentPrice: price,
+    levelPrice: liveNumber(radar?.levelPrice ?? nearest?.price),
+  });
 
   let score = 0;
   let weight = 0;
@@ -3186,24 +3349,26 @@ function quantReversalAssessment(snapshot, flow = {}) {
 
   add(levelScore, 0.30);
   add(regimeScore, 0.22);
-  add(backtestRate, 0.16);
+  add(backtestRate, 0.10);
   add(Number.isFinite(zAbs) ? clamp(zAbs * 28, 0, 100) : NaN, 0.12);
   add(Number.isFinite(distTicks) ? clamp(100 - distTicks * 2.2, 0, 100) : NaN, 0.10);
   add(clamp(flowScore * 4.2, 0, 100), 0.10);
+  add(edge.score, 0.16);
 
-  const rawScore = weight > 0 ? score / weight : NaN;
+  const rawScore = !!r && weight > 0 ? score / weight : NaN;
   const hasStats = !!r && Number.isFinite(rawScore);
   const hasFlow = !!flow.lastMessage || !!state.rtd.timesTradesByAsset[selectedAsset()];
   const hasPrice = Number.isFinite(price);
   const feedPenalty = freshness.tone === "green" ? 1 : freshness.tone === "amber" ? 0.72 : 0.35;
   const dataPenalty = (hasStats ? 1 : 0.55) * (hasFlow ? 1 : 0.88) * (hasPrice ? 1 : 0.60) * feedPenalty;
-  const finalScore = Number.isFinite(rawScore) ? clamp(rawScore * dataPenalty, 0, 100) : NaN;
+  const finalScore = Number.isFinite(rawScore) ? clamp(Math.min(rawScore * dataPenalty, edge.cap), 0, 100) : NaN;
   const confidence = quantConfidence(finalScore);
   const sources = [
     hasStats ? `CSV ${state.selectedWindow}d` : "",
     hasPrice ? `RTD preco ${freshness.label}` : "",
     hasFlow ? (state.rtd.timesTradesByAsset[selectedAsset()] ? "T&T real" : "fluxo derivado") : "",
     state.result ? "confluencia/backtest" : "",
+    edge.hasMinimumData ? edgeGateLabel(edge) : "",
   ].filter(Boolean);
   const reasons = [
     Number.isFinite(levelScore) ? `nivel ${fmt(levelScore, 0)}` : "",
@@ -3211,6 +3376,9 @@ function quantReversalAssessment(snapshot, flow = {}) {
     Number.isFinite(backtestRate) ? `backtest ${fmt(backtestRate, 0)}%` : "",
     Number.isFinite(zAbs) ? `z ${fmt(zAbs, 2)}` : "",
     Number.isFinite(flowScore) ? `fluxo ${fmt(flowScore, 0)}` : "",
+    Number.isFinite(edge.ev) ? `EV ${fmt(edge.ev, 2)}R` : "",
+    Number.isFinite(edge.rr) ? `RR ${fmt(edge.rr, 2)}` : "",
+    edge.hasMinimumData ? "" : `amostra ${edge.sampleDays}/21`,
     hasPrice && freshness.tone !== "green" ? `feed ${freshness.label} ${freshness.detail}` : "",
   ].filter(Boolean);
   return {
@@ -3219,7 +3387,8 @@ function quantReversalAssessment(snapshot, flow = {}) {
     confidence,
     sources,
     reasons,
-    indicatorSummary: quantIndicatorSummary(r),
+    indicatorSummary: quantIndicatorSummary(r, edge),
+    edge,
     dataQuality: freshness.tone === "red" ? "feed parado" : freshness.tone === "amber" ? "feed atrasado" : sources.length >= 3 ? "completa" : sources.length >= 2 ? "parcial" : "insuficiente",
   };
 }
@@ -3246,6 +3415,7 @@ function renderDashboardContext(snapshot, flow) {
   refs.dashboardContext.innerHTML = [
     contextCard("Contexto", price.value, price.detail, price.tone),
     contextCard("Score Quant", Number.isFinite(quant.score) ? `${fmt(quant.score, 0)} ${quant.confidence.label}` : "Aguardando", `${quantDirectionLabel(quant.direction)} | ${quant.dataQuality}`, quant.confidence.tone),
+    contextCard("Edge Quant", edgeGateLabel(quant.edge), quant.edge?.detail || "aguardando", quant.edge?.tone || "amber"),
     contextCard("Fluxo", flowRead.value, flowRead.detail, flowRead.tone),
     contextCard("Nivel proximo", level.value, level.detail, level.tone),
     contextCard("Radar", radar.value, radar.detail, radar.tone),
@@ -3310,6 +3480,10 @@ function renderDashboard() {
     ["Delta 5s", signedFmt(flow.metrics?.delta5s, 0)],
     ["Qualidade fluxo", flow.lastMessage?.dataQuality || "unknown"],
     ["Score Quant", Number.isFinite(quant.score) ? `${fmt(quant.score, 0)} ${quant.confidence.label}` : "--"],
+    ["Gate Quant", edgeGateLabel(quant.edge)],
+    ["EV Proxy", Number.isFinite(quant.edge?.ev) ? `${fmt(quant.edge.ev, 2)}R` : "--"],
+    ["R/R Proxy", Number.isFinite(quant.edge?.rr) ? fmt(quant.edge.rr, 2) : "--"],
+    ["Amostra Quant", `${quant.edge?.sampleDays || 0} pregoes`],
     ["Indicadores Quant", quant.indicatorSummary],
     ["Base Quant", quant.sources.join(" + ") || "aguardando dados"],
     ["Evidencias Quant", quant.reasons.join(" | ") || "--"],
@@ -3352,6 +3526,27 @@ function opportunityKey(item) {
   return `${item.kind}|${item.direction}|${roundToTick(item.levelPrice, state.rtd.tickSize)}|${item.label}`;
 }
 
+function applyQuantGateToOpportunity(item, metrics, snapshot) {
+  const edge = quantEdgeAssessment(state.result, snapshot, { metrics }, {
+    direction: item.direction,
+    currentPrice: item.currentPrice,
+    levelPrice: item.levelPrice,
+  });
+  const baseScore = liveNumber(item.score);
+  const capped = Number.isFinite(baseScore)
+    ? Math.min(baseScore * edge.multiplier, edge.cap)
+    : edge.cap;
+  item.score = clamp(capped, 0, 100);
+  item.edge = edge;
+  item.reasons = [
+    ...(item.reasons || []),
+    edgeGateLabel(edge),
+    Number.isFinite(edge.ev) ? `EV ${fmt(edge.ev, 2)}R` : "",
+    Number.isFinite(edge.rr) ? `RR ${fmt(edge.rr, 2)}` : "",
+  ].filter(Boolean).slice(0, 5);
+  return item;
+}
+
 function collectRadarOpportunities(msg = state.rtd.lastSnapshot) {
   const price = currentDomPrice(msg);
   if (!Number.isFinite(price)) return [];
@@ -3363,10 +3558,11 @@ function collectRadarOpportunities(msg = state.rtd.lastSnapshot) {
   const items = [];
   const seen = new Set();
   const add = item => {
-    const key = opportunityKey(item);
+    const gated = applyQuantGateToOpportunity(item, metrics, msg);
+    const key = opportunityKey(gated);
     if (seen.has(key)) return;
     seen.add(key);
-    items.push(item);
+    items.push(gated);
   };
 
   (state.flow.signals || []).forEach(signal => {
@@ -3520,6 +3716,9 @@ function renderRadar(msg = state.rtd.lastSnapshot) {
     ["Preco atual", fmt(currentDomPrice(msg))],
     ["Candidatos por setup", fmt(items.filter(item => item.kind === "setup").length, 0)],
     ["Candidatos por nivel", fmt(items.filter(item => item.kind === "level").length, 0)],
+    ["Gate melhor", best?.edge ? edgeGateLabel(best.edge) : "--"],
+    ["EV melhor", Number.isFinite(best?.edge?.ev) ? `${fmt(best.edge.ev, 2)}R` : "--"],
+    ["R/R melhor", Number.isFinite(best?.edge?.rr) ? fmt(best.edge.rr, 2) : "--"],
     ["Delta 5s", signedFmt(state.flow.metrics?.delta5s, 0)],
     ["Imbalance", Number.isFinite(liveNumber(state.flow.metrics?.topBookImbalance)) ? fmt(liveNumber(state.flow.metrics?.topBookImbalance), 2) : "--"],
     ["Uso", "analise observacional"],

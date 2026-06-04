@@ -25,6 +25,8 @@ Quando `timesTrades` chega, a UI usa esse tape real. Sem ele, permanece o tape d
 
 O `Score Quant` do `Painel` consome esse mesmo fluxo: quando ha T&T real, a `Base Quant` indica `T&T real`; sem T&T, indica `fluxo derivado`. O score cruza delta, imbalance e VWAP derivada com o CSV estatistico, POC/VAH/VAL, regime, z-score, confluencia e backtest proxy. Assim, o RTD nao serve apenas para preencher tela: ele entra na pontuacao e nas evidencias da oportunidade observacional.
 
+O fluxo tambem entra no gate de edge usado pelo `Painel` e pelo `Radar`. Esse gate combina amostra, backtest proxy, acordo de volatilidade, R/R proxy, EV proxy, delta/imbalance/OFI e freshness do feed. Sinais derivados por RTD podem chamar atencao para absorcao, exaustao, rompimento ou VWAP, mas o score final fica capado quando a estatistica historica ou o EV/RR proxy nao sustentam a leitura.
+
 Para manter agilidade sem repintar tabelas gigantes a cada campo RTD, o backend envia:
 
 - `bookDepth` no maximo a cada 100 ms por ativo;

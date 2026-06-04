@@ -44,8 +44,8 @@ Resultado esperado:
 24. Confirmar que os atalhos nao disparam quando o foco esta em campos de texto, select ou textarea.
 25. Confirmar `Ctrl+K`, `Proximo passo`, busca de grupos/telas/ativos, status de feed/fontes, navegacao por setas, `Enter` para abrir e `Esc` para fechar.
 26. Confirmar que `Latencia WS`, `Msg/s` e `Render UI` aparecem na faixa superior e no `Sistema` quando chegam mensagens do WebSocket.
-27. Confirmar no `Painel` que `Score Quant`, `Indicadores Quant`, `Base Quant` e `Evidencias Quant` aparecem.
-28. Confirmar que o `Score Quant` fica aguardando ou penalizado quando faltar CSV, preco RTD, fluxo/T&T ou quando o feed estiver atrasado/parado.
+27. Confirmar no `Painel` que `Score Quant`, `Edge Quant`, `Gate Quant`, `EV Proxy`, `R/R Proxy`, `Amostra Quant`, `Indicadores Quant`, `Base Quant` e `Evidencias Quant` aparecem.
+28. Confirmar que o `Score Quant` fica aguardando, capado ou penalizado quando faltar CSV, preco RTD, fluxo/T&T, edge valido ou quando o feed estiver atrasado/parado.
 29. Confirmar no `Painel` que o roteiro mostra `Proximo passo` e etapas `Ativo`, `RTD preco`, `CSV`, `Book/T&T`, `Fluxo` e `Score`.
 30. Abrir `Sistema` e confirmar `Render motivos` e `Render ativos` mudando conforme chegam snapshots, book, Times, flow e sinais.
 31. Confirmar na faixa superior que `Feed` mostra `Ao vivo` com RTD atualizando e muda para `Atrasado`/`Parado` quando o snapshot do ativo selecionado fica antigo.
@@ -145,7 +145,9 @@ Sem CSV, a aba DOM ainda pode mostrar ticks RTD, bid/ask e tape. Pontos como POC
 - `/health.process` deve expor PID, uptime, memoria, GC e threads; `Conexoes` e `Sistema` devem mostrar uptime, memoria e threads.
 - `Latencia WS` deve ser tratada como diagnostico backend local -> navegador, e `Render UI` como custo de desenho da tela ativa; nenhuma delas mede latencia de bolsa ou Profit.
 - `Painel` deve mostrar `Score Quant`, `Indicadores Quant`, `Base Quant` e `Evidencias Quant`, combinando CSV estatistico, RTD de preco e fluxo/T&T quando disponiveis.
+- `Painel` deve mostrar `Edge Quant`, `Gate Quant`, `EV Proxy`, `R/R Proxy` e `Amostra Quant`, calculados a partir de amostra, backtest proxy, acordo de volatilidade, risco/retorno, EV proxy, fluxo e freshness.
 - Sem uma das fontes principais, ou com feed atrasado/parado, a `Base Quant` deve explicitar a falta/idade e o score nao deve parecer uma confirmacao forte.
+- Sem amostra minima, com EV negativo, R/R fraco ou edge em teste, o `Score Quant` e o `Radar` devem ser capados ou rebaixados.
 - O roteiro do `Painel` deve indicar o proximo passo real e abrir a tela correta: `Ativos`, `Conexoes`, `Fluxo`, `Radar` ou `Mesa`.
 - O scheduler de render deve agrupar motivos por lote e evitar repintar a tela ativa quando o evento nao e relevante para ela.
 - O feed deve diferenciar RTD conectado de snapshot fresco; `Cotacoes` deve mostrar Feed por ativo e `Conexoes` deve mostrar `Idade backend`, `Feed selecionado` e Feed por ativo.
@@ -205,7 +207,7 @@ Resultado esperado:
 Quant surface OK
 ```
 
-Esse check falha se o dashboard perder estimadores de volatilidade, ATR, profile proxy, backtest proxy, radar, alinhamento de fluxo, penalizacao de feed ou os rotulos visiveis `Score Quant`, `Indicadores Quant`, `Base Quant` e `Evidencias Quant`.
+Esse check falha se o dashboard perder estimadores de volatilidade, ATR, profile proxy, backtest proxy, radar, alinhamento de fluxo, penalizacao de feed, gate de edge, EV/RR proxy, cap de score ou os rotulos visiveis `Score Quant`, `Edge Quant`, `Gate Quant`, `EV Proxy`, `R/R Proxy`, `Indicadores Quant`, `Base Quant` e `Evidencias Quant`.
 
 ## Render QA
 
