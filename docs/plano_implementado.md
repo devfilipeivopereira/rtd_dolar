@@ -33,6 +33,7 @@
 - Roteiro de analise no `Painel`, com `Proximo passo` dinamico e etapas clicaveis para Ativo, RTD preco, CSV, Book/T&T, Fluxo e Score.
 - Coalescing auxiliar para `bookDepth` e `timesTrades`, reduzindo repintura sem bloquear snapshots de preco.
 - Scheduler de render no navegador orientado pela aba ativa, com fila por motivo/ativo, filtro de relevancia por tela, padrao de 120 ms no preset `Equilibrado`, presets de desempenho pela UI e inputs de preco imediatos.
+- Dedupe material de snapshots no navegador, evitando render/calc pesado quando o RTD repete o mesmo preco/book/volume/status e mantendo heartbeat de 1 segundo.
 - `Render Guard` adaptativo no navegador, aumentando temporariamente o intervalo efetivo quando a UI fica lenta e voltando ao preset salvo quando estabiliza.
 - Pausa de render em aba oculta, acumulando pendencias e redesenhando com motivo `visibility` ao retornar para a aba.
 - Bootstrap HTTP consolidado para abertura/reconexao, carregando health, assets, snapshot, flow e signals em uma unica resposta local, com fallback para endpoints antigos.

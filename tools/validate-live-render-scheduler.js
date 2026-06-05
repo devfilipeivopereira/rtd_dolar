@@ -33,6 +33,11 @@ const required = [
   ["visibility change listener", /\bdocument\.addEventListener\("visibilitychange"/],
   ["visibility render reason", /\bscheduleLiveRender\([^)]*"visibility"/],
   ["background diagnostics", /\bRender background\b/],
+  ["snapshot material render key", /\bfunction\s+snapshotRenderKey\b/],
+  ["snapshot render dedupe gate", /\bfunction\s+shouldRenderSnapshot\b/],
+  ["snapshot dedupe counter", /\bsnapshotRenderSkipped\b/],
+  ["snapshot handler uses dedupe", /\bconst\s+shouldRender\s*=\s*shouldRenderSnapshot\(/],
+  ["snapshot dedupe diagnostics", /\bRender dedupe\b/],
 ];
 
 const failures = required

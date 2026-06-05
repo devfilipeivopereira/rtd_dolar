@@ -153,6 +153,7 @@ Sem CSV, a aba DOM ainda pode mostrar ticks RTD, bid/ask e tape. Pontos como POC
 - Sem amostra minima, com EV negativo, R/R fraco ou edge em teste, o `Score Quant` e o `Radar` devem ser capados ou rebaixados.
 - O roteiro do `Painel` deve indicar o proximo passo real e abrir a tela correta: `Ativos`, `Conexoes`, `Fluxo`, `Radar` ou `Mesa`.
 - O scheduler de render deve agrupar motivos por lote, evitar repintar a tela ativa quando o evento nao e relevante para ela e expor `Render guard`/`Render background` no `Sistema`.
+- Snapshots repetidos sem mudanca material devem incrementar `Render dedupe` em `Sistema`; mudancas de preco, volume, bid/ask ou status devem continuar disparando render e recalculo.
 - O feed deve diferenciar RTD conectado de snapshot fresco; `Cotacoes` deve mostrar Feed por ativo e `Conexoes` deve mostrar `Idade backend`, `Feed selecionado` e Feed por ativo.
 - `Score Quant` e `Radar` devem usar a freshness como controle de confianca: `Ao vivo` preserva score, `Atrasado` reduz score e `Parado` reduz fortemente.
 

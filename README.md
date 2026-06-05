@@ -78,6 +78,8 @@ O `Painel` tambem mostra um roteiro de analise com `Proximo passo` e etapas `Ati
 
 O render ao vivo do navegador usa fila coalescida por motivo (`snapshot`, `book`, `times`, `flow`, `signal`, `status`, `ui`) e por ativo. A cada pulso, a UI redesenha principalmente a tela ativa e ignora eventos que nao afetam aquela tela. Em `Sistema`, `Render motivos` e `Render ativos` mostram o ultimo lote desenhado.
 
+Snapshots repetidos tambem passam por dedupe material no navegador. Preco, OHLC, VWAP, volume, book de topo, volume projetado e status formam a chave de render; se nada mudou, o terminal atualiza o estado em memoria, mas evita redesenho/calc pesado e deixa passar apenas um heartbeat de 1 segundo. Em `Sistema`, `Render dedupe` mostra quantos snapshots foram aceitos ou pulados.
+
 O `Render Guard` aumenta temporariamente o intervalo efetivo de render quando os ultimos batches ficam pesados, sem alterar o preset salvo pelo usuario. Quando a UI estabiliza, o intervalo volta ao valor configurado. A faixa superior mostra `Guard` em `Render UI` e `Sistema` mostra `Render guard` com o intervalo efetivo.
 
 Quando a aba do navegador fica em segundo plano, o terminal pausa apenas o desenho da UI e continua acumulando os dados recebidos. Ao voltar para a aba, ele faz um render imediato de catch-up com o motivo `visibility`. Em `Sistema`, `Render background` mostra se a UI esta ativa ou pausada em segundo plano.

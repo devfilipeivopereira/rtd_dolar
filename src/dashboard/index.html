@@ -2117,6 +2117,12 @@ const state = {
     backgroundSince: null,
     backgroundResumedAt: null,
     backgroundSkipped: 0,
+    lastSnapshotRenderKeyByAsset: {},
+    lastSnapshotRenderAtByAsset: {},
+    snapshotRenderHeartbeatMs: 1000,
+    snapshotRenderAccepted: 0,
+    snapshotRenderSkipped: 0,
+    lastSnapshotSkipAt: null,
   },
   assetEditor: {
     draftCsvText: null,
@@ -5005,6 +5011,8 @@ async function deleteAsset(asset) {
     delete state.rtd.snapshotsByAsset[normalized];
     delete state.rtd.ticksByAsset[normalized];
     delete state.rtd.lastPriceByAsset[normalized];
+    delete state.render.lastSnapshotRenderKeyByAsset[normalized];
+    delete state.render.lastSnapshotRenderAtByAsset[normalized];
     delete state.flow.byAsset[normalized];
     updateAssetsMessage(msg);
     renderSelectedAsset();
@@ -7398,6 +7406,7 @@ function renderFlowDebug() {
     ["Render pico", fmtMs(state.render.maxDurationMs)],
     ["Render guard", state.render.guardMode === "guard" ? `${fmtMs(effectiveLiveIntervalMs())} | ${state.render.guardReason || "ativo"}` : "normal"],
     ["Render background", state.render.backgroundPaused ? `pausado | ${fmtMs(Date.now() - state.render.backgroundSince)}` : `ativo | skip ${fmt(state.render.backgroundSkipped, 0)}`],
+    ["Render dedupe", `ok ${fmt(state.render.snapshotRenderAccepted, 0)} / skip ${fmt(state.render.snapshotRenderSkipped, 0)}`],
     ["Render motivos", (state.render.lastReasons || []).join(" / ") || "--"],
     ["Render ativos", (state.render.lastAssets || []).slice(0, 4).join(" / ") || "--"],
     ["Ultima mensagem", lastMessage],
@@ -7940,14 +7949,68 @@ function updateLiveMeta(msg) {
   refs.rtdVpj.textContent = Number.isFinite(vpj) ? fmt(vpj, 0) : "--";
 }
 
+function snapshotMaterialValue(value) {
+  const n = liveNumber(value);
+  if (!Number.isFinite(n)) return String(value ?? "");
+  return String(Math.round(n * 1000) / 1000);
+}
+
+function snapshotRenderKey(msg) {
+  if (!msg) return "";
+  const intraday = msg.intraday || {};
+  const book = msg.book || {};
+  const rtd = msg.rtd || {};
+  return [
+    normalizeAsset(msg.asset),
+    snapshotMaterialValue(intraday.abertura ?? rtd.ABE),
+    snapshotMaterialValue(intraday.maximaParcial ?? rtd.MAX),
+    snapshotMaterialValue(intraday.minimaParcial ?? rtd.MIN),
+    snapshotMaterialValue(intraday.precoAtual ?? rtd.ULT),
+    snapshotMaterialValue(intraday.vwapIntraday ?? rtd.MED),
+    snapshotMaterialValue(intraday.volumeAcumulado ?? rtd.VOL),
+    snapshotMaterialValue(rtd.QTT),
+    snapshotMaterialValue(rtd.NEG),
+    snapshotMaterialValue(book.ofertaCompra ?? rtd.OCP),
+    snapshotMaterialValue(book.ofertaVenda ?? rtd.OVD),
+    snapshotMaterialValue(book.volumeOfertaCompra ?? rtd.VOC),
+    snapshotMaterialValue(book.volumeOfertaVenda ?? rtd.VOV),
+    snapshotMaterialValue(book.volumeProjetado ?? rtd.VPJ),
+    String(msg.status || ""),
+  ].join("|");
+}
+
+function shouldRenderSnapshot(asset, msg) {
+  const normalized = normalizeAsset(asset || msg?.asset);
+  const key = snapshotRenderKey(msg);
+  if (!key) return true;
+
+  const now = Date.now();
+  const previousKey = state.render.lastSnapshotRenderKeyByAsset[normalized];
+  const previousRenderAt = state.render.lastSnapshotRenderAtByAsset[normalized] || 0;
+  const heartbeatMs = state.render.snapshotRenderHeartbeatMs || 1000;
+  const isRepeated = previousKey === key && now - previousRenderAt < heartbeatMs;
+
+  state.render.lastSnapshotRenderKeyByAsset[normalized] = key;
+  if (isRepeated) {
+    state.render.snapshotRenderSkipped += 1;
+    state.render.lastSnapshotSkipAt = now;
+    return false;
+  }
+
+  state.render.lastSnapshotRenderAtByAsset[normalized] = now;
+  state.render.snapshotRenderAccepted += 1;
+  return true;
+}
+
 function applyLiveSnapshot(msg) {
   if (!state.rtd.enabled || !msg || msg.type !== "snapshot") return;
   const asset = normalizeAsset(msg.asset);
   state.rtd.snapshotsByAsset[asset] = msg;
   registerDomTick(msg);
+  const shouldRender = shouldRenderSnapshot(asset, msg);
 
   if (!sameAsset(asset)) {
-    renderLiveAssetChange(asset, msg, "snapshot");
+    if (shouldRender) renderLiveAssetChange(asset, msg, "snapshot");
     return;
   }
 
@@ -7968,6 +8031,7 @@ function applyLiveSnapshot(msg) {
   const currentPrice = liveNumber(intraday.precoAtual);
   checkAlerts(currentPrice);
   updateOrderPlans(currentPrice);
+  if (!shouldRender) return;
   renderOrderSummary();
   renderMarketStrip();
   scheduleLiveRender(msg, false, "snapshot", asset);
