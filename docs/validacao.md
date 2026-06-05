@@ -144,6 +144,7 @@ Sem CSV, a aba DOM ainda pode mostrar ticks RTD, bid/ask e tape. Pontos como POC
 - `/health.webSocket` deve expor clientes conectados, broadcasts, mensagens alvo, falhas e ultimo broadcast; `Conexoes` e `Sistema` devem mostrar esses contadores.
 - `/health.process` deve expor PID, uptime, memoria, GC e threads; `Conexoes` e `Sistema` devem mostrar uptime, memoria e threads.
 - `Latencia WS` deve ser tratada como diagnostico backend local -> navegador, e `Render UI` como custo de desenho da tela ativa; nenhuma delas mede latencia de bolsa ou Profit.
+- O topo deve mostrar `Terminal OK`, `Terminal Atencao` ou `Terminal Alerta`, consolidando WebSocket local, freshness do feed, latencia, render, fila do fluxo e memoria.
 - `Painel` deve mostrar `Score Quant`, `Indicadores Quant`, `Base Quant` e `Evidencias Quant`, combinando CSV estatistico, RTD de preco e fluxo/T&T quando disponiveis.
 - `Painel` deve mostrar `Edge Quant`, `Gate Quant`, `EV Proxy`, `R/R Proxy` e `Amostra Quant`, calculados a partir de amostra, backtest proxy, acordo de volatilidade, risco/retorno, EV proxy, fluxo e freshness.
 - Sem uma das fontes principais, ou com feed atrasado/parado, a `Base Quant` deve explicitar a falta/idade e o score nao deve parecer uma confirmacao forte.
@@ -288,6 +289,22 @@ Process health OK
 ```
 
 Esse check falha se `/health` perder `process`, PID, uptime, memoria, GC, threads ou se `Conexoes`/`Sistema` deixarem de mostrar esses dados.
+
+## Terminal Health QA
+
+Para validar que a faixa superior continua resumindo a saude operacional:
+
+```text
+node tools/validate-terminal-health.js
+```
+
+Resultado esperado:
+
+```text
+Terminal health OK
+```
+
+Esse check falha se o dashboard perder o selo `Terminal OK`/`Terminal Atencao`/`Terminal Alerta`, ou se ele deixar de usar WebSocket local, freshness, latencia, render, fila do fluxo ou memoria do processo.
 
 ## Navegacao
 

@@ -82,6 +82,8 @@ Na abertura e na reconexao do WebSocket, o frontend tenta `GET /bootstrap` para 
 
 O terminal tambem diferencia RTD conectado de dado realmente atualizado. A faixa superior mostra `Feed` como `Ao vivo`, `Atrasado`, `Parado`, `Sem preco` ou `Manual`, com idade do ultimo snapshot do ativo selecionado. O `/health` expoe `lastUpdateAgeMs`, `webSocket` com clientes/broadcasts/falhas e `process` com uptime, PID, memoria e threads; cada item de `/assets` traz `feedStatus` e `lastUpdateAgeMs`, e `Cotacoes`/`Conexoes` mostram freshness por ativo.
 
+O topo tambem resume a saude operacional em um unico selo: `Terminal OK`, `Terminal Atencao` ou `Terminal Alerta`. Esse selo consolida WebSocket local, freshness do feed, latencia coletor-navegador, custo de render, fila do fluxo e memoria do processo, apontando causas curtas como `feed`, `ws`, `lat`, `ui`, `fila` ou `mem`.
+
 `Ctrl+K` abre a paleta de comando para localizar telas, grupos e ativos cadastrados. O topo mostra `Proximo passo`, os grupos aparecem com status operacional e cada ativo mostra feed e fontes `P/B/T`, acelerando a troca de contexto durante o RTD ao vivo.
 
 A aba `DOM` mostra:
@@ -229,8 +231,9 @@ logs/                   logs em runtime
 26. Bootstrap QA: rodar `node tools/validate-bootstrap-loading.js` e confirmar `Bootstrap loading OK`.
 27. WebSocket QA: rodar `node tools/validate-websocket-health.js` e confirmar `WebSocket health OK`.
 28. Process QA: rodar `node tools/validate-process-health.js` e confirmar `Process health OK`.
-29. Score Quant: confirmar no `Painel` que `Score Quant`, `Edge Quant`, `Gate Quant`, `EV Proxy`, `R/R Proxy`, `Amostra Quant`, `Indicadores Quant`, `Base Quant` e `Evidencias Quant` aparecem; sem CSV, RTD, fluxo, edge valido ou com feed atrasado/parado, o score deve ficar capado, penalizado ou aguardando dados.
-30. Roteiro: confirmar que `Proximo passo` muda entre Ativos, Conexoes, Fluxo, Radar e Mesa conforme faltam dados ou conforme o score fica utilizavel.
-31. Sistema: confirmar `Render motivos`, `Render ativos`, `WS clientes backend`, `WS broadcasts backend`, `Memoria local` e `Threads local` mudando conforme chegam snapshot, book, times, flow e signal.
-32. Feed parado: pausar/fechar o Profit ou interromper updates e confirmar que `Feed` muda de `Ao vivo` para `Atrasado`/`Parado` na faixa superior, em `Cotacoes` e em `Conexoes`, e que `Score Quant`/`Radar` rebaixam a confianca.
-33. SQLite: confirmar criacao de `data/marketdata.sqlite` quando o provider for restaurado pelo NuGet.
+29. Terminal QA: rodar `node tools/validate-terminal-health.js` e confirmar `Terminal health OK`.
+30. Score Quant: confirmar no `Painel` que `Score Quant`, `Edge Quant`, `Gate Quant`, `EV Proxy`, `R/R Proxy`, `Amostra Quant`, `Indicadores Quant`, `Base Quant` e `Evidencias Quant` aparecem; sem CSV, RTD, fluxo, edge valido ou com feed atrasado/parado, o score deve ficar capado, penalizado ou aguardando dados.
+31. Roteiro: confirmar que `Proximo passo` muda entre Ativos, Conexoes, Fluxo, Radar e Mesa conforme faltam dados ou conforme o score fica utilizavel.
+32. Sistema: confirmar `Render motivos`, `Render ativos`, `WS clientes backend`, `WS broadcasts backend`, `Memoria local` e `Threads local` mudando conforme chegam snapshot, book, times, flow e signal.
+33. Feed parado: pausar/fechar o Profit ou interromper updates e confirmar que `Feed` muda de `Ao vivo` para `Atrasado`/`Parado` na faixa superior, em `Cotacoes` e em `Conexoes`, e que `Score Quant`/`Radar` rebaixam a confianca.
+34. SQLite: confirmar criacao de `data/marketdata.sqlite` quando o provider for restaurado pelo NuGet.

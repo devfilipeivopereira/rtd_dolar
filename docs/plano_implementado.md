@@ -29,6 +29,7 @@
 - Faixa superior de contexto com ativo selecionado, ultimo preco, bid/ask, Book, Times, delta e CSV.
 - `Score Quant` no `Painel`, com `Edge Quant`, `Gate Quant`, `EV Proxy`, `R/R Proxy`, `Amostra Quant`, `Indicadores Quant`, `Base Quant` e `Evidencias Quant` combinando CSV estatistico, RTD de preco, fluxo derivado/T&T, confluencia, backtest proxy e gate de edge.
 - Telemetria no frontend com latencia WebSocket local, mensagens por segundo, render da UI, reconexoes, contadores por tipo de mensagem, contadores backend de WebSocket e saude do processo local.
+- Selo `Terminal OK`/`Terminal Atencao`/`Terminal Alerta` na faixa superior, consolidando feed, WebSocket, latencia, render, fila do fluxo e memoria.
 - Roteiro de analise no `Painel`, com `Proximo passo` dinamico e etapas clicaveis para Ativo, RTD preco, CSV, Book/T&T, Fluxo e Score.
 - Coalescing auxiliar para `bookDepth` e `timesTrades`, reduzindo repintura sem bloquear snapshots de preco.
 - Scheduler de render no navegador orientado pela aba ativa, com fila por motivo/ativo, filtro de relevancia por tela, padrao de 120 ms no preset `Equilibrado`, presets de desempenho pela UI e inputs de preco imediatos.
@@ -44,6 +45,7 @@
 - Validador `tools/validate-bootstrap-loading.js` para preservar `/bootstrap` e fallback de carregamento inicial.
 - Validador `tools/validate-websocket-health.js` para preservar clientes, broadcasts e falhas do WebSocket em `/health`.
 - Validador `tools/validate-process-health.js` para preservar uptime, memoria, GC e threads do processo local em `/health`.
+- Validador `tools/validate-terminal-health.js` para preservar o resumo operacional da faixa superior.
 
 ## Fluxo de validacao
 
@@ -74,14 +76,16 @@
 25. Rodar `node tools/validate-bootstrap-loading.js`.
 26. Rodar `node tools/validate-websocket-health.js`.
 27. Rodar `node tools/validate-process-health.js`.
-28. Confirmar `GET /bootstrap` retornando health, assets, snapshot, flow e signals.
-29. Confirmar `/health.webSocket` com clientes, broadcasts e falhas.
-30. Confirmar `/health.process` com uptime, memoria e threads.
-31. Confirmar `Score Quant`, `Edge Quant`, `Gate Quant`, `EV Proxy`, `R/R Proxy`, `Amostra Quant`, `Indicadores Quant`, `Base Quant` e `Evidencias Quant` no `Painel`.
-32. Confirmar o roteiro de analise com `Proximo passo` e atalhos para Ativos, Conexoes, Fluxo, Radar e Mesa.
-33. Confirmar `Render motivos`, `Render ativos`, contadores backend de WebSocket e saude do processo no `Sistema`.
-34. Confirmar `Feed`, `Idade backend`, `Feed selecionado` e Feed por ativo em tempo real.
-35. Confirmar que `Score Quant` e `Radar` reduzem confianca quando o feed fica `Atrasado` ou `Parado`.
+28. Rodar `node tools/validate-terminal-health.js`.
+29. Confirmar `GET /bootstrap` retornando health, assets, snapshot, flow e signals.
+30. Confirmar `/health.webSocket` com clientes, broadcasts e falhas.
+31. Confirmar `/health.process` com uptime, memoria e threads.
+32. Confirmar `Terminal OK`, `Terminal Atencao` ou `Terminal Alerta` na faixa superior, com causa curta quando houver problema.
+33. Confirmar `Score Quant`, `Edge Quant`, `Gate Quant`, `EV Proxy`, `R/R Proxy`, `Amostra Quant`, `Indicadores Quant`, `Base Quant` e `Evidencias Quant` no `Painel`.
+34. Confirmar o roteiro de analise com `Proximo passo` e atalhos para Ativos, Conexoes, Fluxo, Radar e Mesa.
+35. Confirmar `Render motivos`, `Render ativos`, contadores backend de WebSocket e saude do processo no `Sistema`.
+36. Confirmar `Feed`, `Idade backend`, `Feed selecionado` e Feed por ativo em tempo real.
+37. Confirmar que `Score Quant` e `Radar` reduzem confianca quando o feed fica `Atrasado` ou `Parado`.
 
 ## Build validado
 

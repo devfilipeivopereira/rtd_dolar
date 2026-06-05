@@ -641,6 +641,7 @@ tr:hover td{background:#ffffff05}
     <nav class="main-tabs" id="main-tabs" aria-label="Areas do terminal"></nav>
     <div class="top-meta">
       <button class="top-command" id="top-command" type="button" title="Abrir busca rapida">Buscar</button>
+      <span class="pill warn" id="terminal-pill">Terminal --</span>
       <span class="pill" id="file-pill">Sem CSV</span>
       <span class="pill warn" id="rtd-pill">RTD Manual</span>
       <span class="pill" id="date-pill">Aguardando</span>
@@ -2174,6 +2175,7 @@ const refs = {
   commandInput: document.getElementById("command-input"),
   commandResults: document.getElementById("command-results"),
   commandClose: document.getElementById("command-close"),
+  terminalPill: document.getElementById("terminal-pill"),
   assetScreen: document.getElementById("asset-screen"),
   terminalMain: document.getElementById("terminal-main"),
   topAssetSelect: document.getElementById("top-asset-select"),
@@ -2710,6 +2712,44 @@ function setMetricTone(el, tone = "") {
   if (tone) el.classList.add(tone);
 }
 
+function terminalHealth(snapshot, flowMetrics = {}) {
+  const feed = feedFreshness(snapshot);
+  const health = state.health.last || {};
+  const healthFlow = health.flow || {};
+  const processInfo = health.process || {};
+  const lag = liveNumber(state.telemetry.lastLagMs);
+  const renderMs = liveNumber(state.render.lastDurationMs);
+  const queue = liveNumber(flowMetrics.queueSize ?? healthFlow.queueSize);
+  const memory = liveNumber(processInfo.workingSetMb);
+  const socketOpen = state.rtd.socket && state.rtd.socket.readyState === WebSocket.OPEN;
+  const issues = [];
+  let tone = "ok";
+
+  const setIssue = (level, label) => {
+    if (label && !issues.includes(label)) issues.push(label);
+    if (level === "bad") tone = "bad";
+    else if (level === "warn" && tone !== "bad") tone = "warn";
+  };
+
+  if (!socketOpen) setIssue("bad", "ws");
+  if (feed.tone === "red") setIssue("bad", "feed");
+  else if (feed.tone === "amber") setIssue("warn", "feed");
+  if (Number.isFinite(lag) && lag > 1200) setIssue("bad", "lat");
+  else if (Number.isFinite(lag) && lag > 500) setIssue("warn", "lat");
+  if (Number.isFinite(renderMs) && renderMs > 120) setIssue("bad", "ui");
+  else if (Number.isFinite(renderMs) && renderMs > 60) setIssue("warn", "ui");
+  if (Number.isFinite(queue) && queue > 256) setIssue("bad", "fila");
+  else if (Number.isFinite(queue) && queue > 64) setIssue("warn", "fila");
+  if (Number.isFinite(memory) && memory > 700) setIssue("bad", "mem");
+  else if (Number.isFinite(memory) && memory > 400) setIssue("warn", "mem");
+
+  const label = tone === "ok" ? "Terminal OK" : tone === "warn" ? "Terminal Atencao" : "Terminal Alerta";
+  return {
+    tone,
+    label: issues.length ? `${label} ${issues.slice(0, 2).join("/")}` : label,
+  };
+}
+
 function renderMarketStrip() {
   const asset = selectedAsset();
   const snapshot = state.rtd.snapshotsByAsset[asset] || null;
@@ -2740,6 +2780,8 @@ function renderMarketStrip() {
   refs.topRender.textContent = fmtMs(state.render.lastDurationMs);
   setMetricTone(refs.topRenderTile, state.render.lastDurationMs > 120 ? "red" : state.render.lastDurationMs > 60 ? "amber" : state.render.lastDurationMs > 0 ? "green" : "");
   refs.topCsv.textContent = state.uploadedCount ? `${state.uploadedCount} pregoes` : "sem CSV";
+  const terminal = terminalHealth(snapshot, flow);
+  setPill(refs.terminalPill, terminal.tone, terminal.label);
   renderWorkspaceStatus();
 }
 
