@@ -18,6 +18,13 @@ const required = [
   ["signal reason", /\brenderLiveAssetChange\([^)]*"signal"/],
   ["diagnostic render reasons", /\bRender motivos\b/],
   ["diagnostic render assets", /\bRender ativos\b/],
+  ["adaptive render guard state", /\bguardMode\b/],
+  ["adaptive render guard interval", /\bguardIntervalMs\b/],
+  ["adaptive render guard helper", /\bfunction\s+updateRenderGuard\b/],
+  ["effective render interval helper", /\bfunction\s+effectiveLiveIntervalMs\b/],
+  ["scheduler uses effective interval", /\bconst\s+interval\s*=\s*effectiveLiveIntervalMs\(\)/],
+  ["render guard diagnostics", /\bRender guard\b/],
+  ["render guard top strip", /\bGuard\b/],
 ];
 
 const failures = required

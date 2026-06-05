@@ -33,6 +33,7 @@
 - Roteiro de analise no `Painel`, com `Proximo passo` dinamico e etapas clicaveis para Ativo, RTD preco, CSV, Book/T&T, Fluxo e Score.
 - Coalescing auxiliar para `bookDepth` e `timesTrades`, reduzindo repintura sem bloquear snapshots de preco.
 - Scheduler de render no navegador orientado pela aba ativa, com fila por motivo/ativo, filtro de relevancia por tela, padrao de 120 ms no preset `Equilibrado`, presets de desempenho pela UI e inputs de preco imediatos.
+- `Render Guard` adaptativo no navegador, aumentando temporariamente o intervalo efetivo quando a UI fica lenta e voltando ao preset salvo quando estabiliza.
 - Bootstrap HTTP consolidado para abertura/reconexao, carregando health, assets, snapshot, flow e signals em uma unica resposta local, com fallback para endpoints antigos.
 - Deteccao de feed parado com `lastUpdateAgeMs` no `/health`, metrica `Feed` na faixa superior e diagnostico `Idade backend` / `Feed selecionado` em `Conexoes`.
 - Freshness por ativo em `/assets`, `Cotacoes` e `Conexoes`, com `feedStatus`, `lastUpdateAgeMs`, `lastPrice` e `hasPrice`.
@@ -40,7 +41,7 @@
 - Validador `tools/validate-dashboard-design.js` para preservar tokens Industrial, mono, plano e sem sombras/gradientes.
 - Validador `tools/validate-product-language.js` para preservar o foco em analise/oportunidades e bloquear linguagem de envio de operacoes.
 - Validador `tools/validate-quant-surface.js` para preservar estimadores, indicadores, radar, score quant, gate de edge, EV/RR proxy, cap de score e evidencias visiveis.
-- Validador `tools/validate-live-render-scheduler.js` para preservar coalescing de render, motivos, ativos e filtro por aba ativa.
+- Validador `tools/validate-live-render-scheduler.js` para preservar coalescing de render, motivos, ativos, filtro por aba ativa e `Render Guard`.
 - Validador `tools/validate-feed-freshness.js` para preservar idade de feed, status `Ao vivo`/`Atrasado`/`Parado` e diagnostico de freshness.
 - Validador `tools/validate-bootstrap-loading.js` para preservar `/bootstrap` e fallback de carregamento inicial.
 - Validador `tools/validate-websocket-health.js` para preservar clientes, broadcasts e falhas do WebSocket em `/health`.
@@ -68,7 +69,7 @@
 16. Confirmar `Conexoes` com `/health`, arquitetura, Profit RTD, WebSocket e fontes por ativo.
 17. Confirmar grupos superiores, selos operacionais, trilha `Grupo / Tela`, hotbar contextual, memoria da ultima tela por grupo e atalhos `Alt+1` a `Alt+9`.
 18. Confirmar paleta `Ctrl+K` para grupos, telas, ativos, `Proximo passo`, status operacional e feed/fontes.
-19. Confirmar `Latencia WS`, `Msg/s`, `Render UI` e contadores no `Sistema`.
+19. Confirmar `Latencia WS`, `Msg/s`, `Render UI`, `Render guard` e contadores no `Sistema`.
 20. Rodar `node tools/validate-dashboard-design.js`.
 21. Rodar `node tools/validate-product-language.js`.
 22. Rodar `node tools/validate-quant-surface.js`.

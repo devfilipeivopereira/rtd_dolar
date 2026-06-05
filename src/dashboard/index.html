@@ -2107,6 +2107,12 @@ const state = {
     lastReasons: [],
     lastAssets: [],
     lastHotbarStateMs: 0,
+    guardMode: "normal",
+    guardIntervalMs: 0,
+    guardReason: "",
+    guardChangedAt: null,
+    slowSamples: 0,
+    fastSamples: 0,
   },
   assetEditor: {
     draftCsvText: null,
@@ -2759,6 +2765,7 @@ function terminalHealth(snapshot, flowMetrics = {}) {
   else if (Number.isFinite(lag) && lag > 500) setIssue("warn", "lat");
   if (Number.isFinite(renderMs) && renderMs > 120) setIssue("bad", "ui");
   else if (Number.isFinite(renderMs) && renderMs > 60) setIssue("warn", "ui");
+  if (state.render.guardMode === "guard") setIssue("warn", "guard");
   if (Number.isFinite(queue) && queue > 256) setIssue("bad", "fila");
   else if (Number.isFinite(queue) && queue > 64) setIssue("warn", "fila");
   if (Number.isFinite(memory) && memory > 700) setIssue("bad", "mem");
@@ -2798,8 +2805,10 @@ function renderMarketStrip() {
   refs.topLatency.textContent = fmtMs(state.telemetry.lastLagMs);
   setMetricTone(refs.topLatencyTile, state.telemetry.lastLagMs > 1200 ? "red" : state.telemetry.lastLagMs > 500 ? "amber" : "");
   refs.topRate.textContent = `${fmt(wsMessageRate(), 1)}/s`;
-  refs.topRender.textContent = fmtMs(state.render.lastDurationMs);
-  setMetricTone(refs.topRenderTile, state.render.lastDurationMs > 120 ? "red" : state.render.lastDurationMs > 60 ? "amber" : state.render.lastDurationMs > 0 ? "green" : "");
+  refs.topRender.textContent = state.render.guardMode === "guard"
+    ? `${fmtMs(state.render.lastDurationMs)} Guard`
+    : fmtMs(state.render.lastDurationMs);
+  setMetricTone(refs.topRenderTile, state.render.guardMode === "guard" ? "amber" : state.render.lastDurationMs > 120 ? "red" : state.render.lastDurationMs > 60 ? "amber" : state.render.lastDurationMs > 0 ? "green" : "");
   refs.topCsv.textContent = state.uploadedCount ? `${state.uploadedCount} pregoes` : "sem CSV";
   const terminal = terminalHealth(snapshot, flow);
   setPill(refs.terminalPill, terminal.tone, terminal.label);
@@ -4202,6 +4211,8 @@ function renderSettings() {
     ["Tick", fmt(settings.tickSize)],
     ["DOM", `${fmt(settings.domVisibleTicks, 0)} niveis`],
     ["Render", `${fmt(settings.liveIntervalMs, 0)} ms`],
+    ["Render efetivo", `${fmt(effectiveLiveIntervalMs(), 0)} ms`],
+    ["Guard", state.render.guardMode === "guard" ? state.render.guardReason || "ativo" : "normal"],
     ["Trades", fmt(settings.maxTrades, 0)],
     ["Sinais", fmt(settings.maxSignals, 0)],
     ["Valor ponto", Number.isFinite(settings.defaultPointValue) ? `R$ ${fmt(settings.defaultPointValue, 2)}` : "--"],
@@ -4212,7 +4223,7 @@ function renderSettings() {
       ? `Preset ${preset.label}: DOM ${preset.domVisibleTicks}, render ${preset.liveIntervalMs} ms, trades ${preset.maxTrades}.`
       : "Preset personalizado: os campos numericos foram ajustados manualmente.",
     `DOM monta ${settings.domVisibleTicks} niveis em torno do ultimo preco do ativo selecionado.`,
-    `Render live consolida atualizacoes a cada ${settings.liveIntervalMs} ms para preservar fluidez.`,
+    `Render live consolida atualizacoes a cada ${settings.liveIntervalMs} ms; o guard aumenta o intervalo efetivo quando a UI fica lenta.`,
     "Atalhos: Alt+1 Monitor, Alt+2 DOM, Alt+3 Book, Alt+4 T&T, Alt+5 Fluxo.",
     "Atalhos: Alt+6 Oportunidades, Alt+7 Ativos, Alt+8 Conexoes, Alt+9 Sistema.",
     Number.isFinite(settings.defaultPointValue)
@@ -7070,12 +7081,50 @@ function recordRenderDuration(durationMs) {
   if (state.render.durationSamples.length > 60) {
     state.render.durationSamples = state.render.durationSamples.slice(-60);
   }
+  updateRenderGuard(duration);
 }
 
 function averageRenderDuration() {
   const samples = state.render.durationSamples || [];
   if (!samples.length) return NaN;
   return samples.reduce((sum, item) => sum + item, 0) / samples.length;
+}
+
+function effectiveLiveIntervalMs() {
+  return Math.max(state.render.liveIntervalMs, state.render.guardIntervalMs || 0);
+}
+
+function updateRenderGuard(duration) {
+  const avg = averageRenderDuration();
+  const slow = duration > 140 || (Number.isFinite(avg) && avg > 95);
+  const light = duration < 50 && Number.isFinite(avg) && avg < 65;
+
+  if (slow) {
+    state.render.slowSamples += 1;
+    state.render.fastSamples = 0;
+  } else if (light) {
+    state.render.fastSamples += 1;
+    state.render.slowSamples = Math.max(0, state.render.slowSamples - 1);
+  } else {
+    state.render.slowSamples = Math.max(0, state.render.slowSamples - 1);
+    state.render.fastSamples = 0;
+  }
+
+  if (state.render.slowSamples >= 2) {
+    const guarded = Math.round(clamp(Math.max(state.render.liveIntervalMs * 1.75, 180), state.render.liveIntervalMs, 500));
+    if (state.render.guardMode !== "guard" || state.render.guardIntervalMs !== guarded) {
+      state.render.guardMode = "guard";
+      state.render.guardIntervalMs = guarded;
+      state.render.guardChangedAt = Date.now();
+    }
+    state.render.guardReason = `render ${fmtMs(duration)}`;
+  } else if (state.render.guardMode === "guard" && state.render.fastSamples >= 8) {
+    state.render.guardMode = "normal";
+    state.render.guardIntervalMs = 0;
+    state.render.guardReason = "";
+    state.render.guardChangedAt = Date.now();
+    state.render.slowSamples = 0;
+  }
 }
 
 function runLiveRenderBatch() {
@@ -7102,10 +7151,11 @@ function scheduleLiveRender(snapshot = null, immediate = false, reason = "ui", a
   state.render.pendingReasons[normalizedReason] = true;
   const normalizedAsset = normalizeAsset(asset || snapshot?.asset || selectedAsset());
   if (normalizedAsset) state.render.pendingAssets[normalizedAsset] = true;
+  const interval = effectiveLiveIntervalMs();
   const elapsed = nowMs() - state.render.lastLiveRenderMs;
-  const delay = immediate || elapsed >= state.render.liveIntervalMs
+  const delay = immediate || elapsed >= interval
     ? 0
-    : state.render.liveIntervalMs - elapsed;
+    : interval - elapsed;
 
   if (state.render.liveTimer && delay > 0) return;
   if (state.render.liveTimer) {
@@ -7314,6 +7364,7 @@ function renderFlowDebug() {
     ["Render UI", fmtMs(state.render.lastDurationMs)],
     ["Render medio", fmtMs(averageRenderDuration())],
     ["Render pico", fmtMs(state.render.maxDurationMs)],
+    ["Render guard", state.render.guardMode === "guard" ? `${fmtMs(effectiveLiveIntervalMs())} | ${state.render.guardReason || "ativo"}` : "normal"],
     ["Render motivos", (state.render.lastReasons || []).join(" / ") || "--"],
     ["Render ativos", (state.render.lastAssets || []).slice(0, 4).join(" / ") || "--"],
     ["Ultima mensagem", lastMessage],
