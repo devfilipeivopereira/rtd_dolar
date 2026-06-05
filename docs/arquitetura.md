@@ -97,7 +97,7 @@ A faixa superior fica disponivel em todas as telas e mostra ativo selecionado, u
 
 Cada grupo do menu superior tem um selo operacional calculado no navegador a partir do estado real: freshness do feed, fontes do ativo, fluxo, ideias/alertas e health. Assim o usuario sabe se precisa ir para `Cadastro`, `Fluxo` ou `Sistema` antes de abrir a tela.
 
-A hotbar de analise fica abaixo da faixa superior e abre telas de uso frequente por clique ou `Alt+1` a `Alt+9`. Ela tambem mostra a trilha `Grupo / Tela`, o estado operacional da tela ativa e um botao `Proximo` calculado pela mesma logica do roteiro do `Painel`. O estado muda conforme o modulo aberto: feed/preco, Book, T&T, fluxo, setups, ideias, alertas, health ou diagnostico do terminal. O resumo e atualizado com throttle para nao competir com DOM, Book e T&T em tempo real.
+A hotbar de analise fica abaixo da faixa superior e abre telas de uso frequente por clique ou `Alt+1` a `Alt+9`. Ela tambem mostra a trilha `Grupo / Tela`, o estado operacional da tela ativa e um botao `Proximo` calculado pela mesma logica do roteiro do `Painel`. O estado muda conforme o modulo aberto: feed/preco, Book, T&T, fluxo, setups, ideias, alertas, health ou diagnostico do terminal. Os badges clicaveis `P`, `B`, `T`, `CSV`, `Flow` e `Edge` indicam prontidao por fonte do ativo selecionado e abrem a tela de correcao/inspecao mais provavel. O resumo e atualizado com throttle para nao competir com DOM, Book e T&T em tempo real.
 
 A paleta `Ctrl+K` busca grupos, telas e ativos cadastrados. Ela mostra `Proximo passo`, status operacional dos grupos, atalhos das telas e feed/fontes `P/B/T` dos ativos. Quando o item escolhido e um ativo, a UI seleciona o ativo e abre `Monitor`.
 

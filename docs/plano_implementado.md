@@ -23,7 +23,7 @@
 - Tela `Oportunidades` para ideias observacionais com preco de interesse, stop, alvo, risco simulado e status por toque de preco.
 - Tela `Ajustes` com presets `Rapido`, `Equilibrado` e `Detalhado`, alem de parametros locais de tick, DOM, renderizacao, memoria de tape/sinais e valor por ponto.
 - Tela `Conexoes` para polling de `/health`, estado do coletor, Profit RTD, WebSocket e fontes por ativo.
-- Hotbar de analise contextual por grupo, com trilha `Grupo / Tela`, estado operacional da tela ativa, botao `Proximo`, memoria da ultima tela usada e atalhos `Alt+1` a `Alt+9` para telas de uso frequente.
+- Hotbar de analise contextual por grupo, com trilha `Grupo / Tela`, estado operacional da tela ativa, badges de prontidao `P/B/T/CSV/Flow/Edge`, botao `Proximo`, memoria da ultima tela usada e atalhos `Alt+1` a `Alt+9` para telas de uso frequente.
 - Selos operacionais no menu superior, calculados por grupo a partir de feed, cadastro, fluxo, ideias/alertas e health.
 - Paleta `Ctrl+K` para buscar grupos, telas e ativos cadastrados, com `Proximo passo`, status operacional, atalhos e feed/fontes por ativo.
 - Faixa superior de contexto com ativo selecionado, ultimo preco, bid/ask, Book, Times, delta e CSV.
@@ -46,7 +46,7 @@
 - Validador `tools/validate-websocket-health.js` para preservar clientes, broadcasts e falhas do WebSocket em `/health`.
 - Validador `tools/validate-process-health.js` para preservar uptime, memoria, GC e threads do processo local em `/health`.
 - Validador `tools/validate-terminal-health.js` para preservar o resumo operacional da faixa superior.
-- Validador `tools/validate-hotbar-workflow.js` para preservar estado da tela ativa, botao `Proximo` e throttle da hotbar.
+- Validador `tools/validate-hotbar-workflow.js` para preservar estado da tela ativa, badges `P/B/T/CSV/Flow/Edge`, botao `Proximo` e throttle da hotbar.
 
 ## Fluxo de validacao
 
@@ -83,7 +83,7 @@
 31. Confirmar `/health.webSocket` com clientes, broadcasts e falhas.
 32. Confirmar `/health.process` com uptime, memoria e threads.
 33. Confirmar `Terminal OK`, `Terminal Atencao` ou `Terminal Alerta` na faixa superior, com causa curta quando houver problema.
-34. Confirmar estado operacional e botao `Proximo` na hotbar.
+34. Confirmar estado operacional, badges `P/B/T/CSV/Flow/Edge` e botao `Proximo` na hotbar.
 35. Confirmar `Score Quant`, `Edge Quant`, `Gate Quant`, `EV Proxy`, `R/R Proxy`, `Amostra Quant`, `Indicadores Quant`, `Base Quant` e `Evidencias Quant` no `Painel`.
 36. Confirmar o roteiro de analise com `Proximo passo` e atalhos para Ativos, Conexoes, Fluxo, Radar e Mesa.
 37. Confirmar `Render motivos`, `Render ativos`, contadores backend de WebSocket e saude do processo no `Sistema`.

@@ -11,20 +11,32 @@ const docs = [
 
 const required = [
   ["hotbar state css", /\.hotbar-state\{[\s\S]*?border:1px solid/],
+  ["hotbar readiness css", /\.hotbar-readiness\{[\s\S]*?display:flex/],
+  ["hotbar source css", /\.hotbar-source\{[\s\S]*?border:1px solid/],
   ["hotbar next css", /\.hotbar-command,\.hotbar-next,\.top-command/],
   ["screen status helper", /\bfunction\s+hotbarScreenStatus\b/],
+  ["readiness helper", /\bfunction\s+hotbarReadinessItems\b/],
   ["operational renderer", /\bfunction\s+renderHotbarOperationalState\b/],
   ["throttled renderer", /\bfunction\s+renderHotbarOperationalStateThrottled\b/],
   ["one second throttle", /lastHotbarStateMs\s*<\s*1000/],
   ["hotbar state element", /\bdata-hotbar-status\b/],
+  ["hotbar readiness element", /\bdata-hotbar-readiness\b/],
+  ["hotbar source buttons", /\bdata-hotbar-source\b/],
   ["hotbar next button", /\bdata-hotbar-next\b/],
   ["uses next step logic", /\bdashboardNextStep\(dashboardCommandContext\(\)\)/],
   ["updates during market strip", /\brenderMarketStrip[\s\S]*renderHotbarOperationalStateThrottled\(\)/],
   ["next click handler", /\bconst\s+next\s*=\s*ev\.target\.closest\("\[data-hotbar-next\]"\)/],
+  ["source click handler", /\bconst\s+source\s*=\s*ev\.target\.closest\("\[data-hotbar-source\]"\)/],
   ["uses real book status", /\bliveBookDepthForAsset\(asset\)/],
   ["uses real times status", /\btimesTradesByAsset\[asset\]/],
   ["uses real feed status", /\bfeedFreshness\(snapshot\)/],
   ["uses real process status", /\bterminalHealth\(snapshot,\s*flow\.metrics\s*\|\|\s*\{\}\)/],
+  ["price readiness", /\blabel:\s*"P"[\s\S]*Configurar RTD de preco/],
+  ["book readiness", /\blabel:\s*"B"[\s\S]*Configurar RTD de Book/],
+  ["times readiness", /\blabel:\s*"T"[\s\S]*Configurar RTD de T&T/],
+  ["csv readiness", /\blabel:\s*"CSV"[\s\S]*Carregar CSV historico/],
+  ["flow readiness", /\blabel:\s*"Flow"[\s\S]*Fluxo calculado/],
+  ["edge readiness", /\blabel:\s*"Edge"[\s\S]*Aguardando score quant/],
 ];
 
 const docRequired = [

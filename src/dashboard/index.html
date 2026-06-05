@@ -112,6 +112,14 @@ button{cursor:pointer}
 .hotbar-state.ok strong{color:#9df2d5}
 .hotbar-state.warn strong{color:#ffd66b}
 .hotbar-state.bad strong{color:#ff9b9b}
+.hotbar-readiness{height:30px;display:flex;align-items:center;gap:4px;white-space:nowrap}
+.hotbar-source{
+  height:30px;min-width:34px;border:1px solid #555d69;background:#0e1318;color:#738091;
+  padding:0 7px;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.04em;
+}
+.hotbar-source.ok{border-color:#1f7a66;color:#9df2d5;background:#0d261f}
+.hotbar-source.warn{border-color:#7a5f1f;color:#ffd66b;background:#28210d}
+.hotbar-source.bad{border-color:#7a2b2b;color:#ff9b9b;background:#2b1111}
 .hotbar-spacer{flex:1;min-width:12px}
 .hotbar-command,.hotbar-next,.top-command{
   height:30px;border:1px solid #285d80;background:#10202b;color:#9bd7ff;
@@ -4658,12 +4666,21 @@ function hotbarScreenStatus(activeTab = state.ui.mainTab) {
 
 function renderHotbarOperationalState(activeTab = state.ui.mainTab) {
   if (!refs.moduleHotbar) return;
+  const ctx = dashboardCommandContext();
   const status = hotbarScreenStatus(activeTab);
-  const next = dashboardNextStep(dashboardCommandContext());
+  const next = dashboardNextStep(ctx);
   const stateEl = refs.moduleHotbar.querySelector("[data-hotbar-status]");
   if (stateEl) {
     stateEl.className = `hotbar-state ${status.tone || ""}`.trim();
     stateEl.innerHTML = `<strong>${escapeHtml(status.label)}</strong><span>${escapeHtml(status.detail)}</span>`;
+  }
+  const readinessEl = refs.moduleHotbar.querySelector("[data-hotbar-readiness]");
+  if (readinessEl) {
+    readinessEl.innerHTML = hotbarReadinessItems(ctx).map(item => `
+      <button class="hotbar-source ${escapeHtml(item.tone)}" type="button" data-hotbar-source="${escapeHtml(item.tab)}" title="${escapeHtml(item.detail)}">
+        ${escapeHtml(item.label)}
+      </button>
+    `).join("");
   }
   const nextEl = refs.moduleHotbar.querySelector("[data-hotbar-next]");
   if (nextEl) {
@@ -4678,6 +4695,57 @@ function renderHotbarOperationalStateThrottled(force = false) {
   if (!force && now - state.render.lastHotbarStateMs < 1000) return;
   state.render.lastHotbarStateMs = now;
   renderHotbarOperationalState();
+}
+
+function hotbarReadinessItems(ctx) {
+  const asset = selectedAsset();
+  const config = selectedAssetConfig();
+  const depth = liveBookDepthForAsset(asset);
+  const times = state.rtd.timesTradesByAsset[asset];
+  const priceSource = sourceIsOk(config?.priceRtd);
+  const bookSource = sourceIsOk(config?.bookRtd);
+  const timesSource = sourceIsOk(config?.timesRtd);
+  const edge = ctx.quant?.edge || {};
+  const edgeScore = liveNumber(ctx.quant?.score);
+
+  return [
+    {
+      label: "P",
+      tone: ctx.priceOk ? "ok" : priceSource ? "warn" : "bad",
+      detail: ctx.priceOk ? "Preco RTD recebido" : priceSource ? "Preco assinado, aguardando snapshot" : "Configurar RTD de preco",
+      tab: ctx.priceOk ? "connections" : "assets",
+    },
+    {
+      label: "B",
+      tone: depth ? "ok" : bookSource ? "warn" : "bad",
+      detail: depth ? `Book ${(depth.bids || []).length} x ${(depth.asks || []).length}` : bookSource ? "Book assinado, aguardando niveis" : "Configurar RTD de Book",
+      tab: depth ? "book" : "assets",
+    },
+    {
+      label: "T",
+      tone: times ? "ok" : timesSource ? "warn" : "bad",
+      detail: times ? `T&T ${(times.trades || []).length} linhas` : timesSource ? "T&T assinado, aguardando linhas" : "Configurar RTD de T&T",
+      tab: times ? "times" : "assets",
+    },
+    {
+      label: "CSV",
+      tone: ctx.csvOk ? "ok" : "bad",
+      detail: ctx.csvOk ? "Historico carregado" : "Carregar CSV historico",
+      tab: "assets",
+    },
+    {
+      label: "Flow",
+      tone: ctx.hasFlow ? "ok" : (ctx.bookOk || ctx.timesOk) ? "warn" : "bad",
+      detail: ctx.hasFlow ? "Fluxo calculado" : (ctx.bookOk || ctx.timesOk) ? "Aguardando delta/imbalance" : "Ligar Book ou T&T",
+      tab: "flow",
+    },
+    {
+      label: "Edge",
+      tone: Number.isFinite(edgeScore) && edgeScore >= 62 ? "ok" : Number.isFinite(edgeScore) || edge.gate === "em_teste" ? "warn" : "bad",
+      detail: edge?.detail || "Aguardando score quant",
+      tab: Number.isFinite(edgeScore) && edgeScore >= 62 ? "radar" : "dashboard",
+    },
+  ];
 }
 
 function renderWorkspaceGroups(activeTab = state.ui.mainTab) {
@@ -4713,6 +4781,7 @@ function renderModuleHotbar(activeTab = state.ui.mainTab) {
       <span>${escapeHtml((TAB_META[activeTab] || {}).detail || "Tela ativa")}</span>
     </span>
     <span class="hotbar-state warn" data-hotbar-status><strong>--</strong><span>--</span></span>
+    <span class="hotbar-readiness" data-hotbar-readiness></span>
     ${buttons}
     <span class="hotbar-spacer"></span>
     <button class="hotbar-next" data-hotbar-next="" type="button">Proximo</button>
@@ -8091,6 +8160,11 @@ refs.moduleHotbar.addEventListener("click", ev => {
   const next = ev.target.closest("[data-hotbar-next]");
   if (next) {
     showMainTab(next.dataset.hotbarNext);
+    return;
+  }
+  const source = ev.target.closest("[data-hotbar-source]");
+  if (source) {
+    showMainTab(source.dataset.hotbarSource);
     return;
   }
   const tab = ev.target.closest("[data-hot-tab]");
