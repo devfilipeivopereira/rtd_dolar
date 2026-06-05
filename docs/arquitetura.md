@@ -99,6 +99,8 @@ Cada grupo do menu superior tem um selo operacional calculado no navegador a par
 
 A hotbar de analise fica abaixo da faixa superior e abre telas de uso frequente por clique ou `Alt+1` a `Alt+9`. Ela tambem mostra a trilha `Grupo / Tela`, o estado operacional da tela ativa e um botao `Proximo` calculado pela mesma logica do roteiro do `Painel`. O estado muda conforme o modulo aberto: feed/preco, Book, T&T, fluxo, setups, ideias, alertas, health ou diagnostico do terminal. Os badges clicaveis `P`, `B`, `T`, `CSV`, `Flow` e `Edge` indicam prontidao por fonte do ativo selecionado e abrem a tela de correcao/inspecao mais provavel. O resumo e atualizado com throttle para nao competir com DOM, Book e T&T em tempo real.
 
+O grupo superior `Rotina` separa o uso diario em `Preparar`, `Ao vivo` e `Revisar`. `Preparar` reutiliza o checklist real de ativo, preco RTD, CSV, Book/T&T e fluxo. `Ao vivo` concentra ultimo preco, contexto de fluxo, nivel proximo, radar, setups e tape para leitura rapida. `Revisar` consolida health, WebSocket, render, dedupe, processo local, sinais, ideias e alertas. Essas telas sao atalhos de analise e diagnostico, sem modulo de envio ao Profit.
+
 A paleta `Ctrl+K` busca grupos, telas e ativos cadastrados. Ela mostra `Proximo passo`, status operacional dos grupos, atalhos das telas e feed/fontes `P/B/T` dos ativos. Quando o item escolhido e um ativo, a UI seleciona o ativo e abre `Monitor`.
 
 A tela `Painel` e a entrada de analise. Ela resume RTD, ativo selecionado, ultimo preco, leitura rapida de contexto, fluxo, nivel proximo, radar e feed, alem de checklist de prontidao, atalhos para as telas principais, setups recentes, oportunidades e alertas.
@@ -138,7 +140,7 @@ As mensagens auxiliares de profundidade sao coalescidas no cliente RTD para redu
 
 No navegador, campos criticos de preco e inputs intraday sao preenchidos a cada snapshot. Renderizacoes densas usam scheduler curto, com padrao de 120 ms no preset `Equilibrado` e ajuste pela aba `Ajustes`. O batch ao vivo renderiza a aba ativa e evita repintar telas invisiveis como DOM, Mesa, Painel, Monitor, Cotacoes e Historico no mesmo pulso.
 
-O scheduler do navegador agora acumula motivos de render (`snapshot`, `book`, `times`, `flow`, `signal`, `status`, `ui`) e ativos impactados. Antes de redesenhar, ele verifica se o evento afeta a tela ativa. Por exemplo, uma mensagem `flow` nao repinta a tela `Book`, e uma mensagem `book` nao repinta a tela `T&T`. Telas de contexto amplo como `Painel`, `Mesa`, `Monitor`, `Radar`, `Cotacoes`, `Conexoes` e `Sistema` continuam recebendo todos os motivos relevantes.
+O scheduler do navegador agora acumula motivos de render (`snapshot`, `book`, `times`, `flow`, `signal`, `status`, `ui`) e ativos impactados. Antes de redesenhar, ele verifica se o evento afeta a tela ativa. Por exemplo, uma mensagem `flow` nao repinta a tela `Book`, e uma mensagem `book` nao repinta a tela `T&T`. Telas de contexto amplo como `Painel`, `Mesa`, `Monitor`, `Radar`, `Cotacoes`, `Conexoes`, `Sistema` e as telas de `Rotina` continuam recebendo os motivos relevantes para seu escopo.
 
 Antes de entrar no scheduler, snapshots de preco usam uma chave material por ativo. Alteracoes em preco atual, abertura, maxima, minima, VWAP, volume, quantidade, negocios, bid/ask, volumes do topo, volume projetado ou status passam imediatamente. Mensagens com a mesma chave sao descartadas para render pesado por ate 1 segundo, mantendo um heartbeat visual e reduzindo backlog quando o RTD repete timestamp ou estado.
 

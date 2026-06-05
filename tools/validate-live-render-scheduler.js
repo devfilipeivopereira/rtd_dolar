@@ -38,6 +38,9 @@ const required = [
   ["snapshot dedupe counter", /\bsnapshotRenderSkipped\b/],
   ["snapshot handler uses dedupe", /\bconst\s+shouldRender\s*=\s*shouldRenderSnapshot\(/],
   ["snapshot dedupe diagnostics", /\bRender dedupe\b/],
+  ["prepare render filter", /\btab\s*===\s*"prepare"[\s\S]*has\("snapshot",\s*"status",\s*"asset",\s*"csv",\s*"flow",\s*"times",\s*"book"\)/],
+  ["live render filter", /\btab\s*===\s*"live"[\s\S]*has\("snapshot",\s*"book",\s*"times",\s*"flow",\s*"signal",\s*"status"\)/],
+  ["review render filter", /\btab\s*===\s*"review"[\s\S]*has\("snapshot",\s*"times",\s*"flow",\s*"signal",\s*"status",\s*"csv"\)/],
 ];
 
 const failures = required

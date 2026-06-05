@@ -48,9 +48,10 @@ O RTD tambem entra como controle de qualidade. Quando o snapshot do ativo fica `
 
 Esses sinais sao ferramentas de analise quantitativa e tape reading. Eles nao prometem resultado financeiro; a robustez vem de fonte de dados identificavel, penalizacao quando falta dado, evidencias visiveis e validacao manual/automatizada.
 
-O menu superior agora separa o terminal em grupos de analise: `Inicio`, `Cadastro`, `Mercado`, `Fluxo`, `Analise` e `Sistema`. Cada grupo mostra um selo operacional curto calculado com dados reais, como `AO VIVO`, `ATRASADO`, `COMPLETO`, `FLOW`, `IDEIA`, `WS` ou `RTD`. A hotbar contextual abaixo mostra apenas as telas do grupo ativo, enquanto a faixa superior mantem ativo selecionado, ultimo preco, bid/ask, status de Book, status de Times, delta, latencia WebSocket local, mensagens por segundo, render da UI e CSV:
+O menu superior agora separa o terminal em grupos de analise: `Inicio`, `Rotina`, `Cadastro`, `Mercado`, `Fluxo`, `Analise` e `Sistema`. Cada grupo mostra um selo operacional curto calculado com dados reais, como `AO VIVO`, `ATRASADO`, `COMPLETO`, `FLOW`, `IDEIA`, `WS` ou `RTD`. A hotbar contextual abaixo mostra apenas as telas do grupo ativo, enquanto a faixa superior mantem ativo selecionado, ultimo preco, bid/ask, status de Book, status de Times, delta, latencia WebSocket local, mensagens por segundo, render da UI e CSV:
 
 - `Painel`: entrada de analise com leitura rapida de contexto, checklist, atalhos, setups, oportunidades e alertas;
+- `Rotina`: telas `Preparar`, `Ao vivo` e `Revisar` para organizar a sessao sem misturar cadastro, leitura de mercado e diagnostico;
 - `Radar`: oportunidades observacionais ranqueadas por setup, nivel, proximidade, delta e imbalance, com ranking multiativo;
 - `Monitor`: mesa ao vivo com watchlist compacta, estado do ativo, setups, tape, oportunidades e alertas;
 - `Mesa`: cockpit de analise com DOM compacto, book resumido, tape, fluxo, setups e risco simulado;
@@ -75,6 +76,8 @@ A hotbar lembra a ultima tela usada dentro de cada grupo e ainda abre telas freq
 A hotbar tambem mostra a trilha `Grupo / Tela`, o estado operacional da tela ativa e um botao `Proximo` calculado pela mesma logica do roteiro do `Painel`. O estado usa dados reais do modulo aberto: feed/preco, Book, T&T, fluxo, setups, ideias, alertas, health ou diagnostico do terminal. Ao lado, os badges clicaveis `P`, `B`, `T`, `CSV`, `Flow` e `Edge` mostram a prontidao do ativo selecionado e abrem a tela certa para corrigir ou inspecionar cada fonte.
 
 O `Painel` tambem mostra um roteiro de analise com `Proximo passo` e etapas `Ativo`, `RTD preco`, `CSV`, `Book/T&T`, `Fluxo` e `Score`. Cada etapa usa o estado real do ativo selecionado e abre a tela correta por clique, reduzindo a confusao entre cadastro, diagnostico e leitura de mercado.
+
+O grupo `Rotina` organiza o dia em tres telas objetivas: `Preparar` valida ativo, RTD, CSV, Book, T&T e fluxo antes da sessao; `Ao vivo` concentra preco, fluxo, nivel proximo, radar, setups e tape; `Revisar` mostra feed, WebSocket, render, dedupe, processo local, ideias, alertas e atalhos para Historico/Sistema. Ele usa os mesmos dados reais do terminal e nao adiciona modulo de envio ao Profit.
 
 O render ao vivo do navegador usa fila coalescida por motivo (`snapshot`, `book`, `times`, `flow`, `signal`, `status`, `ui`) e por ativo. A cada pulso, a UI redesenha principalmente a tela ativa e ignora eventos que nao afetam aquela tela. Em `Sistema`, `Render motivos` e `Render ativos` mostram o ultimo lote desenhado.
 
@@ -133,7 +136,7 @@ Use o MSBuild do Visual Studio 2022/Build Tools. O MSBuild antigo de `C:\Windows
 15. Abra `Conexoes` para confirmar coletor, Profit RTD, WebSocket, arquitetura e fontes por ativo.
 16. Deixe o modo `RTD Live` ativo para preencher o intraday automaticamente.
 17. Confira `Latencia WS`, `Msg/s` e `Render UI` na faixa superior ou em `Sistema` para diagnosticar atraso entre backend local, navegador e desenho da tela.
-18. Use os grupos superiores, a hotbar contextual, `Alt+1` a `Alt+9` ou `Ctrl+K` para alternar telas e selecionar ativos rapidamente.
+18. Use os grupos superiores, `Rotina`, a hotbar contextual, `Alt+1` a `Alt+9` ou `Ctrl+K` para alternar telas e selecionar ativos rapidamente.
 
 O aplicativo e somente para analise e busca de oportunidades. Ele nao envia nada ao Profit nem controla execucao.
 
@@ -225,7 +228,7 @@ logs/                   logs em runtime
 14. Abas de analise: confirmar `Book`, `T&T`, `Alertas`, `Risco`, `Historico`, `Ajustes`, `Conexoes` e `Sistema` sem erro no navegador.
 15. Conexoes: confirmar polling de `/health`, arquitetura x64/x86, Profit RTD, WebSocket e status `Preco`, `Book`, `Times` por ativo.
 16. Ajustes: alternar presets `Rapido`, `Equilibrado` e `Detalhado`; depois alterar niveis do DOM e intervalo de renderizacao, salvar, recarregar a pagina e confirmar persistencia local.
-17. Navegacao: confirmar grupos superiores, trilha `Grupo / Tela`, hotbar contextual, memoria da ultima tela por grupo e atalhos `Alt+1` a `Alt+9`, sem disparar quando o foco esta em campos de texto.
+17. Navegacao: confirmar grupos superiores, `Rotina` com `Preparar`/`Ao vivo`/`Revisar`, trilha `Grupo / Tela`, hotbar contextual, memoria da ultima tela por grupo e atalhos `Alt+1` a `Alt+9`, sem disparar quando o foco esta em campos de texto.
 18. Paleta: confirmar `Ctrl+K`, `Proximo passo`, busca de grupos/telas/ativos, status de feed/fontes, setas, `Enter` e `Esc`.
 19. Performance: confirmar que a aba ativa segue responsiva com RTD ativo; campos intraday devem atualizar imediatamente e telas invisiveis nao devem causar travamento perceptivel.
 20. Telemetria: confirmar que `Latencia WS`, `Msg/s` e `Render UI` mudam quando chegam mensagens WebSocket. Essas leituras medem backend local -> navegador e custo de desenho da tela, nao latencia de bolsa ou Profit.

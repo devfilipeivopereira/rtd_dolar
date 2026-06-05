@@ -137,6 +137,7 @@ Sem CSV, a aba DOM ainda pode mostrar ticks RTD, bid/ask e tape. Pontos como POC
 - `Conexoes` deve consultar `/health` periodicamente e separar status do feed local do debug de fluxo.
 - O menu superior deve mostrar selos operacionais por grupo, usando estado real de feed, cadastro, fluxo, ideias/alertas e sistema.
 - A hotbar deve espelhar a aba ativa, mostrar a trilha `Grupo / Tela`, estado operacional da tela ativa, badges `P`, `B`, `T`, `CSV`, `Flow`, `Edge`, botao `Proximo` e permitir troca rapida para Monitor, DOM, Book, T&T, Fluxo, Oportunidades, Ativos, Conexoes e Sistema.
+- O grupo `Rotina` deve abrir `Preparar`, `Ao vivo` e `Revisar`; cada tela deve usar dados reais de feed, fontes, fluxo, sinais, render ou processo e seus botoes devem abrir as telas especializadas corretas.
 - A paleta `Ctrl+K` deve buscar grupos, telas e ativos cadastrados sem depender de recarregar a pagina, mostrando `Proximo passo`, status operacional, atalhos e feed/fontes dos ativos.
 - `Book` e `T&T` devem atualizar sem travar a pagina mesmo com muitos campos RTD, respeitando coalescing do backend.
 - Campos intraday devem ser preenchidos a cada snapshot; o lote curto configuravel deve renderizar principalmente a aba ativa para manter a UI responsiva com RTD intenso.
@@ -329,10 +330,11 @@ Esse check falha se a hotbar perder o estado da tela ativa, os badges `P/B/T/CSV
 
 No navegador, confirme:
 
-1. Os grupos superiores `Inicio`, `Cadastro`, `Mercado`, `Fluxo`, `Analise` e `Sistema` trocam a hotbar contextual e a trilha `Grupo / Tela`.
-2. Ao voltar para um grupo, a hotbar reabre a ultima tela usada naquele grupo e mostra o estado operacional da tela ativa.
-3. `Buscar`, `Ctrl+K`, setas, `Enter` e `Esc` continuam funcionando.
-4. A paleta mostra `Proximo passo`, grupos, telas, ativos, status operacional e feed/fontes por ativo.
-5. Os badges `P`, `B`, `T`, `CSV`, `Flow` e `Edge` mudam de cor conforme a prontidao e abrem a tela correta.
-6. O botao `Proximo` da hotbar abre a mesma tela indicada pelo roteiro do `Painel`.
-7. `Alt+1` a `Alt+9` continuam abrindo as telas frequentes quando o foco nao esta em campo de texto.
+1. Os grupos superiores `Inicio`, `Rotina`, `Cadastro`, `Mercado`, `Fluxo`, `Analise` e `Sistema` trocam a hotbar contextual e a trilha `Grupo / Tela`.
+2. O grupo `Rotina` mostra `Preparar`, `Ao vivo` e `Revisar`, com status operacional baseado no ativo selecionado.
+3. Ao voltar para um grupo, a hotbar reabre a ultima tela usada naquele grupo e mostra o estado operacional da tela ativa.
+4. `Buscar`, `Ctrl+K`, setas, `Enter` e `Esc` continuam funcionando.
+5. A paleta mostra `Proximo passo`, grupos, telas, ativos, status operacional e feed/fontes por ativo.
+6. Os badges `P`, `B`, `T`, `CSV`, `Flow` e `Edge` mudam de cor conforme a prontidao e abrem a tela correta.
+7. O botao `Proximo` da hotbar abre a mesma tela indicada pelo roteiro do `Painel`.
+8. `Alt+1` a `Alt+9` continuam abrindo as telas frequentes quando o foco nao esta em campo de texto.

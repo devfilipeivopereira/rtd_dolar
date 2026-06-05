@@ -37,11 +37,19 @@ const required = [
   ["csv readiness", /\blabel:\s*"CSV"[\s\S]*Carregar CSV historico/],
   ["flow readiness", /\blabel:\s*"Flow"[\s\S]*Fluxo calculado/],
   ["edge readiness", /\blabel:\s*"Edge"[\s\S]*Aguardando score quant/],
+  ["routine workspace group", /\bid:\s*"routine"[\s\S]*label:\s*"Rotina"[\s\S]*tabs:\s*\["prepare",\s*"live",\s*"review"\]/],
+  ["routine panels", /\bid="panel-prepare"[\s\S]*id="panel-live"[\s\S]*id="panel-review"/],
+  ["routine renderer prepare", /\bfunction\s+renderRoutinePrepare\b/],
+  ["routine renderer live", /\bfunction\s+renderRoutineLive\b/],
+  ["routine renderer review", /\bfunction\s+renderRoutineReview\b/],
+  ["routine click handler", /\bdata-routine-open\b[\s\S]*showMainTab\(action\.dataset\.routineOpen\)/],
 ];
 
 const docRequired = [
   ["README hotbar workflow", /\bhotbar\b[\s\S]*\bProximo\b/],
+  ["README routine workflow", /\bRotina\b[\s\S]*\bPreparar\b[\s\S]*\bAo vivo\b[\s\S]*\bRevisar\b/],
   ["architecture hotbar workflow", /\bhotbar\b[\s\S]*\bProximo\b/],
+  ["architecture routine workflow", /\bRotina\b[\s\S]*\bPreparar\b[\s\S]*\bAo vivo\b[\s\S]*\bRevisar\b/],
   ["validation hotbar QA", /\bvalidate-hotbar-workflow\.js\b/],
 ];
 

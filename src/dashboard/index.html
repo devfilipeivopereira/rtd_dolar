@@ -511,6 +511,10 @@ tr:hover td{background:#ffffff05}
 .source-dot.off{border-color:#555d69;color:#738091;background:#0e1318}
 .dashboard-grid{display:grid;grid-template-columns:minmax(360px,.9fr) minmax(0,1.4fr);gap:14px}
 .dashboard-actions{display:grid;grid-template-columns:repeat(3,minmax(150px,1fr));gap:8px}
+.routine-grid{display:grid;grid-template-columns:minmax(320px,.85fr) minmax(0,1.15fr);gap:14px}
+.routine-live-grid{display:grid;grid-template-columns:minmax(280px,.72fr) minmax(360px,1fr) minmax(280px,.78fr);gap:14px;align-items:start}
+.routine-actions{display:grid;grid-template-columns:repeat(2,minmax(140px,1fr));gap:8px}
+.tab-panel{contain:layout paint}
 .analysis-workflow{
   display:grid;grid-template-columns:minmax(220px,.7fr) minmax(0,1.3fr);gap:8px;align-items:stretch;
   border:1px solid var(--line);background:#0B0C0A;margin:0 0 14px;padding:8px;
@@ -633,7 +637,7 @@ tr:hover td{background:#ffffff05}
   .module-hotbar{flex-wrap:wrap}
   .hotbar-context{order:-1;flex:1 0 100%;max-width:none}
   .field-grid{grid-template-columns:1fr}
-  .market-table-grid,.times-grid,.alert-grid,.risk-grid,.order-grid,.history-grid,.dashboard-grid,.analysis-workflow,.monitor-grid,.monitor-bottom,.connections-grid,.radar-grid,.preset-row{grid-template-columns:1fr}
+  .market-table-grid,.times-grid,.alert-grid,.risk-grid,.order-grid,.history-grid,.dashboard-grid,.routine-grid,.routine-live-grid,.analysis-workflow,.monitor-grid,.monitor-bottom,.connections-grid,.radar-grid,.preset-row{grid-template-columns:1fr}
   .dashboard-actions{grid-template-columns:1fr 1fr}
   .risk-result{grid-template-columns:1fr 1fr}
   .cards{grid-template-columns:1fr 1fr}
@@ -1034,6 +1038,90 @@ tr:hover td{background:#ffffff05}
               <div class="panel-head"><div class="panel-title">Oportunidades e alertas</div></div>
               <div class="panel-body">
                 <div class="small-list" id="dashboard-actions-list"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="tab-panel hidden" id="panel-prepare">
+          <div class="dom-summary">
+            <div class="live-kv"><span>Ativo</span><strong id="prepare-asset">--</strong></div>
+            <div class="live-kv"><span>Feed</span><strong id="prepare-feed">--</strong></div>
+            <div class="live-kv"><span>CSV</span><strong id="prepare-csv">--</strong></div>
+            <div class="live-kv"><span>Proximo</span><strong id="prepare-next">--</strong></div>
+          </div>
+          <div class="analysis-workflow" id="prepare-workflow"></div>
+          <div class="routine-grid">
+            <div class="panel">
+              <div class="panel-head"><div class="panel-title">Fontes para a sessao</div></div>
+              <div class="panel-body">
+                <div class="readiness-list" id="prepare-readiness"></div>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="panel-head"><div class="panel-title">Acoes de preparacao</div></div>
+              <div class="panel-body">
+                <div class="routine-actions" id="prepare-actions"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="tab-panel hidden" id="panel-live">
+          <div class="dom-summary">
+            <div class="live-kv"><span>Ultimo</span><strong id="routine-live-last">--</strong></div>
+            <div class="live-kv"><span>Fluxo</span><strong id="routine-live-flow">--</strong></div>
+            <div class="live-kv"><span>Nivel proximo</span><strong id="routine-live-level">--</strong></div>
+            <div class="live-kv"><span>Radar</span><strong id="routine-live-radar">--</strong></div>
+          </div>
+          <div class="routine-live-grid">
+            <div class="panel">
+              <div class="panel-head"><div class="panel-title">Acoes ao vivo</div></div>
+              <div class="panel-body">
+                <div class="routine-actions" id="routine-live-actions"></div>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="panel-head">
+                <div class="panel-title">Leitura rapida</div>
+                <span class="tag" id="routine-live-state">Aguardando</span>
+              </div>
+              <div class="panel-body">
+                <div class="small-list" id="routine-live-kv"></div>
+              </div>
+            </div>
+            <div class="desk-stack">
+              <div class="panel">
+                <div class="panel-head"><div class="panel-title">Setups ativos</div></div>
+                <div class="panel-body"><div class="desk-feed" id="routine-live-signals"></div></div>
+              </div>
+              <div class="panel">
+                <div class="panel-head"><div class="panel-title">Tape</div></div>
+                <div class="panel-body"><div class="dom-tape desk-feed" id="routine-live-tape"></div></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="tab-panel hidden" id="panel-review">
+          <div class="dom-summary">
+            <div class="live-kv"><span>Terminal</span><strong id="review-terminal">--</strong></div>
+            <div class="live-kv"><span>Render</span><strong id="review-render">--</strong></div>
+            <div class="live-kv"><span>Mensagens</span><strong id="review-messages">--</strong></div>
+            <div class="live-kv"><span>Sinais</span><strong id="review-signals-count">--</strong></div>
+          </div>
+          <div class="routine-grid">
+            <div class="panel">
+              <div class="panel-head"><div class="panel-title">Checklist de revisao</div></div>
+              <div class="panel-body">
+                <div class="readiness-list" id="review-readiness"></div>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="panel-head"><div class="panel-title">Diagnostico da sessao</div></div>
+              <div class="panel-body">
+                <div class="small-list" id="review-kv"></div>
+                <div class="dashboard-actions" id="review-actions"></div>
               </div>
             </div>
           </div>
@@ -2017,6 +2105,9 @@ function saveUiSettings(settings) {
 
 const TAB_META = {
   dashboard: { label: "Painel", detail: "Contexto e checklist" },
+  prepare: { label: "Preparar", detail: "Fontes antes da sessao" },
+  live: { label: "Ao vivo", detail: "Leitura rapida de mercado" },
+  review: { label: "Revisar", detail: "Resumo e diagnostico" },
   radar: { label: "Radar", detail: "Oportunidades por contexto" },
   monitor: { label: "Monitor", detail: "Watchlist, setups e tape" },
   desk: { label: "Mesa", detail: "DOM, fluxo, book e tape" },
@@ -2038,6 +2129,7 @@ const TAB_META = {
 };
 const WORKSPACE_GROUPS = [
   { id: "home", label: "Inicio", tabs: ["dashboard", "radar", "monitor", "desk"] },
+  { id: "routine", label: "Rotina", tabs: ["prepare", "live", "review"] },
   { id: "setup", label: "Cadastro", tabs: ["assets"] },
   { id: "market", label: "Mercado", tabs: ["quotes", "panorama", "dom", "book", "times"] },
   { id: "flow", label: "Fluxo", tabs: ["flow", "signals"] },
@@ -2285,6 +2377,29 @@ const refs = {
   dashboardReadiness: document.getElementById("dashboard-readiness"),
   dashboardSignals: document.getElementById("dashboard-signals"),
   dashboardActionsList: document.getElementById("dashboard-actions-list"),
+  prepareAsset: document.getElementById("prepare-asset"),
+  prepareFeed: document.getElementById("prepare-feed"),
+  prepareCsv: document.getElementById("prepare-csv"),
+  prepareNext: document.getElementById("prepare-next"),
+  prepareWorkflow: document.getElementById("prepare-workflow"),
+  prepareReadiness: document.getElementById("prepare-readiness"),
+  prepareActions: document.getElementById("prepare-actions"),
+  routineLiveLast: document.getElementById("routine-live-last"),
+  routineLiveFlow: document.getElementById("routine-live-flow"),
+  routineLiveLevel: document.getElementById("routine-live-level"),
+  routineLiveRadar: document.getElementById("routine-live-radar"),
+  routineLiveState: document.getElementById("routine-live-state"),
+  routineLiveKv: document.getElementById("routine-live-kv"),
+  routineLiveActions: document.getElementById("routine-live-actions"),
+  routineLiveSignals: document.getElementById("routine-live-signals"),
+  routineLiveTape: document.getElementById("routine-live-tape"),
+  reviewTerminal: document.getElementById("review-terminal"),
+  reviewRender: document.getElementById("review-render"),
+  reviewMessages: document.getElementById("review-messages"),
+  reviewSignalsCount: document.getElementById("review-signals-count"),
+  reviewReadiness: document.getElementById("review-readiness"),
+  reviewKv: document.getElementById("review-kv"),
+  reviewActions: document.getElementById("review-actions"),
   radarAsset: document.getElementById("radar-asset"),
   radarCount: document.getElementById("radar-count"),
   radarBest: document.getElementById("radar-best"),
@@ -3129,6 +3244,231 @@ function renderDashboardWorkflow(ctx) {
     </button>
     <div class="workflow-steps">${steps.map(workflowStep).join("")}</div>
   `;
+}
+
+function routineAction(label, detail, tab) {
+  return `
+    <button class="quick-action" type="button" data-routine-open="${escapeHtml(tab)}">
+      <strong>${escapeHtml(label)}</strong>
+      <span>${escapeHtml(detail)}</span>
+    </button>
+  `;
+}
+
+function routineWorkflowStep(item) {
+  return `
+    <button class="workflow-step ${escapeHtml(item.state)}" type="button" data-routine-open="${escapeHtml(item.tab)}">
+      <span>${escapeHtml(workflowStateLabel(item.state))}</span>
+      <strong>${escapeHtml(item.label)}</strong>
+      <em>${escapeHtml(item.detail)}</em>
+    </button>
+  `;
+}
+
+function routineWorkflowItems(ctx) {
+  const scoreText = Number.isFinite(ctx.quant.score) ? `${fmt(ctx.quant.score, 0)} ${ctx.quant.confidence.label}` : "aguardando";
+  return [
+    {
+      label: "Ativo",
+      detail: ctx.config ? (ctx.config.enabled ? "ligado" : "desligado") : "nao cadastrado",
+      tab: "assets",
+      state: workflowState(!!ctx.config && !!ctx.config.enabled, !!ctx.config),
+    },
+    {
+      label: "RTD preco",
+      detail: ctx.priceOk ? "snapshot recebido" : "sem preco ao vivo",
+      tab: "connections",
+      state: workflowState(ctx.priceOk, sourceIsOk(ctx.config?.priceRtd)),
+    },
+    {
+      label: "CSV",
+      detail: ctx.csvOk ? "historico disponivel" : "necessario para niveis",
+      tab: "assets",
+      state: workflowState(ctx.csvOk),
+    },
+    {
+      label: "Book/T&T",
+      detail: ctx.bookOk || ctx.timesOk ? `${ctx.bookOk ? "Book" : ""}${ctx.bookOk && ctx.timesOk ? " + " : ""}${ctx.timesOk ? "T&T" : ""}` : "fontes desligadas",
+      tab: "assets",
+      state: workflowState(ctx.bookOk && ctx.timesOk, ctx.bookOk || ctx.timesOk),
+    },
+    {
+      label: "Fluxo",
+      detail: ctx.hasFlow ? "delta e imbalance ativos" : "aguardando flow",
+      tab: "flow",
+      state: workflowState(ctx.hasFlow, ctx.bookOk || ctx.timesOk),
+    },
+    {
+      label: "Score",
+      detail: scoreText,
+      tab: "radar",
+      state: workflowState(Number.isFinite(ctx.quant.score) && ctx.quant.score >= 62, Number.isFinite(ctx.quant.score)),
+    },
+  ];
+}
+
+function renderRoutinePrepare() {
+  if (!refs.prepareReadiness) return;
+  const asset = selectedAsset();
+  const config = selectedAssetConfig();
+  const ctx = dashboardCommandContext();
+  const next = dashboardNextStep(ctx);
+  const feed = assetFeedFreshness(asset, config || {});
+  const historyRows = liveNumber(config?.history?.Rows ?? config?.history?.rows);
+
+  refs.prepareAsset.textContent = asset;
+  refs.prepareFeed.textContent = `${feed.label} ${feed.detail}`;
+  refs.prepareCsv.textContent = ctx.csvOk ? `${Number.isFinite(historyRows) ? fmt(historyRows, 0) : fmt(state.bars.length, 0)} pregoes` : "Pendente";
+  refs.prepareNext.textContent = next.label;
+  refs.prepareWorkflow.innerHTML = `
+    <button class="workflow-next" type="button" data-routine-open="${escapeHtml(next.tab)}">
+      <span>Proximo passo</span>
+      <strong>${escapeHtml(next.label)}</strong>
+      <em>${escapeHtml(next.detail)}</em>
+    </button>
+    <div class="workflow-steps">${routineWorkflowItems(ctx).map(routineWorkflowStep).join("")}</div>
+  `;
+  refs.prepareReadiness.innerHTML = [
+    readinessRow("Ativo", ctx.config ? (ctx.config.enabled ? "cadastro ligado" : "cadastro desligado") : "criar cadastro", !!ctx.config && ctx.config.enabled, !!ctx.config),
+    readinessRow("Preco RTD", ctx.priceOk ? `${feed.label} ${feed.detail}` : "sem snapshot de preco", ctx.priceOk, sourceIsOk(config?.priceRtd)),
+    readinessRow("CSV historico", ctx.csvOk ? "estatistica disponivel" : "carregar historico diario", ctx.csvOk),
+    readinessRow("Book", ctx.bookOk ? "fonte Book disponivel" : "aguardando Book", ctx.bookOk, sourceIsOk(config?.bookRtd)),
+    readinessRow("Times", ctx.timesOk ? "T&T disponivel" : "aguardando T&T", ctx.timesOk, sourceIsOk(config?.timesRtd)),
+    readinessRow("Fluxo", ctx.hasFlow ? "metricas calculadas" : "aguardando fluxo", ctx.hasFlow, ctx.bookOk || ctx.timesOk),
+  ].join("");
+  refs.prepareActions.innerHTML = [
+    routineAction("Ativos", "Cadastrar RTDs e CSV", "assets"),
+    routineAction("Conexoes", "Validar Profit, WS e fontes", "connections"),
+    routineAction("Ajustes", "Preset de render e DOM", "settings"),
+    routineAction("Painel", "Ver score e checklist completo", "dashboard"),
+  ].join("");
+}
+
+function renderRoutineSignals(signals = []) {
+  return signals.slice(0, 8).map(signal => {
+    const direction = signal.direction || "neutral";
+    return `
+      <div class="desk-signal ${escapeHtml(direction)}">
+        <span>${escapeHtml((signal.timestamp || "").slice(11, 19) || "--")}</span>
+        <strong>${escapeHtml(trimText(signal.setup || "--", 18))}</strong>
+        <span>${fmt(liveNumber(signal.score), 0)}</span>
+      </div>
+    `;
+  }).join("") || `<div class="warn-line">Aguardando setups do fluxo.</div>`;
+}
+
+function renderRoutineTape() {
+  const trades = state.flow.trades || [];
+  if (trades.length) {
+    return trades.slice(0, 18).map(trade => {
+      const side = trade.side || trade.aggressorSide || "unknown";
+      const dir = side === "buy" ? "up" : side === "sell" ? "down" : "flat";
+      return `
+        <div class="dom-tick ${dir}">
+          <span>${escapeHtml(trade.time || "--")}</span>
+          <strong>${fmt(liveNumber(trade.price))}</strong>
+          <span>${fmt(liveNumber(trade.qty), 0)}</span>
+          <span>${escapeHtml(side)}${trade.derived ? " d" : ""}</span>
+        </div>
+      `;
+    }).join("");
+  }
+
+  return (state.rtd.ticks || []).slice(0, 18).map(tick => `
+    <div class="dom-tick ${tick.delta > 0 ? "up" : tick.delta < 0 ? "down" : "flat"}">
+      <span>${escapeHtml(tick.time || "--")}</span>
+      <strong>${fmt(tick.price)}</strong>
+      <span>${tick.delta > 0 ? "+" : ""}${fmt(tick.delta)}</span>
+      <span>${escapeHtml(tick.side || "--")}</span>
+    </div>
+  `).join("") || `<div class="warn-line">Aguardando tape ou ticks.</div>`;
+}
+
+function renderRoutineLive(snapshot = state.rtd.lastSnapshot) {
+  if (!refs.routineLiveKv) return;
+  const asset = selectedAsset();
+  const msg = snapshot || state.rtd.snapshotsByAsset[asset] || null;
+  const flow = flowBucket(asset);
+  const metrics = flow.metrics || {};
+  const intraday = liveIntradayFromSnapshot(msg);
+  const book = liveBookFromSnapshot(msg);
+  const price = priceContext(msg);
+  const flowInfo = flowContext(metrics);
+  const level = nearestLevelContext(msg);
+  const radar = radarContext(msg);
+  const quant = quantReversalAssessment(msg, flow);
+  const terminal = terminalHealth(msg, metrics);
+
+  refs.routineLiveLast.textContent = Number.isFinite(intraday.price) ? fmt(intraday.price) : "--";
+  refs.routineLiveFlow.textContent = flowInfo.value;
+  refs.routineLiveLevel.textContent = level.value;
+  refs.routineLiveRadar.textContent = radar.value;
+  refs.routineLiveState.textContent = terminal.label;
+  refs.routineLiveState.className = `tag ${terminal.tone === "ok" ? "green" : terminal.tone === "bad" ? "red" : "amber"}`;
+  refs.routineLiveKv.innerHTML = [
+    ["Ativo", asset],
+    ["Feed", `${feedFreshness(msg).label} | ${feedFreshness(msg).detail}`],
+    ["Preco", `${price.value} | ${price.detail}`],
+    ["Bid / Ask", Number.isFinite(book.bid) && Number.isFinite(book.ask) ? `${fmt(book.bid)} / ${fmt(book.ask)}` : "--"],
+    ["Delta 5s", signedFmt(liveNumber(metrics.delta5s), 0)],
+    ["Imbalance", Number.isFinite(liveNumber(metrics.topBookImbalance)) ? fmt(liveNumber(metrics.topBookImbalance), 2) : "--"],
+    ["Nivel proximo", `${level.value} | ${level.detail}`],
+    ["Score Quant", Number.isFinite(quant.score) ? `${fmt(quant.score, 0)} ${quant.confidence.label}` : "--"],
+  ].map(([k, v]) => `<div class="kv"><span>${escapeHtml(k)}</span><span>${escapeHtml(v)}</span></div>`).join("");
+  refs.routineLiveActions.innerHTML = [
+    routineAction("Mesa", "DOM, Book, T&T e fluxo juntos", "desk"),
+    routineAction("DOM", "Escada de preco e niveis", "dom"),
+    routineAction("Fluxo", "Delta, imbalance e VWAP", "flow"),
+    routineAction("Radar", "Oportunidades por contexto", "radar"),
+    routineAction("Book", "Profundidade RTD", "book"),
+    routineAction("T&T", "Negocios do RTD", "times"),
+  ].join("");
+  refs.routineLiveSignals.innerHTML = renderRoutineSignals(flow.signals || []);
+  refs.routineLiveTape.innerHTML = renderRoutineTape();
+}
+
+function renderRoutineReview(snapshot = state.rtd.lastSnapshot) {
+  if (!refs.reviewKv) return;
+  const asset = selectedAsset();
+  const config = selectedAssetConfig();
+  const msg = snapshot || state.rtd.snapshotsByAsset[asset] || null;
+  const flow = flowBucket(asset);
+  const metrics = flow.metrics || {};
+  const terminal = terminalHealth(msg, metrics);
+  const feed = feedFreshness(msg);
+  const backendWs = state.health.last?.webSocket || {};
+  const processInfo = state.health.last?.process || {};
+  const signals = (flow.signals || []).length;
+  const ideas = (state.orderPlans || []).filter(plan => normalizeAsset(plan.asset) === asset).length;
+  const alerts = (state.alerts || []).filter(alert => normalizeAsset(alert.asset) === asset).length;
+
+  refs.reviewTerminal.textContent = terminal.label;
+  refs.reviewRender.textContent = `${fmtMs(state.render.lastDurationMs)} / ${fmtMs(effectiveLiveIntervalMs())}`;
+  refs.reviewMessages.textContent = `${fmt(wsMessageRate(), 1)}/s`;
+  refs.reviewSignalsCount.textContent = fmt(signals, 0);
+  refs.reviewReadiness.innerHTML = [
+    readinessRow("Feed", `${feed.label} ${feed.detail}`, feed.tone === "green", feed.tone === "amber"),
+    readinessRow("WebSocket", socketStateText(), state.rtd.socket?.readyState === WebSocket.OPEN, !!state.rtd.socket),
+    readinessRow("CSV", historyHasCsv(config?.history) || state.bars.length >= 21 ? "historico disponivel" : "sem historico", historyHasCsv(config?.history) || state.bars.length >= 21),
+    readinessRow("Fluxo", flow.metrics ? "metricas em memoria" : "sem flow", !!flow.metrics, sourceIsOk(config?.bookRtd) || sourceIsOk(config?.timesRtd)),
+    readinessRow("Render", state.render.guardMode === "guard" ? state.render.guardReason || "guard ativo" : "normal", state.render.guardMode !== "guard", state.render.guardMode === "guard"),
+  ].join("");
+  refs.reviewKv.innerHTML = [
+    ["Ativo", asset],
+    ["Ultimo feed", msg?.localTimestamp || "--"],
+    ["Render dedupe", `ok ${fmt(state.render.snapshotRenderAccepted, 0)} / skip ${fmt(state.render.snapshotRenderSkipped, 0)}`],
+    ["Background", state.render.backgroundPaused ? "pausado" : `ativo | skip ${fmt(state.render.backgroundSkipped, 0)}`],
+    ["WS backend", `${fmt(liveNumber(backendWs.clients), 0)} clientes | ${fmt(liveNumber(backendWs.broadcasts), 0)} envios`],
+    ["Processo", `PID ${fmt(liveNumber(processInfo.processId), 0)} | ${fmt(liveNumber(processInfo.workingSetMb), 1)} MB`],
+    ["Ideias / alertas", `${fmt(ideas, 0)} / ${fmt(alerts, 0)}`],
+    ["Sinais", fmt(signals, 0)],
+  ].map(([k, v]) => `<div class="kv"><span>${escapeHtml(k)}</span><span>${escapeHtml(v)}</span></div>`).join("");
+  refs.reviewActions.innerHTML = [
+    routineAction("Historico", "CSV e ticks da sessao", "history"),
+    routineAction("Sistema", "Render, WS e processo", "diagnostics"),
+    routineAction("Conexoes", "Profit, RTD e fontes", "connections"),
+    routineAction("Oportunidades", "Ideias observacionais", "orders"),
+  ].join("");
 }
 
 function contextCard(label, value, detail, tone = "") {
@@ -4210,6 +4550,9 @@ function applyUiSettings(settings, options = {}) {
   renderRisk();
   renderOrderSummary();
   renderDashboard();
+  renderRoutinePrepare();
+  renderRoutineLive();
+  renderRoutineReview();
 }
 
 function renderSettings() {
@@ -4550,6 +4893,14 @@ function workspaceGroupStatus(groupId) {
     return { label: feed.label.toUpperCase(), tone: feedToneClass(feed.tone) };
   }
 
+  if (groupId === "routine") {
+    if (!config) return { label: "PREPARAR", tone: "bad" };
+    const ready = [priceOk, hasCsv, bookOk || timesOk].filter(Boolean).length;
+    if (feed.tone === "green" && flow.metrics) return { label: "AO VIVO", tone: "ok" };
+    if (ready >= 2) return { label: "VALIDAR", tone: "warn" };
+    return { label: `${ready}/3`, tone: ready ? "warn" : "bad" };
+  }
+
   if (groupId === "setup") {
     if (!config) return { label: "CADASTRAR", tone: "bad" };
     const ready = [priceOk, bookOk, timesOk, hasCsv].filter(Boolean).length;
@@ -4621,6 +4972,23 @@ function hotbarScreenStatus(activeTab = state.ui.mainTab) {
     if (!config) return { label: "Cadastrar", detail: "sem ativo selecionado", tone: "bad" };
     const ready = [sourceIsOk(config.priceRtd), sourceIsOk(config.bookRtd), sourceIsOk(config.timesRtd), historyHasCsv(config.history)].filter(Boolean).length;
     return { label: ready === 4 ? "Completo" : `${ready}/4 fontes`, detail: config.enabled ? "ativo ligado" : "ativo desligado", tone: ready === 4 ? "ok" : ready >= 2 ? "warn" : "bad" };
+  }
+
+  if (activeTab === "prepare") {
+    const ctx = dashboardCommandContext();
+    const ready = [ctx.priceOk, ctx.csvOk, ctx.bookOk || ctx.timesOk, ctx.hasFlow].filter(Boolean).length;
+    return { label: ready >= 4 ? "Pronto" : `${ready}/4 pronto`, detail: dashboardNextStep(ctx).label, tone: ready >= 4 ? "ok" : ready >= 2 ? "warn" : "bad" };
+  }
+
+  if (activeTab === "live") {
+    if (!config) return { label: "Sem ativo", detail: "abrir Ativos", tone: "bad" };
+    const delta = liveNumber(flow.metrics?.delta5s);
+    return { label: feed.label, detail: Number.isFinite(delta) ? `Delta ${signedFmt(delta, 0)}` : "aguardando fluxo", tone: feedToneClass(feed.tone) };
+  }
+
+  if (activeTab === "review") {
+    const terminal = terminalHealth(snapshot, flow.metrics || {});
+    return { label: terminal.label, detail: `${fmt(wsMessageRate(), 1)}/s | ${fmtMs(state.render.lastDurationMs)}`, tone: terminal.tone };
   }
 
   if (["dashboard", "radar", "monitor", "desk", "quotes", "panorama", "dom"].includes(activeTab)) {
@@ -4853,6 +5221,9 @@ function showMainTab(tabName) {
 
   if (safe === "panorama") activateSubTab("levels");
   else if (safe === "dashboard") activateSubTab("dashboard");
+  else if (safe === "prepare") activateSubTab("prepare");
+  else if (safe === "live") activateSubTab("live");
+  else if (safe === "review") activateSubTab("review");
   else if (safe === "radar") activateSubTab("radar");
   else if (safe === "monitor") activateSubTab("monitor");
   else if (safe === "desk") activateSubTab("desk");
@@ -4871,6 +5242,9 @@ function showMainTab(tabName) {
   else if (safe === "diagnostics") activateSubTab("flowdebug");
 
   if (safe === "dashboard") renderDashboard();
+  if (safe === "prepare") renderRoutinePrepare();
+  if (safe === "live") renderRoutineLive();
+  if (safe === "review") renderRoutineReview();
   if (safe === "radar") renderRadar();
   if (safe === "monitor") renderMonitor();
   if (safe === "desk") renderDesk();
@@ -4913,6 +5287,9 @@ function renderSelectedAsset() {
   renderTopAssetSelect();
   renderAssetList();
   renderDashboard();
+  renderRoutinePrepare();
+  renderRoutineLive(snapshot);
+  renderRoutineReview(snapshot);
   renderMonitor();
   renderQuotesPanel();
   renderConnections();
@@ -7028,6 +7405,9 @@ function activeTabNeedsRender(tab, reasons = []) {
   if (!reasons.length || reasons.includes("ui")) return true;
   const has = (...items) => items.some(item => reasons.includes(item));
   if (["dashboard", "radar", "monitor", "desk", "quotes", "connections", "diagnostics"].includes(tab)) return true;
+  if (tab === "prepare") return has("snapshot", "status", "asset", "csv", "flow", "times", "book");
+  if (tab === "live") return has("snapshot", "book", "times", "flow", "signal", "status");
+  if (tab === "review") return has("snapshot", "times", "flow", "signal", "status", "csv");
   if (tab === "dom") return has("snapshot", "book", "times", "signal", "status", "csv");
   if (tab === "book") return has("snapshot", "book", "status");
   if (tab === "times") return has("times", "status");
@@ -7049,6 +7429,9 @@ function renderActiveLivePanels(snapshot = state.rtd.lastSnapshot, options = {})
   }
 
   if (tab === "dashboard") renderDashboard();
+  else if (tab === "prepare") renderRoutinePrepare();
+  else if (tab === "live") renderRoutineLive(snapshot);
+  else if (tab === "review") renderRoutineReview(snapshot);
   else if (tab === "radar") renderRadar(snapshot);
   else if (tab === "monitor") renderMonitor();
   else if (tab === "desk") renderDesk(snapshot);
@@ -8410,6 +8793,14 @@ document.getElementById("panel-dashboard").addEventListener("click", ev => {
   showMainTab(action.dataset.dashboardOpen);
 });
 
+["panel-prepare", "panel-live", "panel-review"].forEach(panelId => {
+  document.getElementById(panelId).addEventListener("click", ev => {
+    const action = ev.target.closest("[data-routine-open]");
+    if (!action) return;
+    showMainTab(action.dataset.routineOpen);
+  });
+});
+
 document.getElementById("panel-radar").addEventListener("click", ev => {
   const action = ev.target.closest("[data-radar-observe]");
   if (action) {
@@ -8783,6 +9174,9 @@ renderConnections();
 renderTopAssetSelect();
 renderMarketStrip();
 renderDashboard();
+renderRoutinePrepare();
+renderRoutineLive();
+renderRoutineReview();
 renderRadar();
 renderMonitor();
 renderDesk();

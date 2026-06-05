@@ -20,6 +20,7 @@
 - Tela `Monitor` como mesa ao vivo com watchlist compacta, estado do ativo, setups, tape, oportunidades e alertas.
 - Tela `Mesa` como cockpit de analise com DOM compacto, book resumido, tape, fluxo, setups e niveis proximos.
 - Tela `Cotacoes` como watchlist de mercado entre o cadastro de ativos e as telas de analise.
+- Grupo `Rotina` com telas `Preparar`, `Ao vivo` e `Revisar`, reunindo checklist, leitura ao vivo e diagnostico de sessao com dados reais.
 - Tela `Oportunidades` para ideias observacionais com preco de interesse, stop, alvo, risco simulado e status por toque de preco.
 - Tela `Ajustes` com presets `Rapido`, `Equilibrado` e `Detalhado`, alem de parametros locais de tick, DOM, renderizacao, memoria de tape/sinais e valor por ponto.
 - Tela `Conexoes` para polling de `/health`, estado do coletor, Profit RTD, WebSocket e fontes por ativo.
