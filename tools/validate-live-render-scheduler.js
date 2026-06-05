@@ -25,6 +25,14 @@ const required = [
   ["scheduler uses effective interval", /\bconst\s+interval\s*=\s*effectiveLiveIntervalMs\(\)/],
   ["render guard diagnostics", /\bRender guard\b/],
   ["render guard top strip", /\bGuard\b/],
+  ["background render pause state", /\bbackgroundPaused\b/],
+  ["background render helper", /\bfunction\s+pauseBackgroundRender\b/],
+  ["background render resume", /\bfunction\s+resumeBackgroundRender\b/],
+  ["visibility helper", /\bfunction\s+documentIsHidden\b/],
+  ["scheduler skips hidden tab", /\bif\s*\(documentIsHidden\(\)\)\s*\{[\s\S]*?pauseBackgroundRender\(\);[\s\S]*?return;/],
+  ["visibility change listener", /\bdocument\.addEventListener\("visibilitychange"/],
+  ["visibility render reason", /\bscheduleLiveRender\([^)]*"visibility"/],
+  ["background diagnostics", /\bRender background\b/],
 ];
 
 const failures = required

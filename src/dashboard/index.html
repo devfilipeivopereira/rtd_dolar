@@ -2113,6 +2113,10 @@ const state = {
     guardChangedAt: null,
     slowSamples: 0,
     fastSamples: 0,
+    backgroundPaused: false,
+    backgroundSince: null,
+    backgroundResumedAt: null,
+    backgroundSkipped: 0,
   },
   assetEditor: {
     draftCsvText: null,
@@ -2766,6 +2770,7 @@ function terminalHealth(snapshot, flowMetrics = {}) {
   if (Number.isFinite(renderMs) && renderMs > 120) setIssue("bad", "ui");
   else if (Number.isFinite(renderMs) && renderMs > 60) setIssue("warn", "ui");
   if (state.render.guardMode === "guard") setIssue("warn", "guard");
+  if (state.render.backgroundPaused) setIssue("warn", "bg");
   if (Number.isFinite(queue) && queue > 256) setIssue("bad", "fila");
   else if (Number.isFinite(queue) && queue > 64) setIssue("warn", "fila");
   if (Number.isFinite(memory) && memory > 700) setIssue("bad", "mem");
@@ -7072,6 +7077,10 @@ function nowMs() {
   return globalThis.performance?.now ? globalThis.performance.now() : Date.now();
 }
 
+function documentIsHidden() {
+  return typeof document !== "undefined" && document.hidden === true;
+}
+
 function recordRenderDuration(durationMs) {
   const duration = Math.max(0, liveNumber(durationMs) || 0);
   state.render.lastDurationMs = duration;
@@ -7127,6 +7136,25 @@ function updateRenderGuard(duration) {
   }
 }
 
+function pauseBackgroundRender() {
+  if (!state.render.backgroundPaused) {
+    state.render.backgroundPaused = true;
+    state.render.backgroundSince = Date.now();
+  }
+  state.render.backgroundSkipped += 1;
+  if (state.render.liveTimer) {
+    window.clearTimeout(state.render.liveTimer);
+    state.render.liveTimer = null;
+  }
+}
+
+function resumeBackgroundRender() {
+  if (!state.render.backgroundPaused) return;
+  state.render.backgroundPaused = false;
+  state.render.backgroundResumedAt = Date.now();
+  scheduleLiveRender(state.render.pendingSnapshot || state.rtd.lastSnapshot, true, "visibility", selectedAsset());
+}
+
 function runLiveRenderBatch() {
   state.render.liveTimer = null;
   state.render.lastLiveRenderMs = nowMs();
@@ -7151,6 +7179,10 @@ function scheduleLiveRender(snapshot = null, immediate = false, reason = "ui", a
   state.render.pendingReasons[normalizedReason] = true;
   const normalizedAsset = normalizeAsset(asset || snapshot?.asset || selectedAsset());
   if (normalizedAsset) state.render.pendingAssets[normalizedAsset] = true;
+  if (documentIsHidden()) {
+    pauseBackgroundRender();
+    return;
+  }
   const interval = effectiveLiveIntervalMs();
   const elapsed = nowMs() - state.render.lastLiveRenderMs;
   const delay = immediate || elapsed >= interval
@@ -7365,6 +7397,7 @@ function renderFlowDebug() {
     ["Render medio", fmtMs(averageRenderDuration())],
     ["Render pico", fmtMs(state.render.maxDurationMs)],
     ["Render guard", state.render.guardMode === "guard" ? `${fmtMs(effectiveLiveIntervalMs())} | ${state.render.guardReason || "ativo"}` : "normal"],
+    ["Render background", state.render.backgroundPaused ? `pausado | ${fmtMs(Date.now() - state.render.backgroundSince)}` : `ativo | skip ${fmt(state.render.backgroundSkipped, 0)}`],
     ["Render motivos", (state.render.lastReasons || []).join(" / ") || "--"],
     ["Render ativos", (state.render.lastAssets || []).slice(0, 4).join(" / ") || "--"],
     ["Ultima mensagem", lastMessage],
@@ -8236,6 +8269,14 @@ refs.commandResults.addEventListener("click", ev => {
 });
 refs.commandPalette.addEventListener("click", ev => {
   if (ev.target === refs.commandPalette) closeCommandPalette();
+});
+
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) {
+    pauseBackgroundRender();
+    return;
+  }
+  resumeBackgroundRender();
 });
 
 document.addEventListener("keydown", ev => {

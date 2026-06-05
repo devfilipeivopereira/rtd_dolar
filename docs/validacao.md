@@ -141,6 +141,7 @@ Sem CSV, a aba DOM ainda pode mostrar ticks RTD, bid/ask e tape. Pontos como POC
 - `Book` e `T&T` devem atualizar sem travar a pagina mesmo com muitos campos RTD, respeitando coalescing do backend.
 - Campos intraday devem ser preenchidos a cada snapshot; o lote curto configuravel deve renderizar principalmente a aba ativa para manter a UI responsiva com RTD intenso.
 - `Render Guard` deve aumentar temporariamente o intervalo efetivo quando a UI fica lenta e voltar ao preset salvo quando estabilizar.
+- Quando a aba do navegador estiver em segundo plano, o scheduler deve pausar desenho, acumular pendencias e redesenhar imediatamente ao voltar para a aba.
 - `GET /bootstrap` deve consolidar health, assets, snapshot, flow e signals para acelerar abertura/reconexao, com fallback no frontend para `/flow`, `/signals` e `/assets`.
 - `/health.webSocket` deve expor clientes conectados, broadcasts, mensagens alvo, falhas e ultimo broadcast; `Conexoes` e `Sistema` devem mostrar esses contadores.
 - `/health.process` deve expor PID, uptime, memoria, GC e threads; `Conexoes` e `Sistema` devem mostrar uptime, memoria e threads.
@@ -151,7 +152,7 @@ Sem CSV, a aba DOM ainda pode mostrar ticks RTD, bid/ask e tape. Pontos como POC
 - Sem uma das fontes principais, ou com feed atrasado/parado, a `Base Quant` deve explicitar a falta/idade e o score nao deve parecer uma confirmacao forte.
 - Sem amostra minima, com EV negativo, R/R fraco ou edge em teste, o `Score Quant` e o `Radar` devem ser capados ou rebaixados.
 - O roteiro do `Painel` deve indicar o proximo passo real e abrir a tela correta: `Ativos`, `Conexoes`, `Fluxo`, `Radar` ou `Mesa`.
-- O scheduler de render deve agrupar motivos por lote, evitar repintar a tela ativa quando o evento nao e relevante para ela e expor `Render guard` no `Sistema`.
+- O scheduler de render deve agrupar motivos por lote, evitar repintar a tela ativa quando o evento nao e relevante para ela e expor `Render guard`/`Render background` no `Sistema`.
 - O feed deve diferenciar RTD conectado de snapshot fresco; `Cotacoes` deve mostrar Feed por ativo e `Conexoes` deve mostrar `Idade backend`, `Feed selecionado` e Feed por ativo.
 - `Score Quant` e `Radar` devem usar a freshness como controle de confianca: `Ao vivo` preserva score, `Atrasado` reduz score e `Parado` reduz fortemente.
 
@@ -225,7 +226,7 @@ Resultado esperado:
 Live render scheduler OK
 ```
 
-Esse check falha se o dashboard perder a fila de motivos, o filtro por aba ativa, o `Render Guard` ou o diagnostico `Render motivos` / `Render ativos`.
+Esse check falha se o dashboard perder a fila de motivos, o filtro por aba ativa, o `Render Guard`, a pausa em aba oculta ou o diagnostico `Render motivos` / `Render ativos`.
 
 ## Feed QA
 

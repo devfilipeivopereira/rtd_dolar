@@ -80,6 +80,8 @@ O render ao vivo do navegador usa fila coalescida por motivo (`snapshot`, `book`
 
 O `Render Guard` aumenta temporariamente o intervalo efetivo de render quando os ultimos batches ficam pesados, sem alterar o preset salvo pelo usuario. Quando a UI estabiliza, o intervalo volta ao valor configurado. A faixa superior mostra `Guard` em `Render UI` e `Sistema` mostra `Render guard` com o intervalo efetivo.
 
+Quando a aba do navegador fica em segundo plano, o terminal pausa apenas o desenho da UI e continua acumulando os dados recebidos. Ao voltar para a aba, ele faz um render imediato de catch-up com o motivo `visibility`. Em `Sistema`, `Render background` mostra se a UI esta ativa ou pausada em segundo plano.
+
 Na abertura e na reconexao do WebSocket, o frontend tenta `GET /bootstrap` para carregar health, assets, snapshot, flow e signals em uma unica resposta local. Se esse endpoint falhar, a UI volta para `/flow`, `/signals` e `/assets`, mantendo compatibilidade.
 
 O terminal tambem diferencia RTD conectado de dado realmente atualizado. A faixa superior mostra `Feed` como `Ao vivo`, `Atrasado`, `Parado`, `Sem preco` ou `Manual`, com idade do ultimo snapshot do ativo selecionado. O `/health` expoe `lastUpdateAgeMs`, `webSocket` com clientes/broadcasts/falhas e `process` com uptime, PID, memoria e threads; cada item de `/assets` traz `feedStatus` e `lastUpdateAgeMs`, e `Cotacoes`/`Conexoes` mostram freshness por ativo.
@@ -237,6 +239,6 @@ logs/                   logs em runtime
 30. Hotbar QA: rodar `node tools/validate-hotbar-workflow.js` e confirmar `Hotbar workflow OK`.
 31. Score Quant: confirmar no `Painel` que `Score Quant`, `Edge Quant`, `Gate Quant`, `EV Proxy`, `R/R Proxy`, `Amostra Quant`, `Indicadores Quant`, `Base Quant` e `Evidencias Quant` aparecem; sem CSV, RTD, fluxo, edge valido ou com feed atrasado/parado, o score deve ficar capado, penalizado ou aguardando dados.
 32. Roteiro: confirmar que `Proximo passo` muda entre Ativos, Conexoes, Fluxo, Radar e Mesa conforme faltam dados ou conforme o score fica utilizavel.
-33. Sistema: confirmar `Render motivos`, `Render ativos`, `Render guard`, `WS clientes backend`, `WS broadcasts backend`, `Memoria local` e `Threads local` mudando conforme chegam snapshot, book, times, flow e signal.
+33. Sistema: confirmar `Render motivos`, `Render ativos`, `Render guard`, `Render background`, `WS clientes backend`, `WS broadcasts backend`, `Memoria local` e `Threads local` mudando conforme chegam snapshot, book, times, flow e signal.
 34. Feed parado: pausar/fechar o Profit ou interromper updates e confirmar que `Feed` muda de `Ao vivo` para `Atrasado`/`Parado` na faixa superior, em `Cotacoes` e em `Conexoes`, e que `Score Quant`/`Radar` rebaixam a confianca.
 35. SQLite: confirmar criacao de `data/marketdata.sqlite` quando o provider for restaurado pelo NuGet.
