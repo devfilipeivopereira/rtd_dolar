@@ -72,7 +72,7 @@ button{cursor:pointer}
 .main-tab.active{border-color:#1f8a70;background:#092217;color:#b9ffe9}
 .top-meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
 .market-strip{
-  min-height:48px;display:grid;grid-template-columns:minmax(210px,.9fr) repeat(9,minmax(112px,1fr));
+  min-height:48px;display:grid;grid-template-columns:minmax(210px,.9fr) repeat(11,minmax(112px,1fr));
   gap:0;border-bottom:1px solid var(--line);background:#080908;position:sticky;top:64px;z-index:19;
 }
 .terminal-metric{
@@ -686,6 +686,7 @@ tr:hover td{background:#ffffff05}
     <div class="terminal-metric"><span>Times</span><strong id="top-times-status">--</strong></div>
     <div class="terminal-metric" id="top-delta-tile"><span>Delta 5s</span><strong id="top-delta">--</strong></div>
     <div class="terminal-metric" id="top-feed-tile"><span>Feed</span><strong id="top-feed">--</strong></div>
+    <div class="terminal-metric" id="top-session-tile"><span>Sessao</span><strong id="top-session">--</strong></div>
     <div class="terminal-metric" id="top-latency-tile"><span>Latencia WS</span><strong id="top-latency">--</strong></div>
     <div class="terminal-metric"><span>Msg/s</span><strong id="top-rate">--</strong></div>
     <div class="terminal-metric" id="top-render-tile"><span>Render UI</span><strong id="top-render">--</strong></div>
@@ -1662,6 +1663,14 @@ tr:hover td{background:#ffffff05}
                     <label for="settings-point-value">Valor por ponto padrao</label>
                     <input type="number" id="settings-point-value" step="0.01" placeholder="opcional">
                   </div>
+                  <div class="field">
+                    <label for="settings-session-start">Inicio da sessao</label>
+                    <input type="text" id="settings-session-start" placeholder="09:00" inputmode="numeric">
+                  </div>
+                  <div class="field">
+                    <label for="settings-session-end">Fim da sessao</label>
+                    <input type="text" id="settings-session-end" placeholder="18:30" inputmode="numeric">
+                  </div>
                 </div>
                 <div class="asset-actions-bar">
                   <button class="btn-secondary ok" id="settings-save" type="button">Salvar</button>
@@ -2051,6 +2060,8 @@ const DEFAULT_UI_SETTINGS = {
   liveIntervalMs: PERFORMANCE_PRESETS.balanced.liveIntervalMs,
   maxTrades: PERFORMANCE_PRESETS.balanced.maxTrades,
   maxSignals: PERFORMANCE_PRESETS.balanced.maxSignals,
+  sessionStart: "09:00",
+  sessionEnd: "18:30",
   defaultPointValue: null,
 };
 
@@ -2058,6 +2069,16 @@ function finiteSetting(value, fallback, min, max) {
   const n = Number(value);
   if (!Number.isFinite(n)) return fallback;
   return Math.min(max, Math.max(min, n));
+}
+
+function sanitizeTimeSetting(value, fallback) {
+  const text = String(value || "").trim();
+  const match = text.match(/^(\d{1,2}):(\d{2})$/);
+  if (!match) return fallback;
+  const h = Number(match[1]);
+  const m = Number(match[2]);
+  if (!Number.isInteger(h) || !Number.isInteger(m) || h < 0 || h > 23 || m < 0 || m > 59) return fallback;
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 }
 
 function detectPerformancePreset(settings) {
@@ -2080,6 +2101,8 @@ function sanitizeUiSettings(raw) {
     liveIntervalMs: Math.round(finiteSetting(source.liveIntervalMs, DEFAULT_UI_SETTINGS.liveIntervalMs, 33, 1000)),
     maxTrades: Math.round(finiteSetting(source.maxTrades, DEFAULT_UI_SETTINGS.maxTrades, 20, 500)),
     maxSignals: Math.round(finiteSetting(source.maxSignals, DEFAULT_UI_SETTINGS.maxSignals, 10, 300)),
+    sessionStart: sanitizeTimeSetting(source.sessionStart, DEFAULT_UI_SETTINGS.sessionStart),
+    sessionEnd: sanitizeTimeSetting(source.sessionEnd, DEFAULT_UI_SETTINGS.sessionEnd),
     defaultPointValue: Number.isFinite(pointValue) && pointValue > 0 ? pointValue : null,
   };
   const detectedPreset = detectPerformancePreset(settings);
@@ -2322,6 +2345,8 @@ const refs = {
   topDelta: document.getElementById("top-delta"),
   topFeedTile: document.getElementById("top-feed-tile"),
   topFeed: document.getElementById("top-feed"),
+  topSessionTile: document.getElementById("top-session-tile"),
+  topSession: document.getElementById("top-session"),
   topLatencyTile: document.getElementById("top-latency-tile"),
   topLatency: document.getElementById("top-latency"),
   topRate: document.getElementById("top-rate"),
@@ -2515,6 +2540,8 @@ const refs = {
   settingsMaxTrades: document.getElementById("settings-max-trades"),
   settingsMaxSignals: document.getElementById("settings-max-signals"),
   settingsPointValue: document.getElementById("settings-point-value"),
+  settingsSessionStart: document.getElementById("settings-session-start"),
+  settingsSessionEnd: document.getElementById("settings-session-end"),
   settingsSave: document.getElementById("settings-save"),
   settingsReset: document.getElementById("settings-reset"),
   settingsSummary: document.getElementById("settings-summary"),
@@ -2870,6 +2897,33 @@ function setMetricTone(el, tone = "") {
   if (tone) el.classList.add(tone);
 }
 
+function timeToMinutes(value) {
+  const safe = sanitizeTimeSetting(value, "00:00");
+  const [h, m] = safe.split(":").map(Number);
+  return h * 60 + m;
+}
+
+function localClockLabel(now = new Date()) {
+  return now.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+}
+
+function sessionStatus(now = new Date()) {
+  const settings = state.ui.settings || DEFAULT_UI_SETTINGS;
+  const start = timeToMinutes(settings.sessionStart);
+  const end = timeToMinutes(settings.sessionEnd);
+  const minutes = now.getHours() * 60 + now.getMinutes();
+  const day = now.getDay();
+  const clock = localClockLabel(now);
+  const detail = `${settings.sessionStart}-${settings.sessionEnd}`;
+  if (day === 0 || day === 6) return { label: "Fim semana", detail, clock, tone: "amber" };
+  if (end <= start) return { label: "Ajustar", detail, clock, tone: "amber" };
+  if (minutes < start) return { label: "Antes", detail, clock, tone: "amber" };
+  if (minutes <= start + 30) return { label: "Abertura", detail, clock, tone: "amber" };
+  if (minutes < end - 30) return { label: "Aberta", detail, clock, tone: "green" };
+  if (minutes <= end) return { label: "Fechamento", detail, clock, tone: "amber" };
+  return { label: "Encerrada", detail, clock, tone: "red" };
+}
+
 function terminalHealth(snapshot, flowMetrics = {}) {
   const feed = feedFreshness(snapshot);
   const health = state.health.last || {};
@@ -2934,6 +2988,10 @@ function renderMarketStrip() {
   setMetricTone(refs.topDeltaTile, delta5s > 0 ? "green" : delta5s < 0 ? "red" : "");
   refs.topFeed.textContent = `${feed.label}${Number.isFinite(feed.ageMs) ? ` ${feed.detail}` : ""}`;
   setMetricTone(refs.topFeedTile, feed.tone);
+  const session = sessionStatus();
+  refs.topSession.textContent = `${session.label} ${session.clock}`;
+  refs.topSession.title = session.detail;
+  setMetricTone(refs.topSessionTile, session.tone);
   refs.topLatency.textContent = fmtMs(state.telemetry.lastLagMs);
   setMetricTone(refs.topLatencyTile, state.telemetry.lastLagMs > 1200 ? "red" : state.telemetry.lastLagMs > 500 ? "amber" : "");
   refs.topRate.textContent = `${fmt(wsMessageRate(), 1)}/s`;
@@ -3442,6 +3500,7 @@ function renderRoutineReview(snapshot = state.rtd.lastSnapshot) {
   const metrics = flow.metrics || {};
   const terminal = terminalHealth(msg, metrics);
   const feed = feedFreshness(msg);
+  const session = sessionStatus();
   const backendWs = state.health.last?.webSocket || {};
   const processInfo = state.health.last?.process || {};
   const signals = (flow.signals || []).length;
@@ -3461,6 +3520,7 @@ function renderRoutineReview(snapshot = state.rtd.lastSnapshot) {
   ].join("");
   refs.reviewKv.innerHTML = [
     ["Ativo", asset],
+    ["Sessao local", `${session.label} ${session.clock} | ${session.detail}`],
     ["Ultimo feed", msg?.localTimestamp || "--"],
     ["Render dedupe", `ok ${fmt(state.render.snapshotRenderAccepted, 0)} / skip ${fmt(state.render.snapshotRenderSkipped, 0)}`],
     ["Cache derivados", `hit ${fmt(state.render.derivedCacheHits, 0)} / miss ${fmt(state.render.derivedCacheMisses, 0)}`],
@@ -4502,6 +4562,8 @@ function populateSettingsForm() {
   refs.settingsMaxTrades.value = settings.maxTrades;
   refs.settingsMaxSignals.value = settings.maxSignals;
   refs.settingsPointValue.value = Number.isFinite(settings.defaultPointValue) ? settings.defaultPointValue : "";
+  refs.settingsSessionStart.value = settings.sessionStart;
+  refs.settingsSessionEnd.value = settings.sessionEnd;
 }
 
 function collectSettingsForm() {
@@ -4511,6 +4573,8 @@ function collectSettingsForm() {
     liveIntervalMs: refs.settingsRenderMs?.value,
     maxTrades: refs.settingsMaxTrades?.value,
     maxSignals: refs.settingsMaxSignals?.value,
+    sessionStart: refs.settingsSessionStart?.value,
+    sessionEnd: refs.settingsSessionEnd?.value,
     defaultPointValue: refs.settingsPointValue?.value,
   });
   settings.renderPreset = detectPerformancePreset(settings);
@@ -4572,6 +4636,7 @@ function applyUiSettings(settings, options = {}) {
   renderRoutinePrepare();
   renderRoutineLive();
   renderRoutineReview();
+  renderMarketStrip();
 }
 
 function renderSettings() {
@@ -4579,6 +4644,7 @@ function renderSettings() {
   const settings = state.ui.settings;
   const preset = PERFORMANCE_PRESETS[settings.renderPreset];
   const presetLabel = preset ? preset.label : "Personalizado";
+  const session = sessionStatus();
   refs.settingsSummary.innerHTML = [
     ["Preset", presetLabel],
     ["Tick", fmt(settings.tickSize)],
@@ -4588,6 +4654,7 @@ function renderSettings() {
     ["Guard", state.render.guardMode === "guard" ? state.render.guardReason || "ativo" : "normal"],
     ["Trades", fmt(settings.maxTrades, 0)],
     ["Sinais", fmt(settings.maxSignals, 0)],
+    ["Sessao", `${session.label} ${session.clock}`],
     ["Valor ponto", Number.isFinite(settings.defaultPointValue) ? `R$ ${fmt(settings.defaultPointValue, 2)}` : "--"],
   ].map(([k, v]) => `<div class="live-kv"><span>${escapeHtml(k)}</span><strong>${escapeHtml(v)}</strong></div>`).join("");
 
@@ -4597,6 +4664,7 @@ function renderSettings() {
       : "Preset personalizado: os campos numericos foram ajustados manualmente.",
     `DOM monta ${settings.domVisibleTicks} niveis em torno do ultimo preco do ativo selecionado.`,
     `Render live consolida atualizacoes a cada ${settings.liveIntervalMs} ms; o guard aumenta o intervalo efetivo quando a UI fica lenta.`,
+    `Sessao local usa ${settings.sessionStart}-${settings.sessionEnd}; ajuste conforme sua rotina operacional.`,
     "Atalhos: Alt+1 Monitor, Alt+2 DOM, Alt+3 Book, Alt+4 T&T, Alt+5 Fluxo.",
     "Atalhos: Alt+6 Oportunidades, Alt+7 Ativos, Alt+8 Conexoes, Alt+9 Sistema.",
     Number.isFinite(settings.defaultPointValue)
@@ -7886,6 +7954,7 @@ function renderFlowDebug() {
   const depth = liveBookDepthForAsset();
   const times = state.rtd.timesTradesByAsset[selectedAsset()];
   const counts = state.telemetry.counts || {};
+  const session = sessionStatus();
   const socketState = state.rtd.socket
     ? ["conectando", "aberto", "fechando", "fechado"][state.rtd.socket.readyState] || String(state.rtd.socket.readyState)
     : "sem socket";
@@ -7894,6 +7963,7 @@ function renderFlowDebug() {
     : "--";
   const rows = [
     ["Socket", socketState],
+    ["Sessao local", `${session.label} ${session.clock} | ${session.detail}`],
     ["Latencia WS", fmtMs(state.telemetry.lastLagMs)],
     ["Mensagens/s", `${fmt(wsMessageRate(), 1)}/s`],
     ["Render UI", fmtMs(state.render.lastDurationMs)],
@@ -8996,10 +9066,14 @@ refs.settingsSave.addEventListener("click", () => {
 refs.settingsReset.addEventListener("click", () => {
   applyUiSettings(DEFAULT_UI_SETTINGS);
 });
-[refs.settingsTickSize, refs.settingsDomTicks, refs.settingsRenderMs, refs.settingsMaxTrades, refs.settingsMaxSignals, refs.settingsPointValue].forEach(input => {
+[refs.settingsTickSize, refs.settingsDomTicks, refs.settingsRenderMs, refs.settingsMaxTrades, refs.settingsMaxSignals, refs.settingsPointValue, refs.settingsSessionStart, refs.settingsSessionEnd].forEach(input => {
   input.addEventListener("input", () => {
     const preview = collectSettingsForm();
     const preset = PERFORMANCE_PRESETS[preview.renderPreset];
+    const currentSettings = state.ui.settings;
+    state.ui.settings = preview;
+    const session = sessionStatus();
+    state.ui.settings = currentSettings;
     updateSettingsPresetButtons(preview.renderPreset);
     refs.settingsSummary.innerHTML = [
       ["Preset", preset ? preset.label : "Personalizado"],
@@ -9008,6 +9082,7 @@ refs.settingsReset.addEventListener("click", () => {
       ["Render", `${fmt(preview.liveIntervalMs, 0)} ms`],
       ["Trades", fmt(preview.maxTrades, 0)],
       ["Sinais", fmt(preview.maxSignals, 0)],
+      ["Sessao", `${session.label} ${session.clock}`],
       ["Valor ponto", Number.isFinite(preview.defaultPointValue) ? `R$ ${fmt(preview.defaultPointValue, 2)}` : "--"],
     ].map(([k, v]) => `<div class="live-kv"><span>${escapeHtml(k)}</span><strong>${escapeHtml(v)}</strong></div>`).join("");
   });

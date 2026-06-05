@@ -28,6 +28,7 @@
 - Selos operacionais no menu superior, calculados por grupo a partir de feed, cadastro, fluxo, ideias/alertas e health.
 - Paleta `Ctrl+K` para buscar grupos, telas e ativos cadastrados, com `Proximo passo`, status operacional, atalhos e feed/fontes por ativo.
 - Faixa superior de contexto com ativo selecionado, ultimo preco, bid/ask, Book, Times, delta e CSV.
+- Relogio de sessao local configuravel em `Ajustes`, exibido na faixa superior como `Sessao`.
 - `Score Quant` no `Painel`, com `Edge Quant`, `Gate Quant`, `EV Proxy`, `R/R Proxy`, `Amostra Quant`, `Indicadores Quant`, `Base Quant` e `Evidencias Quant` combinando CSV estatistico, RTD de preco, fluxo derivado/T&T, confluencia, backtest proxy e gate de edge.
 - Telemetria no frontend com latencia WebSocket local, mensagens por segundo, render da UI, reconexoes, contadores por tipo de mensagem, contadores backend de WebSocket e saude do processo local.
 - Selo `Terminal OK`/`Terminal Atencao`/`Terminal Alerta` na faixa superior, consolidando feed, WebSocket, latencia, render, fila do fluxo e memoria.

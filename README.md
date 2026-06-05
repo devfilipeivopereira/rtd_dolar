@@ -48,7 +48,7 @@ O RTD tambem entra como controle de qualidade. Quando o snapshot do ativo fica `
 
 Esses sinais sao ferramentas de analise quantitativa e tape reading. Eles nao prometem resultado financeiro; a robustez vem de fonte de dados identificavel, penalizacao quando falta dado, evidencias visiveis e validacao manual/automatizada.
 
-O menu superior agora separa o terminal em grupos de analise: `Inicio`, `Rotina`, `Cadastro`, `Mercado`, `Fluxo`, `Analise` e `Sistema`. Cada grupo mostra um selo operacional curto calculado com dados reais, como `AO VIVO`, `ATRASADO`, `COMPLETO`, `FLOW`, `IDEIA`, `WS` ou `RTD`. A hotbar contextual abaixo mostra apenas as telas do grupo ativo, enquanto a faixa superior mantem ativo selecionado, ultimo preco, bid/ask, status de Book, status de Times, delta, latencia WebSocket local, mensagens por segundo, render da UI e CSV:
+O menu superior agora separa o terminal em grupos de analise: `Inicio`, `Rotina`, `Cadastro`, `Mercado`, `Fluxo`, `Analise` e `Sistema`. Cada grupo mostra um selo operacional curto calculado com dados reais, como `AO VIVO`, `ATRASADO`, `COMPLETO`, `FLOW`, `IDEIA`, `WS` ou `RTD`. A hotbar contextual abaixo mostra apenas as telas do grupo ativo, enquanto a faixa superior mantem ativo selecionado, ultimo preco, bid/ask, status de Book, status de Times, delta, feed, sessao local, latencia WebSocket local, mensagens por segundo, render da UI e CSV:
 
 - `Painel`: entrada de analise com leitura rapida de contexto, checklist, atalhos, setups, oportunidades e alertas;
 - `Rotina`: telas `Preparar`, `Ao vivo` e `Revisar` para organizar a sessao sem misturar cadastro, leitura de mercado e diagnostico;
@@ -78,6 +78,8 @@ A hotbar tambem mostra a trilha `Grupo / Tela`, o estado operacional da tela ati
 O `Painel` tambem mostra um roteiro de analise com `Proximo passo` e etapas `Ativo`, `RTD preco`, `CSV`, `Book/T&T`, `Fluxo` e `Score`. Cada etapa usa o estado real do ativo selecionado e abre a tela correta por clique, reduzindo a confusao entre cadastro, diagnostico e leitura de mercado.
 
 O grupo `Rotina` organiza o dia em tres telas objetivas: `Preparar` valida ativo, RTD, CSV, Book, T&T e fluxo antes da sessao; `Ao vivo` concentra preco, fluxo, nivel proximo, radar, setups e tape; `Revisar` mostra feed, WebSocket, render, dedupe, processo local, ideias, alertas e atalhos para Historico/Sistema. Ele usa os mesmos dados reais do terminal e nao adiciona modulo de envio ao Profit.
+
+O topo tambem mostra `Sessao`, calculada pelo relogio local e pelos horarios configurados em `Ajustes` (`Inicio da sessao` e `Fim da sessao`). A leitura pode aparecer como `Antes`, `Abertura`, `Aberta`, `Fechamento`, `Encerrada` ou `Fim semana`; o objetivo e orientar a rotina local, sem embutir calendario oficial.
 
 O render ao vivo do navegador usa fila coalescida por motivo (`snapshot`, `book`, `times`, `flow`, `signal`, `status`, `ui`) e por ativo. A cada pulso, a UI redesenha principalmente a tela ativa e ignora eventos que nao afetam aquela tela. Em `Sistema`, `Render motivos` e `Render ativos` mostram o ultimo lote desenhado.
 

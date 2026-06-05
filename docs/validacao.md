@@ -134,6 +134,7 @@ Sem CSV, a aba DOM ainda pode mostrar ticks RTD, bid/ask e tape. Pontos como POC
 - `Mesa` deve concentrar DOM compacto, book resumido, tape, fluxo, setups, niveis proximos e acoes de analise.
 - `Oportunidades` deve salvar ideias em localStorage, calcular R/R e mudar status com preco RTD sem envio ao Profit.
 - `Ajustes` deve persistir em `wdo-ui-settings` e aplicar presets de desempenho, tamanho do tick, niveis do DOM, intervalo de renderizacao, limite de trades/sinais e valor por ponto padrao.
+- `Ajustes` deve permitir configurar `Inicio da sessao` e `Fim da sessao`; o topo deve mostrar `Sessao` com estado local e horario atual.
 - `Conexoes` deve consultar `/health` periodicamente e separar status do feed local do debug de fluxo.
 - O menu superior deve mostrar selos operacionais por grupo, usando estado real de feed, cadastro, fluxo, ideias/alertas e sistema.
 - A hotbar deve espelhar a aba ativa, mostrar a trilha `Grupo / Tela`, estado operacional da tela ativa, badges `P`, `B`, `T`, `CSV`, `Flow`, `Edge`, botao `Proximo` e permitir troca rapida para Monitor, DOM, Book, T&T, Fluxo, Oportunidades, Ativos, Conexoes e Sistema.

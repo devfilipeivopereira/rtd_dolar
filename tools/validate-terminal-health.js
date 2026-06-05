@@ -23,11 +23,20 @@ const required = [
   ["terminal OK label", /\bTerminal OK\b/],
   ["terminal attention label", /\bTerminal Atencao\b/],
   ["terminal alert label", /\bTerminal Alerta\b/],
+  ["session top tile", /id="top-session"/],
+  ["session settings start", /id="settings-session-start"/],
+  ["session settings end", /id="settings-session-end"/],
+  ["session status helper", /\bfunction\s+sessionStatus\b/],
+  ["session settings persisted", /\bsessionStart\b[\s\S]*\bsessionEnd\b/],
+  ["session rendered in market strip", /\brefs\.topSession\.textContent\b[\s\S]*\bsetMetricTone\(refs\.topSessionTile,\s*session\.tone\)/],
+  ["session diagnostics", /\bSessao local\b/],
 ];
 
 const docRequired = [
   ["README terminal summary", /\bTerminal OK\b[\s\S]*\bTerminal Atencao\b[\s\S]*\bTerminal Alerta\b/],
+  ["README session summary", /\bSessao\b[\s\S]*\bInicio da sessao\b[\s\S]*\bFim da sessao\b/],
   ["architecture terminal summary", /\bTerminal OK\b[\s\S]*\bTerminal Atencao\b[\s\S]*\bTerminal Alerta\b/],
+  ["architecture session summary", /\bSessao\b[\s\S]*\bwdo-ui-settings\b/],
   ["validation terminal QA", /\bvalidate-terminal-health\.js\b/],
 ];
 

@@ -93,7 +93,9 @@ O menu superior separa:
 - `Conexoes`: estado do coletor, Profit RTD, WebSocket, `/health` e fontes por ativo;
 - `Sistema`: saude, telemetria WebSocket, render da UI e debug.
 
-A faixa superior fica disponivel em todas as telas e mostra ativo selecionado, ultimo preco, bid/ask, status de Book, status de Times, delta 5s, latencia WebSocket local, mensagens por segundo, render da UI e CSV carregado.
+A faixa superior fica disponivel em todas as telas e mostra ativo selecionado, ultimo preco, bid/ask, status de Book, status de Times, delta 5s, feed, sessao local, latencia WebSocket local, mensagens por segundo, render da UI e CSV carregado.
+
+A leitura de `Sessao` e calculada no navegador com o relogio local e os horarios persistidos em `wdo-ui-settings`. O usuario ajusta `Inicio da sessao` e `Fim da sessao` na tela `Ajustes`; a UI classifica o momento como antes da sessao, abertura, aberta, fechamento, encerrada ou fim de semana. Esse bloco orienta a rotina do terminal e nao substitui calendario oficial.
 
 Cada grupo do menu superior tem um selo operacional calculado no navegador a partir do estado real: freshness do feed, fontes do ativo, fluxo, ideias/alertas e health. Assim o usuario sabe se precisa ir para `Cadastro`, `Fluxo` ou `Sistema` antes de abrir a tela.
 
@@ -117,7 +119,7 @@ A tela `Ativos` configura fontes e CSV. A tela `Cotacoes` e a mesa de monitorame
 
 A tela `Oportunidades` persiste ideias observacionais no navegador por ativo. Ela calcula risco simulado e R/R, acompanha se preco de interesse, alvo ou stop foram tocados pelo RTD e permanece local.
 
-A tela `Ajustes` persiste preferencias no navegador em `wdo-ui-settings`. Ela oferece presets `Rapido`, `Equilibrado` e `Detalhado` para controlar DOM, cadencia de renderizacao e memoria de tape/sinais de uma vez. Tambem permite ajuste fino de tamanho do tick, quantidade de niveis do DOM, intervalo de renderizacao, limite de trades/sinais em memoria e valor por ponto padrao para `Oportunidades` e `Risco`.
+A tela `Ajustes` persiste preferencias no navegador em `wdo-ui-settings`. Ela oferece presets `Rapido`, `Equilibrado` e `Detalhado` para controlar DOM, cadencia de renderizacao e memoria de tape/sinais de uma vez. Tambem permite ajuste fino de tamanho do tick, quantidade de niveis do DOM, intervalo de renderizacao, limite de trades/sinais em memoria, sessao local e valor por ponto padrao para `Oportunidades` e `Risco`.
 
 A tela `Conexoes` consulta `/health` a cada 3 segundos. Ela mostra status do coletor, Profit RTD, arquitetura, ultimo update, estado do WebSocket e status `Preco`, `Book` e `Times` por ativo.
 
