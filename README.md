@@ -72,7 +72,7 @@ O menu superior agora separa o terminal em grupos de analise: `Inicio`, `Cadastr
 
 A hotbar lembra a ultima tela usada dentro de cada grupo e ainda abre telas frequentes por teclado: `Alt+1` Monitor, `Alt+2` DOM, `Alt+3` Book, `Alt+4` T&T, `Alt+5` Fluxo, `Alt+6` Oportunidades, `Alt+7` Ativos, `Alt+8` Conexoes e `Alt+9` Sistema.
 
-A hotbar tambem mostra a trilha `Grupo / Tela` e um resumo curto da tela ativa, para reduzir perda de contexto durante a troca rapida de modulos.
+A hotbar tambem mostra a trilha `Grupo / Tela`, o estado operacional da tela ativa e um botao `Proximo` calculado pela mesma logica do roteiro do `Painel`. O estado usa dados reais do modulo aberto: feed/preco, Book, T&T, fluxo, setups, ideias, alertas, health ou diagnostico do terminal.
 
 O `Painel` tambem mostra um roteiro de analise com `Proximo passo` e etapas `Ativo`, `RTD preco`, `CSV`, `Book/T&T`, `Fluxo` e `Score`. Cada etapa usa o estado real do ativo selecionado e abre a tela correta por clique, reduzindo a confusao entre cadastro, diagnostico e leitura de mercado.
 
@@ -232,8 +232,9 @@ logs/                   logs em runtime
 27. WebSocket QA: rodar `node tools/validate-websocket-health.js` e confirmar `WebSocket health OK`.
 28. Process QA: rodar `node tools/validate-process-health.js` e confirmar `Process health OK`.
 29. Terminal QA: rodar `node tools/validate-terminal-health.js` e confirmar `Terminal health OK`.
-30. Score Quant: confirmar no `Painel` que `Score Quant`, `Edge Quant`, `Gate Quant`, `EV Proxy`, `R/R Proxy`, `Amostra Quant`, `Indicadores Quant`, `Base Quant` e `Evidencias Quant` aparecem; sem CSV, RTD, fluxo, edge valido ou com feed atrasado/parado, o score deve ficar capado, penalizado ou aguardando dados.
-31. Roteiro: confirmar que `Proximo passo` muda entre Ativos, Conexoes, Fluxo, Radar e Mesa conforme faltam dados ou conforme o score fica utilizavel.
-32. Sistema: confirmar `Render motivos`, `Render ativos`, `WS clientes backend`, `WS broadcasts backend`, `Memoria local` e `Threads local` mudando conforme chegam snapshot, book, times, flow e signal.
-33. Feed parado: pausar/fechar o Profit ou interromper updates e confirmar que `Feed` muda de `Ao vivo` para `Atrasado`/`Parado` na faixa superior, em `Cotacoes` e em `Conexoes`, e que `Score Quant`/`Radar` rebaixam a confianca.
-34. SQLite: confirmar criacao de `data/marketdata.sqlite` quando o provider for restaurado pelo NuGet.
+30. Hotbar QA: rodar `node tools/validate-hotbar-workflow.js` e confirmar `Hotbar workflow OK`.
+31. Score Quant: confirmar no `Painel` que `Score Quant`, `Edge Quant`, `Gate Quant`, `EV Proxy`, `R/R Proxy`, `Amostra Quant`, `Indicadores Quant`, `Base Quant` e `Evidencias Quant` aparecem; sem CSV, RTD, fluxo, edge valido ou com feed atrasado/parado, o score deve ficar capado, penalizado ou aguardando dados.
+32. Roteiro: confirmar que `Proximo passo` muda entre Ativos, Conexoes, Fluxo, Radar e Mesa conforme faltam dados ou conforme o score fica utilizavel.
+33. Sistema: confirmar `Render motivos`, `Render ativos`, `WS clientes backend`, `WS broadcasts backend`, `Memoria local` e `Threads local` mudando conforme chegam snapshot, book, times, flow e signal.
+34. Feed parado: pausar/fechar o Profit ou interromper updates e confirmar que `Feed` muda de `Ao vivo` para `Atrasado`/`Parado` na faixa superior, em `Cotacoes` e em `Conexoes`, e que `Score Quant`/`Radar` rebaixam a confianca.
+35. SQLite: confirmar criacao de `data/marketdata.sqlite` quando o provider for restaurado pelo NuGet.

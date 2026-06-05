@@ -100,8 +100,20 @@ button{cursor:pointer}
 }
 .hotbar-context strong{font-size:10px;color:var(--txt);text-transform:uppercase;letter-spacing:.04em;overflow:hidden;text-overflow:ellipsis}
 .hotbar-context span{font-size:9px;color:var(--soft);overflow:hidden;text-overflow:ellipsis}
+.hotbar-state{
+  height:30px;display:flex;align-items:center;gap:8px;min-width:160px;max-width:280px;
+  padding:0 9px;border:1px solid #202833;background:#0B0C0A;color:var(--muted);white-space:nowrap;
+}
+.hotbar-state strong{font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--txt);overflow:hidden;text-overflow:ellipsis}
+.hotbar-state span{font-size:9px;color:var(--soft);overflow:hidden;text-overflow:ellipsis}
+.hotbar-state.ok{border-color:#1f7a66;background:#0d261f}
+.hotbar-state.warn{border-color:#7a5f1f;background:#28210d}
+.hotbar-state.bad{border-color:#7a2b2b;background:#2b1111}
+.hotbar-state.ok strong{color:#9df2d5}
+.hotbar-state.warn strong{color:#ffd66b}
+.hotbar-state.bad strong{color:#ff9b9b}
 .hotbar-spacer{flex:1;min-width:12px}
-.hotbar-command,.top-command{
+.hotbar-command,.hotbar-next,.top-command{
   height:30px;border:1px solid #285d80;background:#10202b;color:#9bd7ff;
   padding:0 10px;font-size:10px;font-weight:900;text-transform:uppercase;white-space:nowrap;
 }
@@ -2086,6 +2098,7 @@ const state = {
     pendingAssets: {},
     lastReasons: [],
     lastAssets: [],
+    lastHotbarStateMs: 0,
   },
   assetEditor: {
     draftCsvText: null,
@@ -2782,6 +2795,7 @@ function renderMarketStrip() {
   refs.topCsv.textContent = state.uploadedCount ? `${state.uploadedCount} pregoes` : "sem CSV";
   const terminal = terminalHealth(snapshot, flow);
   setPill(refs.terminalPill, terminal.tone, terminal.label);
+  renderHotbarOperationalStateThrottled();
   renderWorkspaceStatus();
 }
 
@@ -4561,6 +4575,111 @@ function hotkeyForTab(tabName) {
   return pair ? `Alt+${pair[0]}` : "";
 }
 
+function hotbarScreenStatus(activeTab = state.ui.mainTab) {
+  const asset = selectedAsset();
+  const config = selectedAssetConfig();
+  const snapshot = state.rtd.snapshotsByAsset[asset] || null;
+  const feed = feedFreshness(snapshot);
+  const flow = flowBucket(asset);
+  const depth = liveBookDepthForAsset(asset);
+  const times = state.rtd.timesTradesByAsset[asset];
+  const signals = (flow.signals || []).length;
+  const plans = (state.orderPlans || []).filter(plan => normalizeAsset(plan.asset) === asset);
+  const alerts = (state.alerts || []).filter(alert => normalizeAsset(alert.asset) === asset);
+
+  if (activeTab === "assets") {
+    if (!config) return { label: "Cadastrar", detail: "sem ativo selecionado", tone: "bad" };
+    const ready = [sourceIsOk(config.priceRtd), sourceIsOk(config.bookRtd), sourceIsOk(config.timesRtd), historyHasCsv(config.history)].filter(Boolean).length;
+    return { label: ready === 4 ? "Completo" : `${ready}/4 fontes`, detail: config.enabled ? "ativo ligado" : "ativo desligado", tone: ready === 4 ? "ok" : ready >= 2 ? "warn" : "bad" };
+  }
+
+  if (["dashboard", "radar", "monitor", "desk", "quotes", "panorama", "dom"].includes(activeTab)) {
+    if (!config) return { label: "Sem ativo", detail: "abrir Ativos", tone: "bad" };
+    const price = liveIntradayFromSnapshot(snapshot).price;
+    return { label: feed.label, detail: Number.isFinite(price) ? `${asset} ${fmt(price)}` : asset, tone: feedToneClass(feed.tone) };
+  }
+
+  if (activeTab === "book") {
+    if (depth) return { label: "Book ativo", detail: `${(depth.bids || []).length} x ${(depth.asks || []).length}`, tone: "ok" };
+    return { label: "Sem book", detail: sourceIsOk(config?.bookRtd) ? "aguardando niveis" : "fonte off", tone: sourceIsOk(config?.bookRtd) ? "warn" : "bad" };
+  }
+
+  if (activeTab === "times") {
+    const rows = (times?.trades || []).length;
+    if (rows) return { label: "T&T ativo", detail: `${rows} linhas`, tone: "ok" };
+    return { label: "Sem T&T", detail: sourceIsOk(config?.timesRtd) ? "aguardando tape" : "fonte off", tone: sourceIsOk(config?.timesRtd) ? "warn" : "bad" };
+  }
+
+  if (activeTab === "flow") {
+    const m = flow.metrics || {};
+    const delta = liveNumber(m.delta5s);
+    if (Number.isFinite(delta)) return { label: "Fluxo ativo", detail: `Delta ${signedFmt(delta, 0)}`, tone: delta > 0 ? "ok" : delta < 0 ? "bad" : "warn" };
+    return { label: "Sem fluxo", detail: "aguardando delta", tone: "warn" };
+  }
+
+  if (activeTab === "signals") {
+    return { label: signals ? `${signals} setup` : "Sem setup", detail: flow.lastMessage?.dataQuality || "aguardando", tone: signals ? "ok" : "warn" };
+  }
+
+  if (activeTab === "orders") {
+    const open = plans.filter(plan => !plan.closedAt).length;
+    return { label: open ? `${open} ativa` : "Sem ideia", detail: `${plans.length} salvas`, tone: open ? "ok" : "warn" };
+  }
+
+  if (activeTab === "alerts") {
+    const live = alerts.filter(alert => !alert.triggeredAt).length;
+    return { label: live ? `${live} alerta` : "Sem alerta", detail: `${alerts.length} no ativo`, tone: live ? "warn" : "ok" };
+  }
+
+  if (activeTab === "risk") {
+    return { label: "Risco local", detail: `ponto ${fmt(state.ui.settings.defaultPointValue, 2)}`, tone: "ok" };
+  }
+
+  if (activeTab === "history") {
+    return { label: state.bars.length ? `${state.bars.length} pregoes` : "Sem CSV", detail: `${state.rtd.ticks.length} ticks memoria`, tone: state.bars.length ? "ok" : "warn" };
+  }
+
+  if (activeTab === "settings") {
+    return { label: state.ui.settings.renderPreset, detail: `${state.ui.settings.liveIntervalMs} ms render`, tone: "ok" };
+  }
+
+  if (activeTab === "connections") {
+    const healthOk = String(state.health.last?.status || "").toLowerCase() === "ok";
+    return { label: healthOk ? "Health OK" : "Ver health", detail: state.health.last?.profitRtd || "--", tone: healthOk ? "ok" : "warn" };
+  }
+
+  if (activeTab === "diagnostics") {
+    const terminal = terminalHealth(snapshot, flow.metrics || {});
+    return { label: terminal.label, detail: "processo e WebSocket", tone: terminal.tone };
+  }
+
+  return { label: "Tela ativa", detail: (TAB_META[activeTab] || {}).detail || "--", tone: "warn" };
+}
+
+function renderHotbarOperationalState(activeTab = state.ui.mainTab) {
+  if (!refs.moduleHotbar) return;
+  const status = hotbarScreenStatus(activeTab);
+  const next = dashboardNextStep(dashboardCommandContext());
+  const stateEl = refs.moduleHotbar.querySelector("[data-hotbar-status]");
+  if (stateEl) {
+    stateEl.className = `hotbar-state ${status.tone || ""}`.trim();
+    stateEl.innerHTML = `<strong>${escapeHtml(status.label)}</strong><span>${escapeHtml(status.detail)}</span>`;
+  }
+  const nextEl = refs.moduleHotbar.querySelector("[data-hotbar-next]");
+  if (nextEl) {
+    nextEl.dataset.hotbarNext = next.tab;
+    nextEl.textContent = `Proximo: ${next.label}`;
+    nextEl.title = next.detail;
+  }
+}
+
+function renderHotbarOperationalStateThrottled(force = false) {
+  const now = Date.now();
+  if (!force && now - state.render.lastHotbarStateMs < 1000) return;
+  state.render.lastHotbarStateMs = now;
+  renderHotbarOperationalState();
+}
+
 function renderWorkspaceGroups(activeTab = state.ui.mainTab) {
   if (!refs.mainTabs) return;
   const activeGroup = workspaceGroupForTab(activeTab).id;
@@ -4593,10 +4712,14 @@ function renderModuleHotbar(activeTab = state.ui.mainTab) {
       <strong>${escapeHtml(group.label)} / ${escapeHtml((TAB_META[activeTab] || {}).label || activeTab)}</strong>
       <span>${escapeHtml((TAB_META[activeTab] || {}).detail || "Tela ativa")}</span>
     </span>
+    <span class="hotbar-state warn" data-hotbar-status><strong>--</strong><span>--</span></span>
     ${buttons}
     <span class="hotbar-spacer"></span>
+    <button class="hotbar-next" data-hotbar-next="" type="button">Proximo</button>
     <button class="hotbar-command" data-command-open="true" type="button">Buscar</button>
   `;
+  renderHotbarOperationalState(activeTab);
+  state.render.lastHotbarStateMs = Date.now();
 }
 
 function showWorkspaceGroup(groupId) {
@@ -7963,6 +8086,11 @@ refs.moduleHotbar.addEventListener("click", ev => {
   const command = ev.target.closest("[data-command-open]");
   if (command) {
     openCommandPalette();
+    return;
+  }
+  const next = ev.target.closest("[data-hotbar-next]");
+  if (next) {
+    showMainTab(next.dataset.hotbarNext);
     return;
   }
   const tab = ev.target.closest("[data-hot-tab]");
