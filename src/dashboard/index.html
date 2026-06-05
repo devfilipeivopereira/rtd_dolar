@@ -2218,6 +2218,9 @@ const state = {
     derivedCache: {},
     derivedCacheHits: 0,
     derivedCacheMisses: 0,
+    panelKeys: {},
+    panelRenderAccepted: 0,
+    panelRenderSkipped: 0,
   },
   assetEditor: {
     draftCsvText: null,
@@ -3461,6 +3464,7 @@ function renderRoutineReview(snapshot = state.rtd.lastSnapshot) {
     ["Ultimo feed", msg?.localTimestamp || "--"],
     ["Render dedupe", `ok ${fmt(state.render.snapshotRenderAccepted, 0)} / skip ${fmt(state.render.snapshotRenderSkipped, 0)}`],
     ["Cache derivados", `hit ${fmt(state.render.derivedCacheHits, 0)} / miss ${fmt(state.render.derivedCacheMisses, 0)}`],
+    ["Paint paineis", `ok ${fmt(state.render.panelRenderAccepted, 0)} / skip ${fmt(state.render.panelRenderSkipped, 0)}`],
     ["Background", state.render.backgroundPaused ? "pausado" : `ativo | skip ${fmt(state.render.backgroundSkipped, 0)}`],
     ["WS backend", `${fmt(liveNumber(backendWs.clients), 0)} clientes | ${fmt(liveNumber(backendWs.broadcasts), 0)} envios`],
     ["Processo", `PID ${fmt(liveNumber(processInfo.processId), 0)} | ${fmt(liveNumber(processInfo.workingSetMb), 1)} MB`],
@@ -4172,12 +4176,12 @@ function renderBookPanel() {
   refs.bookUpdate.textContent = depth?.localTimestamp ? depth.localTimestamp.slice(11, 19) : "--";
 
   if (!depth) {
-    refs.bookBidsBody.innerHTML = `<tr><td colspan="4">Aguardando book RTD.</td></tr>`;
-    refs.bookAsksBody.innerHTML = `<tr><td colspan="4">Aguardando book RTD.</td></tr>`;
+    renderPanelHtml("book-bids", refs.bookBidsBody, `<tr><td colspan="4">Aguardando book RTD.</td></tr>`);
+    renderPanelHtml("book-asks", refs.bookAsksBody, `<tr><td colspan="4">Aguardando book RTD.</td></tr>`);
     return;
   }
 
-  refs.bookBidsBody.innerHTML = (depth.bids || []).slice(0, 50).map(row => `
+  const bidHtml = (depth.bids || []).slice(0, 50).map(row => `
     <tr class="bid">
       <td>${escapeHtml(row.agent || "--")}</td>
       <td>${fmt(liveNumber(row.qty), 0)}</td>
@@ -4185,8 +4189,9 @@ function renderBookPanel() {
       <td>${escapeHtml(row.time || "--")}</td>
     </tr>
   `).join("") || `<tr><td colspan="4">Sem niveis de compra.</td></tr>`;
+  renderPanelHtml("book-bids", refs.bookBidsBody, bidHtml);
 
-  refs.bookAsksBody.innerHTML = (depth.asks || []).slice(0, 50).map(row => `
+  const askHtml = (depth.asks || []).slice(0, 50).map(row => `
     <tr class="ask">
       <td class="strong">${fmt(liveNumber(row.price))}</td>
       <td>${fmt(liveNumber(row.qty), 0)}</td>
@@ -4194,6 +4199,7 @@ function renderBookPanel() {
       <td>${escapeHtml(row.time || "--")}</td>
     </tr>
   `).join("") || `<tr><td colspan="4">Sem niveis de venda.</td></tr>`;
+  renderPanelHtml("book-asks", refs.bookAsksBody, askHtml);
 }
 
 function renderTimesPanel() {
@@ -4204,9 +4210,9 @@ function renderTimesPanel() {
   refs.timesTopicLabel.textContent = times?.topic || selectedAssetConfig()?.timesRtd?.topic || "--";
 
   if (!trades.length) {
-    refs.timesBody.innerHTML = `<tr><td colspan="6">Aguardando Times & Trades RTD.</td></tr>`;
+    renderPanelHtml("times-body", refs.timesBody, `<tr><td colspan="6">Aguardando Times & Trades RTD.</td></tr>`);
   } else {
-    refs.timesBody.innerHTML = trades.slice(0, 100).map(row => `
+    const html = trades.slice(0, 100).map(row => `
       <tr>
         <td>${escapeHtml(row.time || "--")}</td>
         <td>${escapeHtml(row.buyer || "--")}</td>
@@ -4216,6 +4222,7 @@ function renderTimesPanel() {
         <td>${escapeHtml(row.aggressor || "--")}</td>
       </tr>
     `).join("");
+    renderPanelHtml("times-body", refs.timesBody, html);
   }
 
   const buyAgg = trades.filter(row => String(row.aggressor || "").toLowerCase().includes("compra")).length;
@@ -6948,6 +6955,20 @@ function cachedDerivedValue(scope, msg, flow, compute) {
   return value;
 }
 
+function renderPanelHtml(panelId, element, html, key = "") {
+  if (!element) return false;
+  const scopedKey = `${selectedAsset()}|${key || html}`;
+  if (state.render.panelKeys[panelId] === scopedKey) {
+    state.render.panelRenderSkipped += 1;
+    return false;
+  }
+
+  state.render.panelKeys[panelId] = scopedKey;
+  state.render.panelRenderAccepted += 1;
+  element.innerHTML = html;
+  return true;
+}
+
 function collectDomLevelsRaw(msg) {
   const r = state.result;
   const intraday = r?.intraday || liveIntradayFromSnapshot(msg);
@@ -7120,7 +7141,7 @@ function registerDomTick(msg) {
 function renderDomTape() {
   if (!refs.domTape) return;
   if (state.flow.trades.length) {
-    refs.domTape.innerHTML = state.flow.trades.slice(0, 28).map(trade => {
+    const html = state.flow.trades.slice(0, 28).map(trade => {
       const side = trade.side || trade.aggressorSide || "unknown";
       const dir = side === "buy" ? "up" : side === "sell" ? "down" : "flat";
       return `
@@ -7132,15 +7153,16 @@ function renderDomTape() {
         </div>
       `;
     }).join("");
+    renderPanelHtml("dom-tape", refs.domTape, html);
     return;
   }
 
   if (!state.rtd.ticks.length) {
-    refs.domTape.innerHTML = `<div class="warn-line">Aguardando ticks do RTD.</div>`;
+    renderPanelHtml("dom-tape", refs.domTape, `<div class="warn-line">Aguardando ticks do RTD.</div>`);
     return;
   }
 
-  refs.domTape.innerHTML = state.rtd.ticks.slice(0, 28).map(tick => {
+  const html = state.rtd.ticks.slice(0, 28).map(tick => {
     const dir = tick.delta > 0 ? "up" : tick.delta < 0 ? "down" : "flat";
     const deltaText = tick.delta > 0 ? `+${fmt(tick.delta)}` : fmt(tick.delta);
     return `
@@ -7152,6 +7174,7 @@ function renderDomTape() {
       </div>
     `;
   }).join("");
+  renderPanelHtml("dom-tape", refs.domTape, html);
 }
 
 function renderDomKeyLevels(msg) {
@@ -7162,11 +7185,11 @@ function renderDomKeyLevels(msg) {
     .sort((a, b) => Math.abs(a.price - price) - Math.abs(b.price - price) || b.score - a.score);
 
   if (!levels.length) {
-    refs.domKeyLevels.innerHTML = `<div class="warn-line">Carregue o CSV para marcar POC, VAH, VAL, desvios e confluencias.</div>`;
+    renderPanelHtml("dom-key-levels", refs.domKeyLevels, `<div class="warn-line">Carregue o CSV para marcar POC, VAH, VAL, desvios e confluencias.</div>`);
     return;
   }
 
-  refs.domKeyLevels.innerHTML = levels.map(level => {
+  const html = levels.map(level => {
     const dist = level.price - price;
     const side = dist > 0 ? "above" : "below";
     const label = [level.label || level.type || "Nivel", level.source].filter(Boolean).join(" | ");
@@ -7178,6 +7201,7 @@ function renderDomKeyLevels(msg) {
       </div>
     `;
   }).join("");
+  renderPanelHtml("dom-key-levels", refs.domKeyLevels, html);
 }
 
 function renderDomLadder(msg) {
@@ -7190,7 +7214,7 @@ function renderDomLadder(msg) {
   const hadRows = !!refs.domLadder.querySelector(".dom-row");
 
   if (!Number.isFinite(center)) {
-    refs.domLadder.innerHTML = `<div class="warn-line">Aguardando preco atual para montar a escada.</div>`;
+    renderPanelHtml("dom-ladder", refs.domLadder, `<div class="warn-line">Aguardando preco atual para montar a escada.</div>`);
     return;
   }
 
@@ -7240,7 +7264,8 @@ function renderDomLadder(msg) {
     `);
   }
 
-  refs.domLadder.innerHTML = rows.join("");
+  const rendered = renderPanelHtml("dom-ladder", refs.domLadder, rows.join(""));
+  if (!rendered) return;
   if (hadRows) {
     refs.domLadder.scrollTop = previousScrollTop;
   } else {
@@ -7878,6 +7903,7 @@ function renderFlowDebug() {
     ["Render background", state.render.backgroundPaused ? `pausado | ${fmtMs(Date.now() - state.render.backgroundSince)}` : `ativo | skip ${fmt(state.render.backgroundSkipped, 0)}`],
     ["Render dedupe", `ok ${fmt(state.render.snapshotRenderAccepted, 0)} / skip ${fmt(state.render.snapshotRenderSkipped, 0)}`],
     ["Cache derivados", `hit ${fmt(state.render.derivedCacheHits, 0)} / miss ${fmt(state.render.derivedCacheMisses, 0)}`],
+    ["Paint paineis", `ok ${fmt(state.render.panelRenderAccepted, 0)} / skip ${fmt(state.render.panelRenderSkipped, 0)}`],
     ["Render motivos", (state.render.lastReasons || []).join(" / ") || "--"],
     ["Render ativos", (state.render.lastAssets || []).slice(0, 4).join(" / ") || "--"],
     ["Ultima mensagem", lastMessage],

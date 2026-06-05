@@ -146,6 +146,8 @@ Antes de entrar no scheduler, snapshots de preco usam uma chave material por ati
 
 Os derivados mais caros do navegador tambem sao cacheados por chave de mercado: ativo, snapshot material, janela/CSV, tick size, fluxo e sinais. `collectDomLevels`, `collectRadarOpportunities` e `quantReversalAssessment` mantem a mesma assinatura publica, mas reaproveitam valores enquanto a chave nao muda. Isso evita que `Painel`, `Rotina`, `Mesa`, `DOM` e `Radar` recalculem os mesmos niveis e scores no mesmo estado.
 
+Depois do calculo, paineis densos como DOM, Book e Times & Trades passam por uma segunda trava de paint. Se a string HTML gerada para o ativo selecionado e igual ao ultimo paint daquele painel, a UI nao chama `innerHTML` novamente. A escada preserva a rolagem atual e as tabelas evitam relayout desnecessario quando o RTD repete niveis.
+
 O `Render Guard` monitora o custo dos batches no navegador. Se os ultimos renders ficam pesados, ele aumenta temporariamente o intervalo efetivo de render e preserva o preset salvo pelo usuario. Quando varios batches voltam a ficar leves, o guard desliga. A faixa superior indica `Guard` em `Render UI`, enquanto `Sistema` mostra `Render guard` e o intervalo efetivo.
 
 Quando `document.hidden` indica que a aba esta em segundo plano, o scheduler continua acumulando snapshots, motivos e ativos pendentes, mas pausa o desenho da UI. Ao voltar para a aba, o terminal dispara um render imediato com motivo `visibility`. `Sistema` mostra `Render background` para diferenciar desenho ativo de pausa por aba oculta.

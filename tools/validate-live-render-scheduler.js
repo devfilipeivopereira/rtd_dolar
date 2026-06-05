@@ -47,6 +47,13 @@ const required = [
   ["radar cached wrapper", /\bfunction\s+collectRadarOpportunitiesRaw\b[\s\S]*\bfunction\s+collectRadarOpportunities\b[\s\S]*cachedDerivedValue\("radar"/],
   ["quant cached wrapper", /\bfunction\s+quantReversalAssessmentRaw\b[\s\S]*\bfunction\s+quantReversalAssessment\b[\s\S]*cachedDerivedValue\("quant"/],
   ["derived cache diagnostics", /\bCache derivados\b/],
+  ["panel paint helper", /\bfunction\s+renderPanelHtml\b/],
+  ["panel paint counters", /\bpanelRenderAccepted\b[\s\S]*\bpanelRenderSkipped\b/],
+  ["dom ladder paint skip", /\brenderPanelHtml\("dom-ladder"/],
+  ["dom tape paint skip", /\brenderPanelHtml\("dom-tape"/],
+  ["book paint skip", /\brenderPanelHtml\("book-bids"[\s\S]*renderPanelHtml\("book-asks"/],
+  ["times paint skip", /\brenderPanelHtml\("times-body"/],
+  ["panel paint diagnostics", /\bPaint paineis\b/],
 ];
 
 const failures = required
