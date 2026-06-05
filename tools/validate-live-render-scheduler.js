@@ -41,6 +41,12 @@ const required = [
   ["prepare render filter", /\btab\s*===\s*"prepare"[\s\S]*has\("snapshot",\s*"status",\s*"asset",\s*"csv",\s*"flow",\s*"times",\s*"book"\)/],
   ["live render filter", /\btab\s*===\s*"live"[\s\S]*has\("snapshot",\s*"book",\s*"times",\s*"flow",\s*"signal",\s*"status"\)/],
   ["review render filter", /\btab\s*===\s*"review"[\s\S]*has\("snapshot",\s*"times",\s*"flow",\s*"signal",\s*"status",\s*"csv"\)/],
+  ["derived cache helper", /\bfunction\s+cachedDerivedValue\b/],
+  ["derived cache key", /\bfunction\s+derivedCacheKey\b/],
+  ["dom levels cached wrapper", /\bfunction\s+collectDomLevelsRaw\b[\s\S]*\bfunction\s+collectDomLevels\b[\s\S]*cachedDerivedValue\("domLevels"/],
+  ["radar cached wrapper", /\bfunction\s+collectRadarOpportunitiesRaw\b[\s\S]*\bfunction\s+collectRadarOpportunities\b[\s\S]*cachedDerivedValue\("radar"/],
+  ["quant cached wrapper", /\bfunction\s+quantReversalAssessmentRaw\b[\s\S]*\bfunction\s+quantReversalAssessment\b[\s\S]*cachedDerivedValue\("quant"/],
+  ["derived cache diagnostics", /\bCache derivados\b/],
 ];
 
 const failures = required

@@ -144,6 +144,8 @@ O scheduler do navegador agora acumula motivos de render (`snapshot`, `book`, `t
 
 Antes de entrar no scheduler, snapshots de preco usam uma chave material por ativo. Alteracoes em preco atual, abertura, maxima, minima, VWAP, volume, quantidade, negocios, bid/ask, volumes do topo, volume projetado ou status passam imediatamente. Mensagens com a mesma chave sao descartadas para render pesado por ate 1 segundo, mantendo um heartbeat visual e reduzindo backlog quando o RTD repete timestamp ou estado.
 
+Os derivados mais caros do navegador tambem sao cacheados por chave de mercado: ativo, snapshot material, janela/CSV, tick size, fluxo e sinais. `collectDomLevels`, `collectRadarOpportunities` e `quantReversalAssessment` mantem a mesma assinatura publica, mas reaproveitam valores enquanto a chave nao muda. Isso evita que `Painel`, `Rotina`, `Mesa`, `DOM` e `Radar` recalculem os mesmos niveis e scores no mesmo estado.
+
 O `Render Guard` monitora o custo dos batches no navegador. Se os ultimos renders ficam pesados, ele aumenta temporariamente o intervalo efetivo de render e preserva o preset salvo pelo usuario. Quando varios batches voltam a ficar leves, o guard desliga. A faixa superior indica `Guard` em `Render UI`, enquanto `Sistema` mostra `Render guard` e o intervalo efetivo.
 
 Quando `document.hidden` indica que a aba esta em segundo plano, o scheduler continua acumulando snapshots, motivos e ativos pendentes, mas pausa o desenho da UI. Ao voltar para a aba, o terminal dispara um render imediato com motivo `visibility`. `Sistema` mostra `Render background` para diferenciar desenho ativo de pausa por aba oculta.

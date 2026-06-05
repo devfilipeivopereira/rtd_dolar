@@ -2215,6 +2215,9 @@ const state = {
     snapshotRenderAccepted: 0,
     snapshotRenderSkipped: 0,
     lastSnapshotSkipAt: null,
+    derivedCache: {},
+    derivedCacheHits: 0,
+    derivedCacheMisses: 0,
   },
   assetEditor: {
     draftCsvText: null,
@@ -3457,6 +3460,7 @@ function renderRoutineReview(snapshot = state.rtd.lastSnapshot) {
     ["Ativo", asset],
     ["Ultimo feed", msg?.localTimestamp || "--"],
     ["Render dedupe", `ok ${fmt(state.render.snapshotRenderAccepted, 0)} / skip ${fmt(state.render.snapshotRenderSkipped, 0)}`],
+    ["Cache derivados", `hit ${fmt(state.render.derivedCacheHits, 0)} / miss ${fmt(state.render.derivedCacheMisses, 0)}`],
     ["Background", state.render.backgroundPaused ? "pausado" : `ativo | skip ${fmt(state.render.backgroundSkipped, 0)}`],
     ["WS backend", `${fmt(liveNumber(backendWs.clients), 0)} clientes | ${fmt(liveNumber(backendWs.broadcasts), 0)} envios`],
     ["Processo", `PID ${fmt(liveNumber(processInfo.processId), 0)} | ${fmt(liveNumber(processInfo.workingSetMb), 1)} MB`],
@@ -3732,7 +3736,7 @@ function quantIndicatorSummary(r, edge = null) {
   return values.filter(Boolean).join(" | ");
 }
 
-function quantReversalAssessment(snapshot, flow = {}) {
+function quantReversalAssessmentRaw(snapshot, flow = {}) {
   const r = state.result;
   const metrics = flow.metrics || {};
   const price = currentDomPrice(snapshot);
@@ -3815,6 +3819,10 @@ function quantReversalAssessment(snapshot, flow = {}) {
     edge,
     dataQuality: freshness.tone === "red" ? "feed parado" : freshness.tone === "amber" ? "feed atrasado" : sources.length >= 3 ? "completa" : sources.length >= 2 ? "parcial" : "insuficiente",
   };
+}
+
+function quantReversalAssessment(snapshot, flow = {}) {
+  return cachedDerivedValue("quant", snapshot, flow, () => quantReversalAssessmentRaw(snapshot, flow));
 }
 
 function feedContext(snapshot = state.rtd.lastSnapshot) {
@@ -3971,7 +3979,7 @@ function applyQuantGateToOpportunity(item, metrics, snapshot) {
   return item;
 }
 
-function collectRadarOpportunities(msg = state.rtd.lastSnapshot) {
+function collectRadarOpportunitiesRaw(msg = state.rtd.lastSnapshot) {
   const price = currentDomPrice(msg);
   if (!Number.isFinite(price)) return [];
   const metrics = state.flow.metrics || {};
@@ -4032,6 +4040,10 @@ function collectRadarOpportunities(msg = state.rtd.lastSnapshot) {
     .filter(item => Number.isFinite(item.score))
     .sort((a, b) => b.score - a.score || a.distTicks - b.distTicks)
     .slice(0, 18);
+}
+
+function collectRadarOpportunities(msg = state.rtd.lastSnapshot) {
+  return cachedDerivedValue("radar", msg, null, () => collectRadarOpportunitiesRaw(msg));
 }
 
 function applyRadarOpportunity(index) {
@@ -6865,7 +6877,78 @@ function compactDomLevels(levels, step = state.rtd.tickSize) {
   return out.sort((a, b) => b.score - a.score || a.price - b.price || a.label.localeCompare(b.label));
 }
 
-function collectDomLevels(msg) {
+function derivedSignalKey(signals = []) {
+  return (signals || [])
+    .slice(0, 20)
+    .map(signal => signalKey(signal))
+    .filter(Boolean)
+    .join(",");
+}
+
+function derivedResultKey() {
+  const r = state.result || {};
+  return [
+    state.selectedWindow,
+    state.bars.length,
+    state.uploadedCount,
+    snapshotMaterialValue(r.anchor),
+    snapshotMaterialValue(r.profile?.poc?.price),
+    snapshotMaterialValue(r.profile?.vah),
+    snapshotMaterialValue(r.profile?.val),
+    (r.levels || []).length,
+    (r.openingLevels || []).length,
+    (r.pocDeviationLevels || []).length,
+    (r.percentMaps || []).length,
+    (r.previousLevels || []).length,
+    (r.avwaps || []).length,
+    (r.sr || []).length,
+    (r.confluence || []).length,
+  ].join("|");
+}
+
+function derivedFlowKey(flow = null, asset = selectedAsset()) {
+  const bucket = flow || flowBucket(asset);
+  const metrics = bucket.metrics || {};
+  const signals = bucket.signals || state.flow.signals || [];
+  return [
+    snapshotMaterialValue(metrics.delta5s),
+    snapshotMaterialValue(metrics.delta15s),
+    snapshotMaterialValue(metrics.topBookImbalance),
+    snapshotMaterialValue(metrics.orderFlowImbalance),
+    snapshotMaterialValue(metrics.vwap),
+    snapshotMaterialValue(metrics.poc),
+    derivedSignalKey(signals),
+  ].join("|");
+}
+
+function derivedCacheKey(scope, msg = null, flow = null) {
+  const asset = normalizeAsset(msg?.asset || selectedAsset());
+  const snapshot = msg || state.rtd.snapshotsByAsset[asset] || state.rtd.lastSnapshot || { asset };
+  return [
+    scope,
+    asset,
+    state.rtd.tickSize,
+    snapshotRenderKey(snapshot),
+    derivedResultKey(),
+    derivedFlowKey(flow, asset),
+  ].join("~");
+}
+
+function cachedDerivedValue(scope, msg, flow, compute) {
+  const key = derivedCacheKey(scope, msg, flow);
+  const entry = state.render.derivedCache[scope];
+  if (entry && entry.key === key) {
+    state.render.derivedCacheHits += 1;
+    return entry.value;
+  }
+
+  const value = compute();
+  state.render.derivedCache[scope] = { key, value };
+  state.render.derivedCacheMisses += 1;
+  return value;
+}
+
+function collectDomLevelsRaw(msg) {
   const r = state.result;
   const intraday = r?.intraday || liveIntradayFromSnapshot(msg);
   const currentPrice = intraday.price;
@@ -6989,6 +7072,10 @@ function collectDomLevels(msg) {
   });
 
   return compactDomLevels(levels);
+}
+
+function collectDomLevels(msg) {
+  return cachedDerivedValue("domLevels", msg, null, () => collectDomLevelsRaw(msg));
 }
 
 function registerDomTick(msg) {
@@ -7790,6 +7877,7 @@ function renderFlowDebug() {
     ["Render guard", state.render.guardMode === "guard" ? `${fmtMs(effectiveLiveIntervalMs())} | ${state.render.guardReason || "ativo"}` : "normal"],
     ["Render background", state.render.backgroundPaused ? `pausado | ${fmtMs(Date.now() - state.render.backgroundSince)}` : `ativo | skip ${fmt(state.render.backgroundSkipped, 0)}`],
     ["Render dedupe", `ok ${fmt(state.render.snapshotRenderAccepted, 0)} / skip ${fmt(state.render.snapshotRenderSkipped, 0)}`],
+    ["Cache derivados", `hit ${fmt(state.render.derivedCacheHits, 0)} / miss ${fmt(state.render.derivedCacheMisses, 0)}`],
     ["Render motivos", (state.render.lastReasons || []).join(" / ") || "--"],
     ["Render ativos", (state.render.lastAssets || []).slice(0, 4).join(" / ") || "--"],
     ["Ultima mensagem", lastMessage],

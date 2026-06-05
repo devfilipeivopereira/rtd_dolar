@@ -83,6 +83,8 @@ O render ao vivo do navegador usa fila coalescida por motivo (`snapshot`, `book`
 
 Snapshots repetidos tambem passam por dedupe material no navegador. Preco, OHLC, VWAP, volume, book de topo, volume projetado e status formam a chave de render; se nada mudou, o terminal atualiza o estado em memoria, mas evita redesenho/calc pesado e deixa passar apenas um heartbeat de 1 segundo. Em `Sistema`, `Render dedupe` mostra quantos snapshots foram aceitos ou pulados.
 
+Niveis do DOM, Radar e `Score Quant` usam cache curto por ativo/snapshot/CSV/fluxo. Dentro do mesmo estado de mercado, telas como `Mesa`, `DOM`, `Radar`, `Painel` e `Rotina` reaproveitam o mesmo derivado em vez de recalcular tudo a cada componente. Em `Sistema` e `Revisar`, `Cache derivados` mostra hits e misses.
+
 O `Render Guard` aumenta temporariamente o intervalo efetivo de render quando os ultimos batches ficam pesados, sem alterar o preset salvo pelo usuario. Quando a UI estabiliza, o intervalo volta ao valor configurado. A faixa superior mostra `Guard` em `Render UI` e `Sistema` mostra `Render guard` com o intervalo efetivo.
 
 Quando a aba do navegador fica em segundo plano, o terminal pausa apenas o desenho da UI e continua acumulando os dados recebidos. Ao voltar para a aba, ele faz um render imediato de catch-up com o motivo `visibility`. Em `Sistema`, `Render background` mostra se a UI esta ativa ou pausada em segundo plano.
